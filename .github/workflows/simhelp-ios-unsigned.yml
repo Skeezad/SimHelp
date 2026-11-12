@@ -14,8 +14,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app
       - name: Build unsigned iOS app
         run: |
           set -euo pipefail
@@ -45,3 +43,4 @@ jobs:
           name: SimHelp-iPhone-unsigned
           path: build/SimHelp-iPhone-unsigned.ipa
           if-no-files-found: error
+
