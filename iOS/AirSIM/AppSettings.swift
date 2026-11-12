@@ -10,7 +10,7 @@ enum AppInformation {
     static func version(info: [String: Any]) -> String {
         let name = (info["CFBundleShortVersionString"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         let build = (info["CFBundleVersion"] as? String).flatMap { $0.isEmpty ? nil : $0 }
-        guard let build else { return name ?? "未知版本" }
+        guard let build else { return name ?? "Unknown version" }
         return "\(name ?? "未知版本") (\(build))"
     }
 }
@@ -33,8 +33,8 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: return L10n.t("跟随系统")
-        case .light: return L10n.t("浅色")
+        case .system: return L10n.t("Follow the system")
+        case .light: return L10n.t("light color")
         case .dark: return L10n.t("深色")
         }
     }
@@ -54,7 +54,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: return L10n.t("跟随系统")
+        case .system: return L10n.t("Follow the system")
         case .zh: return "简体中文"
         case .en: return "English"
         }
@@ -94,37 +94,37 @@ enum L10n {
     }
 
     private static let english: [String: String] = [
-        "拨号": "Dial", "最近": "Recents", "最近通话": "Recents", "短信": "Messages", "联系人": "Contacts", "通讯录": "Contacts", "设置": "Settings",
-        "输入号码": "Enter number", "接听": "Accept", "拒接": "Decline", "挂断": "End", "静音": "Mute",
-        "取消静音": "Unmute", "扬声器": "Speaker", "录音": "Record", "停止录音": "Stop Recording", "通话中": "On Call",
-        "等待接听": "Waiting", "暂无通话记录": "No Recents", "新信息": "New Message", "收件人": "To",
-        "短信内容": "Message", "发送": "Send", "已发送": "Sent", "取消": "Cancel", "刷新": "Refresh", "暂无短信": "No Messages",
-        "读取后自动清理模块短信": "Auto-clean module SMS after reading", "清空全部短信": "Clear all SMS",
-        "搜索姓名或号码": "Search name or number", "授权访问通讯录": "Allow Contacts Access", "通讯录为空": "No contacts",
-        "搜索姓名、号码或短信内容": "Search name, number or message", "未找到匹配的短信": "No matching messages",
-        "状态": "Status", "通用": "General", "网络": "Network", "定位": "Location", "eSIM / 卡片": "eSIM / Card",
-        "AT 调试": "AT Debug", "网络诊断": "Network Diagnostics", "运营商": "Operator", "SIM 卡": "SIM Card",
-        "网络模式": "Network Mode", "信号强度": "Signal", "下载速度": "Download", "上传速度": "Upload",
-        "本次流量": "Session Data", "允许 4G 上网": "Allow 4G Data", "检查 4G 出口": "Check 4G Route",
-        "检查代理出口": "Check Proxy Route", "重启模块": "Reboot Module", "GPS 定位": "GPS Positioning",
-        "等待定位": "Waiting for fix", "坐标": "Coordinates", "卫星": "Satellites", "卡片类型": "Card Type",
-        "下载新 Profile": "Download New Profile", "通讯录检测": "Phonebook Check", "AT 指令": "AT Command",
-        "发送 AT": "Send AT", "外观": "Appearance", "显示模式": "Display Mode", "语言": "Language", "跟随系统": "Follow System",
-        "浅色": "Light", "深色": "Dark", "模块代理": "Module Agent", "在线": "Online", "离线": "Offline",
-        "未查看": "Unseen", "标为已读": "Mark as Read", "全部标为已读": "Mark All as Read",
+        "dial": "Dial", "最近": "Recents", "recent calls": "Recents", "Short message": "Messages", "Contact person": "Contacts", "通讯录": "Contacts", "set up": "Settings",
+        "Enter number": "Enter number", "Answer": "Accept", "Reject": "Decline", "hang up": "End", "mute": "Mute",
+        "Unmute": "Unmute", "speaker": "Speaker", "recording": "Record", "Stop recording": "Stop Recording", "In call": "On Call",
+        "Waiting to answer": "Waiting", "No call records yet": "No Recents", "新信息": "New Message", "recipient": "To",
+        "SMS content": "Message", "send": "Send", "Sent": "Sent", "Cancel": "Cancel", "刷新": "Refresh", "暂无短信": "No Messages",
+        "Automatically clean module text messages after reading": "Auto-clean module SMS after reading", "Clear all text messages": "Clear all SMS",
+        "搜索姓名或号码": "Search name or number", "授权访问通讯录": "Allow Contacts Access", "Address book is empty": "No contacts",
+        "Search names, numbers or text messages": "Search name, number or message", "No matching text message found": "No matching messages",
+        "状态": "Status", "Universal": "General", "network": "Network", "position": "Location", "eSIM / 卡片": "eSIM / Card",
+        "AT debugging": "AT Debug", "Network diagnostics": "Network Diagnostics", "运营商": "Operator", "SIM card": "SIM Card",
+        "network mode": "Network Mode", "signal strength": "Signal", "下载速度": "Download", "upload speed": "Upload",
+        "This traffic": "Session Data", "Allow 4G Internet access": "Allow 4G Data", "Check 4G outlet": "Check 4G Route",
+        "Check proxy exit": "Check Proxy Route", "Restart module": "Reboot Module", "GPS positioning": "GPS Positioning",
+        "Waiting for positioning": "Waiting for fix", "coordinate": "Coordinates", "satellite": "Satellites", "卡片类型": "Card Type",
+        "Download new profile": "Download New Profile", "Address book detection": "Phonebook Check", "AT 指令": "AT Command",
+        "Send AT": "Send AT", "Appearance": "Appearance", "display mode": "Display Mode", "language": "Language", "Follow the system": "Follow System",
+        "light color": "Light", "深色": "Dark", "模块代理": "Module Agent", "online": "Online", "离线": "Offline",
+        "Not viewed": "Unseen", "Mark as read": "Mark as Read", "Mark all as read": "Mark All as Read",
         "%d 条未读短信": "%d unread messages",
-        "未接": "Missed", "呼入": "Incoming", "呼出": "Outgoing", "处理中": "Working", "保存": "Save",
-        "删除": "Delete", "切换": "Switch", "重命名": "Rename", "错误": "Error",
-        "清空": "Clear", "清空号码": "Clear number",
-        "复制": "Copy", "选择文本": "Select", "更多…": "More…",
-        "选择短信": "Select Message", "取消选择": "Cancel Selection",
-        "删除所选短信": "Delete Selected Messages", "共享所选短信": "Share Selected Messages",
-        "已选 %d 条": "%d Selected", "删除所选 %d 条短信？": "Delete %d Messages?",
-        "复制最新短信": "Copy Latest Message", "复制整段会话": "Copy Conversation",
-        "复制短信": "Copy Messages",
-        "短信操作": "Message Actions", "选择会话": "Select Conversations",
-        "完成选择": "Done", "删除所选会话": "Delete Selected Conversations",
-        "1 条短信": "1 Message", "%d 条短信": "%d Messages",
-        "仅删除此 iPhone 上 SimHelp 内的记录，不删除安卓系统短信。": "Only deletes records in SimHelp on this iPhone, not SMS on Android."
+        "Missed": "Missed", "Incoming call": "Incoming", "exhale": "Outgoing", "Processing": "Working", "keep": "Save",
+        "delete": "Delete", "switch": "Switch", "Rename": "Rename", "错误": "Error",
+        "Clear": "Clear", "Clear number": "Clear number",
+        "copy": "Copy", "Select text": "Select", "More…": "More…",
+        "Select SMS": "Select Message", "Deselect": "Cancel Selection",
+        "Delete selected text messages": "Delete Selected Messages", "Share selected text messages": "Share Selected Messages",
+        "%d items selected": "%d Selected", "删除所选 %d 条短信？": "Delete %d Messages?",
+        "Copy latest text message": "Copy Latest Message", "Copy entire conversation": "Copy Conversation",
+        "Copy SMS": "Copy Messages",
+        "SMS operation": "Message Actions", "Select session": "Select Conversations",
+        "Complete selection": "Done", "Delete selected conversations": "Delete Selected Conversations",
+        "1 text message": "1 Message", "%d text messages": "%d Messages",
+        "Only the records in SimHelp on this iPhone will be deleted, and the Android text messages will not be deleted.": "Only deletes records in SimHelp on this iPhone, not SMS on Android."
     ]
 }

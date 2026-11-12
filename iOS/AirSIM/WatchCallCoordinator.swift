@@ -49,7 +49,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             session.activate()
             self.session = session
 #if DEBUG
-			print("[SimHelp iPhone WC] 已请求激活；paired=\(session.isPaired) watchAppInstalled=\(session.isWatchAppInstalled)")
+			print("[SimHelp iPhone WC] Activation requested; paired=\\(session.isPaired) watchAppInstalled=\\(session.isWatchAppInstalled)")
 #endif
         }
     }
@@ -151,7 +151,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         error: Error?
     ) {
 #if DEBUG
-		print("[SimHelp iPhone WC] 激活完成；state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
+		print("[SimHelp iPhone WC] Activation completed; state=\\(activationState.rawValue) context=\\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
 #endif
 		guard activationState == .activated else { return }
 		let context = session.receivedApplicationContext
@@ -248,7 +248,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         let boundAtStart = AndroidAgentBindingPreference.selected()
         guard let requestID = (message["request_id"] as? String).flatMap(UUID.init(uuidString:)),
               let number = (message["number"] as? String).flatMap(WatchDialNumber.validated) else {
-            replyHandler(["ok": false, "error": "请输入有效的电话号码"])
+            replyHandler(["ok": false, "error": "Please enter a valid phone number"])
             return
         }
         guard pendingWatchDialID == nil, watchOutgoingCall == nil, localWatchCall == nil,
@@ -324,7 +324,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                 return
             }
             guard CloudModePreference.isEnabled() else {
-                replyHandler(["ok": false, "error": "VoWLAN 不可达，且云端模式未开启"])
+                replyHandler(["ok": false, "error": "VoWLAN is unreachable and cloud mode is not enabled"])
                 return
             }
             let status = try await VoIPPushController.shared.fetchCloudAgentStatus()
@@ -355,7 +355,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             components.queryItems = nil
             guard let mediaURL = components.url else {
                 await endAbandonedWatchCall(outgoing)
-                replyHandler(["ok": false, "error": "云端音频地址无效"])
+                replyHandler(["ok": false, "error": "Cloud audio address is invalid"])
                 return
             }
             watchOutgoingCall = (requestID, outgoing)
@@ -389,7 +389,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                     if localWatchCall?.callID == active.callID { localWatchCall = nil }
                     model?.deviceCallContext.releaseAdmission(requestID)
                 } catch {
-                    NSLog("[SimHelp Watch Dial] VoWLAN 取消失败：%@", error.localizedDescription)
+                    NSLog("[SimHelp Watch Dial] VoWLAN cancellation failed: %@", error.localizedDescription)
                 }
             }
         }
@@ -431,7 +431,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         guard let api = owned?.api ?? legacy?.0,
               let pcmRoute = owned.map({ $0.api.route }).map(AppModel.pcmRouteForWatch) ?? legacy?.1,
               case let .vowlan(endpoint, credential) = pcmRoute else {
-            replyHandler(["ok": false, "error": "VoWLAN 未就绪",
+            replyHandler(["ok": false, "error": "VoWLAN not ready",
                           "cloud_media_allowed": CloudModePreference.isEnabled()])
             return
         }
@@ -439,7 +439,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             guard let current = try await api.callStatus().active,
                   current.id == (owned?.backendID ?? callID),
                   ["incoming", "waiting"].contains(current.state) else {
-                replyHandler(["ok": false, "error": "来电已失效",
+                replyHandler(["ok": false, "error": "Incoming call has expired",
                               "cloud_media_allowed": CloudModePreference.isEnabled()])
                 return
             }
@@ -514,14 +514,14 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         }
         guard let callID = message["call_id"] as? String, !callID.isEmpty,
               let model, let (api, _) = await model.readyVoWLANRoute() else {
-            replyHandler(["ok": false, "error": "VoWLAN 未就绪"])
+            replyHandler(["ok": false, "error": "VoWLAN not ready"])
             return
         }
         do {
             guard let current = try await api.callStatus().active,
                   current.id == callID,
                   ["incoming", "waiting"].contains(current.state) else {
-                replyHandler(["ok": false, "error": "来电已失效"])
+                replyHandler(["ok": false, "error": "Incoming call has expired"])
                 return
             }
             _ = try await api.rejectCall(callID: current.id)
@@ -545,7 +545,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                 }
                 try? await Task.sleep(for: .milliseconds(500))
             }
-            NSLog("[SimHelp Watch] VoWLAN 音频主机注册超时；call=%@", callID)
+            NSLog("[SimHelp Watch] VoWLAN audio host registration timed out; call=%@", callID)
         }
     }
 
@@ -573,7 +573,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             }
         } catch {
             // 已拨号但交接失败必须可诊断，不能悄悄遗留蜂窝通话。
-            NSLog("[SimHelp Watch Dial] 取消呼出失败：%@", error.localizedDescription)
+            NSLog("[SimHelp Watch Dial] Failed to cancel outgoing call: %@", error.localizedDescription)
         }
     }
 
@@ -634,7 +634,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
               !token.isEmpty, !bundleID.isEmpty else { return false }
         VoIPPushController.shared.storeWatchVoIPRegistration(token: token, bundleID: bundleID)
 #if DEBUG
-		print("[SimHelp iPhone WC] 已接收 Watch VoIP token；字符数=\(token.count)")
+		print("[SimHelp iPhone WC] Received Watch VoIP token; number of characters =\\(token.count)")
 #endif
         return true
     }

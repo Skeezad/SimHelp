@@ -128,13 +128,13 @@ enum WatchVoIPPayloadError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedEvent: return "不是有效的手表来电推送"
-        case .missingCallID: return "手表来电推送缺少 call_id"
-        case .invalidCallUUID: return "手表来电推送缺少有效 call_uuid"
+        case .unsupportedEvent: return "Not a valid watch call push notification"
+        case .missingCallID: return "The call notification on the watch is missing call_id"
+        case .invalidCallUUID: return "The watch push notification lacks a valid call_uuid"
         case .missingSecret: return "手表来电推送缺少媒体密钥"
-        case .invalidMediaURL: return "手表来电推送缺少安全媒体地址"
+        case .invalidMediaURL: return "Incoming call notification on watch lacks secure media address"
         case .expired: return "手表来电推送已经过期"
-        case .invalidLocalMedia: return "手表本地语音参数无效"
+        case .invalidLocalMedia: return "The local voice parameters of the watch are invalid"
         }
     }
 }
@@ -358,7 +358,7 @@ struct WatchIncomingNotificationPlan: Equatable, Sendable {
                 if !result.contains(value) { result.append(value) }
             }
         identifier = "airsim.watch.incoming.\(payload.callID)"
-        title = "SimHelp 来电"
-        body = parts.isEmpty ? "模块收到来电" : parts.joined(separator: " · ")
+        title = "SimHelp call"
+        body = parts.isEmpty ? "The module receives an incoming call" : parts.joined(separator: " · ")
     }
 }

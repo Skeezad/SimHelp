@@ -10,7 +10,7 @@ final class SMSNavigationUITests: XCTestCase {
         guard alert.waitForExistence(timeout: 2) else { return }
         let description = alert.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: " ")
         guard description.contains("麦克风") || description.localizedCaseInsensitiveContains("microphone") else { return }
-        for label in ["不允许", "Don’t Allow", "Don't Allow"] {
+        for label in ["not allowed", "Don’t Allow", "Don't Allow"] {
             let deny = alert.buttons[label]
             if deny.exists { deny.tap(); return }
         }
@@ -26,13 +26,13 @@ final class SMSNavigationUITests: XCTestCase {
         defer { app.terminate() }
         XCTAssertTrue(app.buttons["sms-compose"].waitForExistence(timeout: 10))
         for _ in 0..<2 {
-            app.buttons["联系人"].tap()
+            app.buttons["Contact person"].tap()
             XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
             XCTAssertTrue(app.searchFields.firstMatch.isHittable)
             app.buttons["最近"].tap()
-            XCTAssertTrue(app.navigationBars["最近通话"].waitForExistence(timeout: 5))
-            app.buttons["设置"].tap()
-            app.buttons["短信"].tap()
+            XCTAssertTrue(app.navigationBars["recent calls"].waitForExistence(timeout: 5))
+            app.buttons["set up"].tap()
+            app.buttons["Short message"].tap()
             XCTAssertTrue(app.buttons["sms-compose"].waitForExistence(timeout: 5))
         }
     }
@@ -48,13 +48,13 @@ final class SMSNavigationUITests: XCTestCase {
         let compose = app.buttons["sms-compose"]
         XCTAssertTrue(compose.waitForExistence(timeout: 10), "real toolbar must expose its compose action")
         for iteration in 0..<3 {
-            app.buttons["设置"].tap()
-            app.buttons["短信"].tap()
+            app.buttons["set up"].tap()
+            app.buttons["Short message"].tap()
             XCTAssertTrue(compose.waitForExistence(timeout: 5))
             XCTAssertTrue(app.buttons["sms-list-actions"].exists)
             if iteration == 0 {
                 compose.tap()
-                let cancel = app.buttons["取消"]
+                let cancel = app.buttons["Cancel"]
                 XCTAssertTrue(cancel.waitForExistence(timeout: 5))
                 cancel.tap()
                 XCTAssertTrue(compose.waitForExistence(timeout: 5))
@@ -72,9 +72,9 @@ final class SMSNavigationUITests: XCTestCase {
                 XCTAssertTrue(reply.waitForExistence(timeout: 5))
                 XCTAssertLessThanOrEqual(row.frame.maxX, reply.frame.minX,
                     "expanded conversation must occupy a separate detail column")
-                XCTAssertTrue(app.buttons["短信"].isHittable)
+                XCTAssertTrue(app.buttons["Short message"].isHittable)
             } else {
-                XCTAssertFalse(app.buttons["短信"].isHittable, "compact conversation must cover the root tabs")
+                XCTAssertFalse(app.buttons["Short message"].isHittable, "compact conversation must cover the root tabs")
                 let systemBack = app.buttons["BackButton"]
                 if systemBack.exists {
                     systemBack.tap()
@@ -83,7 +83,7 @@ final class SMSNavigationUITests: XCTestCase {
                 }
             }
             XCTAssertTrue(compose.waitForExistence(timeout: 5))
-            XCTAssertTrue(app.buttons["短信"].isHittable)
+            XCTAssertTrue(app.buttons["Short message"].isHittable)
         }
     }
     @MainActor
@@ -96,7 +96,7 @@ final class SMSNavigationUITests: XCTestCase {
         app.launch()
         defer { XCUIDevice.shared.orientation = .portrait; app.terminate() }
         XCTAssertTrue(app.buttons["sms-compose"].waitForExistence(timeout: 10))
-        app.buttons["拨号"].tap()
+        app.buttons["dial"].tap()
         for label in ["1", "2 ABC", "3 DEF"] { app.buttons[label].tap() }
         let number = app.staticTexts["dialpad.number"]
         XCTAssertEqual(number.label, "123")
@@ -115,7 +115,7 @@ final class SMSNavigationUITests: XCTestCase {
         let appended = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "1234"), object: number)
         XCTAssertEqual(XCTWaiter.wait(for: [appended], timeout: 5), .completed)
         app.buttons["dialpad.clear"].tap()
-        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "输入号码"), object: number)
+        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Enter number"), object: number)
         XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
     }
 
@@ -128,8 +128,8 @@ final class SMSNavigationUITests: XCTestCase {
         app.launchEnvironment["AIRSIM_UI_FIXTURE"] = "sms-navigation"
         app.launch()
         defer { app.terminate() }
-        XCTAssertTrue(app.buttons["拨号"].waitForExistence(timeout: 10))
-        app.buttons["拨号"].tap()
+        XCTAssertTrue(app.buttons["dial"].waitForExistence(timeout: 10))
+        app.buttons["dial"].tap()
         app.buttons["1"].tap()
         let clear = app.buttons["dialpad.clear"]
         for _ in 0..<3 where !clear.isHittable { app.scrollViews.firstMatch.swipeUp() }
@@ -141,7 +141,7 @@ final class SMSNavigationUITests: XCTestCase {
         add(shot)
         clear.tap()
         let number = app.staticTexts["dialpad.number"]
-        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "输入号码"), object: number)
+        let cleared = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label == %@", "Enter number"), object: number)
         XCTAssertEqual(XCTWaiter.wait(for: [cleared], timeout: 5), .completed)
     }
 
@@ -185,7 +185,7 @@ final class SMSNavigationUITests: XCTestCase {
             app.launch()
             dismissMicrophonePrompt()
             XCUIDevice.shared.orientation = .landscapeLeft
-            let action = app.buttons[phase == "incoming" ? "接听" : "挂断"]
+            let action = app.buttons[phase == "incoming" ? "Answer" : "hang up"]
             XCTAssertTrue(action.waitForExistence(timeout: 5))
             if !action.isHittable { app.swipeUp() }
             let callShot = XCTAttachment(screenshot: app.screenshot())
@@ -199,17 +199,17 @@ final class SMSNavigationUITests: XCTestCase {
                 add(hierarchy)
             }
             XCTAssertTrue(action.isHittable)
-            XCTAssertFalse(app.buttons["短信"].isHittable, "call surface must cover the root tabs")
+            XCTAssertFalse(app.buttons["Short message"].isHittable, "call surface must cover the root tabs")
             let shot = XCTAttachment(screenshot: app.screenshot())
             shot.name = "call-\(phase)-landscape"
             shot.lifetime = .keepAlways
             add(shot)
             if phase == "active" {
-                app.buttons["键盘"].tap()
-                XCTAssertTrue(app.navigationBars["通话键盘"].waitForExistence(timeout: 5))
+                app.buttons["keyboard"].tap()
+                XCTAssertTrue(app.navigationBars["call keyboard"].waitForExistence(timeout: 5))
                 app.swipeUp()
                 XCTAssertTrue(app.buttons["发送 DTMF #"].isHittable)
-                app.buttons["取消"].tap()
+                app.buttons["Cancel"].tap()
                 XCTAssertTrue(action.waitForExistence(timeout: 5))
             }
             app.terminate()
@@ -226,8 +226,8 @@ final class SettingsJourneyUITests: XCTestCase {
         app.launchEnvironment["AIRSIM_UI_FIXTURE"] = "sms-navigation"
         app.launch()
         XCTAssertTrue(app.buttons["sms-compose"].waitForExistence(timeout: 15))
-        app.buttons["设置"].tap()
-        XCTAssertTrue(app.navigationBars["设置"].waitForExistence(timeout: 5))
+        app.buttons["set up"].tap()
+        XCTAssertTrue(app.navigationBars["set up"].waitForExistence(timeout: 5))
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "settings-home"; shot.lifetime = .keepAlways; add(shot)
         return app
@@ -289,11 +289,11 @@ final class SettingsJourneyUITests: XCTestCase {
     @MainActor func testCategoriesAndManualPairingPreserveNavigation() {
         let app = launchSettings(); defer { app.terminate() }
         open("connections", in: app)
-        XCTAssertTrue(app.navigationBars["连接与设备"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Connections and devices"].waitForExistence(timeout: 3))
         open("add", in: app)
         open("pairManual", in: app)
         XCTAssertTrue(app.textFields["manualPairingHost"].waitForExistence(timeout: 3))
-        let connect = app.buttons["连接并加密配对"]
+        let connect = app.buttons["Connect and encrypt pairing"]
         // A short Duo window lazily creates the bottom Form rows after scrolling.
         for _ in 0..<6 where !connect.exists {
             let form = app.collectionViews.firstMatch
@@ -303,14 +303,14 @@ final class SettingsJourneyUITests: XCTestCase {
         XCTAssertTrue(connect.exists)
         XCTAssertFalse(connect.isEnabled)
         back(app)
-        XCTAssertTrue(app.navigationBars["添加设备"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Add device"].waitForExistence(timeout: 3))
         back(app); back(app)
         open("widgets", in: app)
         open("widgetGuide", in: app)
-        XCTAssertTrue(app.staticTexts["添加小组件"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Add widget"].waitForExistence(timeout: 3))
         back(app); back(app)
         open("preferences", in: app)
-        XCTAssertTrue(app.navigationBars["外观与偏好"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.navigationBars["Appearance and Preferences"].waitForExistence(timeout: 3))
         let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         shot.name = "settings-preferences"; shot.lifetime = .keepAlways; add(shot)
     }
@@ -329,7 +329,7 @@ final class SettingsJourneyUITests: XCTestCase {
         let done = app.toolbars.buttons["完成"]
         if done.exists { done.tap() }
         open("feedbackPreview", in: app)
-        XCTAssertTrue(app.navigationBars["上传内容范围"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Upload content range"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["settings draft retained"].waitForExistence(timeout: 3))
         back(app)
         XCTAssertEqual(app.textFields["settings.feedbackDescription"].value as? String, "settings draft retained")
@@ -356,11 +356,11 @@ extension SettingsJourneyUITests {
         app.launchEnvironment["AIRSIM_UI_FIXTURE"] = "sms-navigation"
         app.launch(); defer { app.terminate() }
         XCTAssertTrue(app.buttons["sms-compose"].waitForExistence(timeout: 15))
-        app.buttons["设置"].tap()
-        XCTAssertTrue(app.navigationBars["设置"].waitForExistence(timeout: 5))
-        for (id, title) in [("connections", "连接与设备"), ("calls", "来电与短信"),
-                            ("widgets", "灵动岛与小组件"), ("preferences", "外观与偏好"),
-                            ("help", "帮助与诊断"), ("about", "关于 SimHelp")] {
+        app.buttons["set up"].tap()
+        XCTAssertTrue(app.navigationBars["set up"].waitForExistence(timeout: 5))
+        for (id, title) in [("connections", "Connections and devices"), ("calls", "Incoming calls and text messages"),
+                            ("widgets", "Smart island and widgets"), ("preferences", "Appearance and Preferences"),
+                            ("help", "Help and diagnostics"), ("about", "About SimHelp")] {
             open(id, in: app)
             XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 3))
             let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())

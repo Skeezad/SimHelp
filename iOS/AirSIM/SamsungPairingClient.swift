@@ -93,10 +93,10 @@ final class SamsungPairingBrowser: ObservableObject {
                 guard let self, self.scanID == scanID else { return }
                 switch state {
                 case .ready: self.stateText = "正在等待安卓配对广播…"
-                case .waiting: self.stateText = "请确认 iPhone 与安卓处于同一 Wi-Fi 或安卓热点"
+                case .waiting: self.stateText = "Please make sure iPhone and Android are on the same Wi-Fi or Android hotspot"
                 case .failed(let error):
                     self.stop()
-                    self.stateText = "局域网扫描失败：\(error.localizedDescription)。请检查本地网络权限后重新扫描。"
+                    self.stateText = "LAN scan failed: \\(error.localizedDescription). Please check the local network permissions and scan again."
                 case .cancelled: self.stop()
                 default: break
                 }
@@ -111,7 +111,7 @@ final class SamsungPairingBrowser: ObservableObject {
                 self.services = parsed
                 self.stateText = parsed.isEmpty
                     ? "正在等待安卓配对广播…"
-                    : "已发现 \(parsed.count) 台待配对设备"
+                    : "Found \\(parsed.count) devices to be paired"
             }
         }
         browser = active
@@ -284,7 +284,7 @@ enum SamsungPairingClient {
         guard let agentID = response.agentID, !agentID.isEmpty else { throw SamsungPairingClientError.directGatewayUnavailable }
         PairedAndroidDeviceStore.allowPairing(agentID)
         return PairedDeviceResult(agentID: agentID,
-            message: response.deviceIDHint.map { "配对成功（设备 …\($0)）" } ?? "配对成功")
+            message: response.deviceIDHint.map { "配对成功（设备 …\($0)）" } ?? "Pairing successful")
     }
     static func pair(service: SamsungPairingService, code: String, registration: AgentPushRegistration) async throws -> String {
         try await pairDevice(service: service, code: code, registration: registration).message
@@ -496,17 +496,17 @@ enum SamsungPairingClientError: LocalizedError, Equatable {
     case manualUnsupported, directGatewayUnavailable, timedOut, networkNotAllowed
     var errorDescription: String? {
         switch self {
-        case .invalidCode: return "请输入三星屏幕上的 6 位验证码"
-        case .expired: return "三星配对窗口已过期，请重新开始"
-        case .rejected: return "三星拒绝了配对，请核对验证码后重试"
-        case .networkNotAllowed: return "安卓拒绝当前网络来源，尚未校验验证码。请更新安卓 App，并确认两端处于同一 Wi-Fi／热点或允许互访的 Tailscale 网络。"
-        case .responseTooLarge: return "三星返回的数据异常"
-        case .connectionClosed: return "与三星的局域网连接已断开"
-        case .registrationUnavailable: return "Relay／推送配置未就绪。请先在设置完成云端配置；若只需本地连接，请打开‘本地模式配对’。"
+        case .invalidCode: return "Please enter the 6-digit verification code on your Samsung screen"
+        case .expired: return "Samsung pairing window has expired, please start again"
+        case .rejected: return "Samsung rejected the pairing, please check the verification code and try again."
+        case .networkNotAllowed: return "Android rejects the current network source and the verification code has not yet been verified. Please update the Android App and confirm that both ends are on the same Wi-Fi/hotspot or a Tailscale network that allows mutual access."
+        case .responseTooLarge: return "The data returned by Samsung is abnormal"
+        case .connectionClosed: return "LAN connection to Samsung has been lost"
+        case .registrationUnavailable: return "Relay/push configuration is not ready. Please complete the cloud configuration in the settings first; if you only need a local connection, please turn on 'Local Mode Pairing'."
         case .pairingBusy: return "另一个配对正在进行，请稍后重试"
         case .invalidAddress: return "请按所选方式填写私网 IPv4 或 HTTPS 域名，以及 1–65535 的端口；域名不含协议、路径或 IP 地址。"
-        case .manualUnsupported: return "该地址未返回 SimHelp 配对信息。请更新安卓 App，并填写当前一次性配对端口，而非 ADB、Relay 或通话端口。"
-        case .directGatewayUnavailable: return "配对已写入，但直连通话网关未就绪或认证失败。请检查安卓默认电话角色及 PCM 桥，再开启新的配对窗口重试。"
+        case .manualUnsupported: return "No SimHelp pairing information was returned for this address. Please update the Android App and fill in the current one-time pairing port, not the ADB, Relay or call port."
+        case .directGatewayUnavailable: return "Pairing has been written, but the direct call gateway is not ready or authentication failed. Please check the Android default phone role and PCM bridge, then open a new pairing window and try again."
         case .timedOut: return "连接超时。请检查 IP、当前配对端口、局域网隔离或 Tailscale 两端连接及访问规则。"
         }
     }

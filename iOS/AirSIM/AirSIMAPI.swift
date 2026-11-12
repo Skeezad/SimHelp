@@ -20,8 +20,8 @@ enum LocalAgentRoute: Equatable, Sendable {
 
     var traceDescription: String {
         switch self {
-        case let .vowlan(endpoint, _): return endpoint.usesTLS ? "VoWLAN · 自建 TLS 直连" : VoWLANNetworkRoutePolicy.isOverlayHost(endpoint.host)
-            ? "VoWLAN · VPN 直连" : "VoWLAN · 同一局域网"
+        case let .vowlan(endpoint, _): return endpoint.usesTLS ? "VoWLAN·Self-built TLS direct connection" : VoWLANNetworkRoutePolicy.isOverlayHost(endpoint.host)
+            ? "VoWLAN·VPN direct connection" : "VoWLAN·Same LAN"
         }
     }
 
@@ -91,7 +91,7 @@ struct SimHelpAPI: Sendable {
         precondition(Self.isAllowedLocalURL(baseURL) || {
             if case let .vowlan(endpoint, _) = route { return endpoint.usesTLS }
             return false
-        }(), "Agent 地址必须是本地 HTTP 或已配对的 TLS 网关")
+        }(), "Agent address must be local HTTP or paired TLS gateway")
         self.baseURL = baseURL
         self.transport = transport ?? WiredHTTPTransport()
     }
@@ -332,12 +332,12 @@ struct SimHelpAPI: Sendable {
     func setCallRecording(_ recording: Bool) async throws -> CallRecordingResponse {
         let path = "api/calls/audio/record"
         guard await OptionalAgentAPIs.shared.supports(baseURL.absoluteString, path) else {
-            throw APIError.unsupportedFeature("当前安卓网关不支持通话录音")
+            throw APIError.unsupportedFeature("Currently, the Android gateway does not support call recording.")
         }
         do { return try await postDecoded(path, ["action": recording ? "start" : "stop"]) }
         catch APIError.http(404, _) {
             await OptionalAgentAPIs.shared.absent(baseURL.absoluteString, path)
-            throw APIError.unsupportedFeature("当前安卓网关不支持通话录音")
+            throw APIError.unsupportedFeature("Currently, the Android gateway does not support call recording.")
         }
     }
     func setAudioHostEnabled(_ enabled: Bool) async throws {
@@ -436,7 +436,7 @@ struct SimHelpAPI: Sendable {
         } catch {
             if recordVerboseTrace, ["/api/events", "/api/calls/events", "/api/calls"].contains(request.url?.path ?? "") {
                 Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "call-terminal",
-                    phase: "decode_failed", title: "通话事件解码失败", isFailure: true) }
+                    phase: "decode_failed", title: "Call event decoding failed", isFailure: true) }
             }
             throw error
         }
@@ -519,7 +519,7 @@ struct SimHelpAPI: Sendable {
             if error is CancellationError || (error as? URLError)?.code == .cancelled {
                 if let trace {
                     await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "http",
-                        phase: "cancelled", title: "请求任务已取消", fields: ["trace_id": trace.id])
+                        phase: "cancelled", title: "The requested task has been canceled", fields: ["trace_id": trace.id])
                 }
                 throw error
             }
@@ -536,7 +536,7 @@ struct SimHelpAPI: Sendable {
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            throw APIError.unreadablePayload("模块代理返回的数据无法识别：\(error.localizedDescription)")
+            throw APIError.unreadablePayload("Unrecognized data returned by module proxy: \\(error.localizedDescription)")
         }
     }
 
@@ -557,8 +557,8 @@ enum APIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .unsupportedFeature(message): return message
-        case .invalidResponse: return "模块代理返回了无效响应"
-        case let .http(status, message): return message?.isEmpty == false ? message : "请求失败（HTTP \(status)）"
+        case .invalidResponse: return "Module proxy returned an invalid response"
+        case let .http(status, message): return message?.isEmpty == false ? message : "Request failed (HTTP \\(status))"
         case let .unreadablePayload(message): return message
         }
     }

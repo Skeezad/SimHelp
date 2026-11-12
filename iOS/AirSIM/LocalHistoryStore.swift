@@ -54,7 +54,7 @@ final class LocalHistoryStore {
             )
         } catch {
             // 本地缓存不能阻塞通话和短信；后续写入失败时仍会继续记录日志。
-            Self.log("创建本地历史目录失败：\(error.localizedDescription)")
+            Self.log("Failed to create local history directory: \\(error.localizedDescription)")
         }
     }
 
@@ -198,7 +198,7 @@ final class LocalHistoryStore {
         } catch CocoaError.fileReadNoSuchFile {
             return MessageState(messages: [], deletedKeys: [])
         } catch {
-            Self.log("读取短信历史失败；保留文件且不覆盖删除标记")
+            Self.log("Failed to read SMS history; retain file and do not overwrite deletion mark")
             return nil
         }
     }
@@ -223,7 +223,7 @@ final class LocalHistoryStore {
         } catch CocoaError.fileReadNoSuchFile {
             return nil
         } catch {
-            Self.log("读取本地历史失败（\(url.lastPathComponent)）：\(error.localizedDescription)")
+            Self.log("Failed to read local history (\\(url.lastPathComponent)): \\(error.localizedDescription)")
             return nil
         }
     }
@@ -237,7 +237,7 @@ final class LocalHistoryStore {
             try data.write(to: url, options: [.atomic])
             return true
         } catch {
-            Self.log("写入本地历史失败（\(url.lastPathComponent)）：\(error.localizedDescription)")
+            Self.log("Failed to write local history (\\(url.lastPathComponent)): \\(error.localizedDescription)")
             return false
         }
     }

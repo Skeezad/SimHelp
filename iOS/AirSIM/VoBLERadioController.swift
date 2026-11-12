@@ -170,7 +170,7 @@ final class VoBLERadioController: NSObject, ObservableObject {
     private func trace(_ phase: String, detail: String = "", fields: [String: String] = [:]) {
         Task { await AgentVerboseTraceRecorder.shared.recordEvent(
             source: "ios", category: "voble-radio", phase: phase,
-            title: "蓝牙共享扫描", detail: detail, fields: fields) }
+            title: "Bluetooth share scan", detail: detail, fields: fields) }
     }
 
     private func adoptRestored(_ value: CBPeripheral, central: CBCentralManager) {

@@ -21,21 +21,21 @@ struct SimHelpFirstConnectionView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("连接安卓手机")
                         .font(.largeTitle.bold())
-                    Text("SimHelp 可通过 VoWLAN、蓝牙或云端 Relay 独立连接 Android 手机。")
+                    Text("SimHelp can independently connect to Android phones via VoWLAN, Bluetooth or Cloud Relay.")
                         .foregroundStyle(.secondary)
                 }
 
                 VStack(alignment: .leading, spacing: 18) {
-                    Label("在 Android 手机启动 SimHelp 和音频桥", systemImage: "1.circle.fill")
-                    Label(selectedMode == .bluetooth ? "打开两台设备的蓝牙" : "按所选模式准备网络或蓝牙", systemImage: "2.circle.fill")
-                    Label("核对配对安全码并完成认证", systemImage: "3.circle.fill")
+                    Label("Launch SimHelp and Audio Bridge on your Android phone", systemImage: "1.circle.fill")
+                    Label(selectedMode == .bluetooth ? "Turn on Bluetooth on both devices" : "Prepare for network or Bluetooth by selected mode", systemImage: "2.circle.fill")
+                    Label("Check the pairing security code and complete the authentication", systemImage: "3.circle.fill")
                 }
                 .font(.body.weight(.medium))
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24))
 
-                Picker("连接模式", selection: $connectionModeRaw) {
+                Picker("connection mode", selection: $connectionModeRaw) {
                     ForEach(SimHelpConnectionMode.allCases) { mode in
                         Text(mode.title).tag(mode.rawValue)
                     }
@@ -51,7 +51,7 @@ struct SimHelpFirstConnectionView: View {
 
                 Spacer()
 
-                Button("开始配对", systemImage: "lock.shield") {
+                Button("Start pairing", systemImage: "lock.shield") {
                     showingPairing = true
                 }
                 .buttonStyle(.borderedProminent)
@@ -59,11 +59,11 @@ struct SimHelpFirstConnectionView: View {
                 .frame(maxWidth: .infinity)
 
                 if selectedMode == .localDual {
-                    NavigationLink("添加蓝牙设备") { VoBLEPairingView().environmentObject(model) }
+                    NavigationLink("Add Bluetooth device") { VoBLEPairingView().environmentObject(model) }
                         .frame(maxWidth: .infinity)
                 }
 
-                Button("稍后在设置中配对") { completed = true }
+                Button("Pair later in settings") { completed = true }
                     .frame(maxWidth: .infinity)
             }
             .padding(24)
@@ -96,13 +96,13 @@ struct SimHelpFirstConnectionView: View {
     }
 }
 
-#Preview("已配对设备 · 空列表") {
-    Form { Section("安卓连接") { PairedAndroidDeviceRows(devices: [], onDelete: { _ in }) } }
+#Preview("Paired devices · Empty list") {
+    Form { Section("Android connection") { PairedAndroidDeviceRows(devices: [], onDelete: { _ in }) } }
 }
 
-#Preview("已配对设备 · 在线与离线") {
+#Preview("Paired devices · Online and offline") {
     Form {
-        Section("安卓连接") {
+        Section("Android connection") {
             PairedAndroidDeviceRows(devices: [
                 .init(id: "preview-flip", deviceName: "Samsung Flip7", phoneNumber: "+10000000001",
                       agentKind: "standalone", cloudOnline: false, vowlanOnline: false,
@@ -120,15 +120,15 @@ private struct PairedAndroidDeviceRows: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("已配对设备").font(.subheadline.weight(.semibold))
+            Text("Paired device").font(.subheadline.weight(.semibold))
             if devices.isEmpty {
-                Text("暂无配对记录").font(.caption).foregroundStyle(.secondary)
+                Text("No pairing record yet").font(.caption).foregroundStyle(.secondary)
             }
             ForEach(devices) { device in
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(device.deviceName).font(.subheadline.weight(.medium))
-                        Text(device.phoneNumber ?? "号码未提供").font(.caption).foregroundStyle(.secondary)
+                        Text(device.phoneNumber ?? "Number not provided").font(.caption).foregroundStyle(.secondary)
                         Text(connectionText(device)).font(.caption2).foregroundStyle(.secondary)
                         if let pairing = VoWLANPairingRecordStore.records()
                             .first(where: { $0.agentID == device.id }) {
@@ -142,20 +142,20 @@ private struct PairedAndroidDeviceRows: View {
                         Image(systemName: "trash").padding(10)
                     }
                     .buttonStyle(.borderless)
-                    .accessibilityLabel("删除 \(device.deviceName) 配对记录")
+                    .accessibilityLabel("Delete \\(device.deviceName) pairing record")
                 }
             }
-            Text("重连时重新读取当前信息，离线记录不保存号码。")
+            Text("The current information will be re-read when reconnecting, and the number will not be saved in offline records.")
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }
 
     private func connectionText(_ device: AndroidAgentPresentation) -> String {
-        let routes = [device.vowlanOnline ? "VoWLAN 在线" : nil,
-                      device.bluetoothOnline ? "VoBLE 在线" : nil,
-                      device.cloudOnline ? "云端在线" : nil].compactMap { $0 }
-        return routes.isEmpty ? "离线 · 下次连接重新读取" : routes.joined(separator: " · ")
+        let routes = [device.vowlanOnline ? "VoWLAN online" : nil,
+                      device.bluetoothOnline ? "VoBLE online" : nil,
+                      device.cloudOnline ? "Cloud online" : nil].compactMap { $0 }
+        return routes.isEmpty ? "Offline·Read again next time you connect" : routes.joined(separator: " · ")
     }
 }
 
@@ -171,12 +171,12 @@ private struct PureLocalSlideControl: View {
 
     private var isInteractive: Bool { !busy && !blockedByCall }
     private var title: String {
-        if busy { return "正在切换连接策略" }
-        if blockedByCall { return "通话中不可切换" }
-        return enabled ? "纯本地模式已开启" : "滑动开启纯本地模式"
+        if busy { return "Switching connection strategy" }
+        if blockedByCall { return "Cannot be switched during a call" }
+        return enabled ? "Pure local mode is enabled" : "滑动开启纯本地模式"
     }
 
-    private var statusText: String { enabled ? "仅本地连接 · 云端已停用" : "按连接偏好运行" }
+    private var statusText: String { enabled ? "Local connection only · Cloud disabled" : "Run by connection preference" }
     private var tint: Color { enabled ? .green : .blue }
 
     var body: some View {
@@ -195,7 +195,7 @@ private struct PureLocalSlideControl: View {
                 Spacer(minLength: 8)
                 if busy { ProgressView().controlSize(.small) }
                 else {
-                    Text(enabled ? "已开启" : "已关闭")
+                    Text(enabled ? "Already turned on" : "Closed")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(enabled ? Color.green : Color.secondary)
                         .padding(.horizontal, 9).padding(.vertical, 5)
@@ -274,9 +274,9 @@ private struct PureLocalSlideControl: View {
         .padding(.vertical, 4)
         .opacity(isInteractive ? 1 : 0.62)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("纯本地模式")
+        .accessibilityLabel("pure local mode")
         .accessibilityValue("\(enabled ? "已开启" : "已关闭")，\(statusText)")
-        .accessibilityHint(blockedByCall ? "结束通话后可以切换" : (enabled ? "双击关闭纯本地模式" : "双击开启纯本地模式"))
+        .accessibilityHint(blockedByCall ? "You can switch after ending the call" : (enabled ? "Double-click to turn off pure local mode" : "Double-click to enable pure local mode"))
         .accessibilityAddTraits(isInteractive ? .isButton : [])
         .accessibilityAction {
             guard isInteractive else { return }
@@ -287,7 +287,7 @@ private struct PureLocalSlideControl: View {
     }
 
     private var slideInstruction: some View {
-        Text(busy ? "正在切换，请稍候" : blockedByCall ? "请先结束当前通话" : (enabled ? "向左滑动关闭" : "向右滑动开启"))
+        Text(busy ? "Switching, please wait." : blockedByCall ? "Please end the current call first" : (enabled ? "Slide left to close" : "Slide right to open"))
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(.primary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -328,31 +328,31 @@ private struct RemoteDirectSettingsView: View {
             }
 
             Section {
-                Picker("已配对设备", selection: $agentID) {
+                Picker("Paired device", selection: $agentID) {
                     Text("选择安卓手机").tag("")
                     ForEach(model.pairedDeviceHistory) { device in
                         Text(device.deviceName).tag(device.id)
                     }
                 }
-                Toggle("启用自建域名直连", isOn: $enabled)
+                Toggle("Enable self-created domain name direct connection", isOn: $enabled)
                     .disabled(agentID.isEmpty)
             } footer: {
-                Text("试验性功能，真实公网配对与双向音频仍待真机验收。为已通过私网或公网域名配对的手机配置 NAS 或软路由加密入口。验证后保存，不会自动开启 Relay。")
+                Text("Experimental features, real public network pairing and two-way audio are still pending acceptance by real devices. Configure NAS or soft route encryption entrance for mobile phones that have been paired through private network or public network domain names. Save after verification, Relay will not be automatically turned on.")
             }
             .disabled(saving || model.vowlan.callInProgress() || model.activeCall != nil || model.remoteCall != nil || model.pendingOutgoingCall != nil)
             if enabled {
-                Section("远程入口") {
-                    TextField("DDNS 域名，例如 phone.example.com", text: $host)
+                Section("remote entrance") {
+                    TextField("DDNS domain name, such as phone.example.com", text: $host)
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                    TextField("HTTPS 控制端口", text: $controlPort).keyboardType(.numberPad)
-                    TextField("TLS 音频端口", text: $pcmPort).keyboardType(.numberPad)
+                    TextField("HTTPS control port", text: $controlPort).keyboardType(.numberPad)
+                    TextField("TLS audio port", text: $pcmPort).keyboardType(.numberPad)
                 }
                 .disabled(saving || model.vowlan.callInProgress() || model.activeCall != nil || model.remoteCall != nil || model.pendingOutgoingCall != nil)
             }
             Section {
-                Button(enabled ? "验证并保存" : "保存关闭") {
+                Button(enabled ? "验证并保存" : "Save Close") {
                     saving = true
                     let target = agentID
                     saveTask = Task { @MainActor in
@@ -362,17 +362,17 @@ private struct RemoteDirectSettingsView: View {
                                 host: host, controlPort: controlPort, pcmPort: pcmPort) : nil
                             try await model.configureRemoteDirect(agentID: target, route: route)
                             message = route == nil ? "已关闭此设备的自建域名直连。" :
-                                "控制入口与设备身份验证通过，已保存。音频入口需在实际通话时验证。"
+                                "Control portal and device authentication passed and saved. Audio access needs to be verified during the actual call."
                         } catch is CancellationError {
                             message = "配置已取消，请重新验证。"
                         } catch { message = error.localizedDescription }
                     }
                 }
                 .disabled(agentID.isEmpty || saving || model.vowlan.callInProgress() || model.activeCall != nil || model.remoteCall != nil || model.pendingOutgoingCall != nil)
-                if saving { ProgressView("正在验证远程设备…") }
+                if saving { ProgressView("Verifying remote device...") }
                 if !message.isEmpty { Text(message).font(.footnote) }
             } footer: {
-                Text("选择 VoWLAN 或自动模式后，局域网优先，不可达时尝试自建域名。NAS 需为控制与音频分别提供有效证书的 TLS 转发；只有网页反向代理不足以传输音频。此选项不提供后台来电推送，通话中不能更改。")
+                Text("After selecting VoWLAN or automatic mode, the LAN is given priority. If it is unreachable, try to create a self-made domain name. The NAS needs to provide TLS forwarding with valid certificates for control and audio respectively; web reverse proxy alone is not enough to transmit audio. This option does not provide background push notification for incoming calls and cannot be changed during a call.")
             }
         }
         .navigationTitle("自建域名直连（试验性）")
@@ -412,45 +412,45 @@ enum SimHelpSettingsPage: Hashable, Identifiable {
     }
     var title: String {
         switch self {
-        case .home: return "设置"
-        case .local: return "纯本地模式"
-        case .connections: return "连接与设备"
-        case .mode: return "通话连接方式"
-        case .add: return "添加设备"
-        case .pairAuto: return "自动发现配对"
-        case .pairManual: return "手动地址配对"
-        case .pairDomain: return "公网域名配对"
-        case .device: return "设备详情"
-        case .deviceInfo: return "地址与配对信息"
-        case .status: return "当前连接详情"
-        case .network: return "局域网与 VPN"
-        case .prefixes: return "自定义私有网段"
-        case .bluetooth: return "蓝牙连接"
-        case .bluetoothPair: return "蓝牙配对"
-        case .bluetoothStatus: return "蓝牙链路状态"
-        case .relay: return "云端 Relay"
-        case .tls: return "公网域名直连"
-        case .tlsGuide: return "域名直连教程"
-        case .calls: return "来电与短信"
-        case .background: return "后台运行"
-        case .forwarding: return "通知转发"
-        case .widgets: return "灵动岛与小组件"
-        case .order: return "设备显示顺序"
+        case .home: return "set up"
+        case .local: return "pure local mode"
+        case .connections: return "Connections and devices"
+        case .mode: return "Call connection method"
+        case .add: return "Add device"
+        case .pairAuto: return "Automatically discover pairs"
+        case .pairManual: return "Manual address pairing"
+        case .pairDomain: return "Public domain name matching"
+        case .device: return "Device details"
+        case .deviceInfo: return "Address and pairing information"
+        case .status: return "Current connection details"
+        case .network: return "LAN and VPN"
+        case .prefixes: return "Custom private network segment"
+        case .bluetooth: return "Bluetooth connection"
+        case .bluetoothPair: return "Bluetooth pairing"
+        case .bluetoothStatus: return "Bluetooth link status"
+        case .relay: return "Cloud Relay"
+        case .tls: return "Direct connection to public domain name"
+        case .tlsGuide: return "Domain name direct connection tutorial"
+        case .calls: return "Incoming calls and text messages"
+        case .background: return "Running in the background"
+        case .forwarding: return "Notification forwarding"
+        case .widgets: return "Smart island and widgets"
+        case .order: return "Device display order"
         case .widgetGuide: return "桌面小组件"
-        case .islandGuide: return "锁屏与灵动岛"
-        case .preferences: return "外观与偏好"
-        case .accessibility: return "语言与辅助功能"
-        case .help: return "帮助与诊断"
-        case .diagnostics: return "检查连接"
-        case .localCheck: return "本地连接检查"
-        case .cloudCheck: return "云端连接自检"
+        case .islandGuide: return "Lock screen and smart island"
+        case .preferences: return "Appearance and Preferences"
+        case .accessibility: return "Language and Accessibility"
+        case .help: return "Help and diagnostics"
+        case .diagnostics: return "Check connection"
+        case .localCheck: return "local connection check"
+        case .cloudCheck: return "Cloud connection self-test"
         case .permissions: return "系统权限"
         case .logs: return "详细日志与技术信息"
-        case .feedback: return "提交反馈"
-        case .feedbackPreview: return "上传内容范围"
+        case .feedback: return "Submit feedback"
+        case .feedbackPreview: return "Upload content range"
         case .guide: return "使用指南"
-        case .networkGuide: return "连接准备与排障"
-        case .about: return "关于 SimHelp"
+        case .networkGuide: return "Connection preparation and troubleshooting"
+        case .about: return "About SimHelp"
         }
     }
 }
@@ -549,13 +549,13 @@ private struct SimHelpSettingsHomeContent: View, Equatable {
                         .padding(.vertical, 6)
                     }
                 } else {
-                    link(.add, "iphone.badge.plus", detail: "连接你的安卓手机或 U30 Air")
+                    link(.add, "iphone.badge.plus", detail: "Connect your Android phone or U30 Air")
                 }
             }
             Section {
                 link(.connections, "antenna.radiowaves.left.and.right", detail: snapshot.modeTitle)
                 link(.calls, "phone", detail: "来电通知、短信与转发")
-                link(.widgets, "rectangle.on.rectangle", detail: "桌面与锁屏展示")
+                link(.widgets, "rectangle.on.rectangle", detail: "Desktop and lock screen display")
                 link(.preferences, "paintpalette")
             }
             Section {
@@ -620,7 +620,7 @@ struct SimHelpSettingsView: View {
     @State private var localCheckRunning = false
     @State private var localCheckDate: Date?
     @State private var localCheckStatus: String?
-    @State private var notificationPermission = "正在读取"
+    @State private var notificationPermission = "Reading"
     @State private var relaySaving = false
     @State private var selfTestCopied = false
 
@@ -651,10 +651,10 @@ struct SimHelpSettingsView: View {
             if phase == .active { Task { await readNotificationPermission() } }
         }
         .onChange(of: model.errorMessage) { _ in presentManualAppUpdateIfIdle() }
-        .confirmationDialog("忘记这个设备？",
+        .confirmationDialog("Forgot this device?",
             isPresented: Binding(get: { deletingDevice != nil }, set: { if !$0 { deletingDevice = nil } }),
             titleVisibility: .visible, presenting: deletingDevice) { device in
-            Button("忘记 \(device.deviceName)", role: .destructive) {
+            Button("Forgot \\(device.deviceName)", role: .destructive) {
                 deviceDeletionInProgress = true
                 Task {
                     defer { deviceDeletionInProgress = false }
@@ -664,9 +664,9 @@ struct SimHelpSettingsView: View {
                     } catch { deviceDeletionError = error.localizedDescription }
                 }
             }
-            Button("取消", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("清除本机配对和缓存，不删除手机系统短信与通话记录。重新使用需要配对；离线设备上的远端凭据不会自动撤销。")
+            Text("Clear the local pairing and cache, and do not delete the mobile phone system text messages and call records. Pairing is required for reuse; remote credentials on offline devices are not automatically revoked.")
         }
         .onDisappear {
             updateViewVisible = false
@@ -726,11 +726,11 @@ struct SimHelpSettingsView: View {
             EmptyView() // The home Form owns its value-based update boundary.
         case .local:
             Section { pureLocalControl }
-            Section("开启后") {
+            Section("After opening") {
                 Label("仅通过 VoWLAN、蓝牙或 VPN 直连", systemImage: "checkmark.shield")
-                Label("阻止 SimHelp 云端通知、Relay 与反馈上传", systemImage: "cloud.slash")
+                Label("Block SimHelp Cloud Notifications, Relay and Feedback Uploads", systemImage: "cloud.slash")
                 Text("本地链路不可用时不会回退到 Relay。GitHub 版本检查不受影响，安卓第三方通知转发仍由其独立设置控制。")
-                Text("安卓离线时不能确认跨端策略已同步，重连后请核对安卓状态。")
+                Text("When Android is offline, it cannot be confirmed that the cross-terminal policy has been synchronized. Please check the Android status after reconnecting.")
             }
         case .connections:
             Section { link(.mode, "arrow.triangle.branch", detail: selectedMode.title) }
@@ -755,15 +755,15 @@ struct SimHelpSettingsView: View {
                     .accessibilityAddTraits(selectedMode == mode ? .isSelected : [])
                 }
             } footer: {
-                Text(updateCallBusy ? "通话结束后可切换。" : pureLocalEnabled
-                    ? "纯本地已开启，自动模式只尝试本地链路。" : "这是连接偏好，实际链路以设备状态为准；不影响手动云端自检。")
+                Text(updateCallBusy ? "It can be switched after the call ends." : pureLocalEnabled
+                    ? "Pure local is turned on, automatic mode only tries local links." : "This is the connection preference. The actual link is subject to the device status; it does not affect the manual cloud self-check.")
             }
         case .add:
             Section {
-                Text("先在安卓 SimHelp 打开一次性配对窗口，再选择连接方式。")
-                link(.pairAuto, "wifi", detail: "同一 Wi-Fi 或安卓热点")
+                Text("First open the one-time pairing window in Android SimHelp, and then select the connection method.")
+                link(.pairAuto, "wifi", detail: "Same Wi-Fi or Android hotspot")
                 link(.pairManual, "network", detail: "手动 IP、Tailscale 或其他 VPN")
-                link(.bluetoothPair, "wave.3.right", detail: "在两端核对安全码")
+                link(.bluetoothPair, "wave.3.right", detail: "Check security codes on both ends")
                 link(.pairDomain, "lock.shield", detail: "试验性 · 需要可信 TLS 证书")
             }
         case .device(let id): deviceSections(id)
@@ -772,14 +772,14 @@ struct SimHelpSettingsView: View {
         case .network:
             Section {
                 LabeledContent("VoWLAN", value: VoWLANStatusCopy.text(for: model.vowlan.availability))
-                Button("重新发现与验证", systemImage: "arrow.clockwise") { checkLocalConnection() }
+                Button("Rediscover and verify", systemImage: "arrow.clockwise") { checkLocalConnection() }
                     .disabled(localCheckRunning || updateCallBusy)
-                if localCheckRunning { ProgressView("正在检查直连网关…") }
+                if localCheckRunning { ProgressView("Checking direct connect gateway...") }
                 if let localCheckStatus { Text(localCheckStatus).font(.footnote).foregroundStyle(.secondary) }
             }
             Section {
                 link(.pairManual, "network")
-                link(.prefixes, "slider.horizontal.3", detail: "特殊内网才需要修改")
+                link(.prefixes, "slider.horizontal.3", detail: "Only special intranets need to be modified.")
                 link(.networkGuide, "book")
             }
         case .prefixes: networkPrefixesSection
@@ -787,10 +787,10 @@ struct SimHelpSettingsView: View {
             bluetoothSection
             Section { link(.bluetoothStatus, "waveform.path.ecg") }
         case .bluetoothStatus:
-            Section { LabeledContent("连接状态", value: voBLEStatus) }
+            Section { LabeledContent("connection status", value: voBLEStatus) }
             bluetoothDiagnosticsSection
             Section {
-                Text("这些是当前蓝牙状态，不是一次完整通话测试。控制认证通过不代表音频已经实测。")
+                Text("These are current Bluetooth status, not a full call test. Passing the control certification does not mean that the audio has been tested.")
                 link(.bluetoothPair, "wave.3.right")
                 link(.permissions, "hand.raised")
             }
@@ -800,11 +800,11 @@ struct SimHelpSettingsView: View {
                 Toggle(isOn: Binding(get: { !pureLocalEnabled && cloudSignalingEnabled }, set: {
                     cloudSignalingEnabled = $0
                     model.setCloudSignalingEnabled($0)
-                })) { Label("云端通知", systemImage: "bell") }
+                })) { Label("Cloud notification", systemImage: "bell") }
                     .disabled(pureLocalEnabled || pureLocalBusy)
                     .accessibilityIdentifier("cloudSignaling")
             } footer: {
-                Text(pureLocalEnabled ? "纯本地模式已阻止云端通知，关闭后恢复原偏好。" : "用于后台来电通知，不改变通话的音频连接方式。")
+                Text(pureLocalEnabled ? "Pure local mode has blocked cloud notifications, and the original preferences will be restored after closing." : "Used for background call notification without changing the audio connection method of the call.")
             }
             smsSection
             Section {
@@ -826,13 +826,13 @@ struct SimHelpSettingsView: View {
             } else { deviceOrderSection }
         case .preferences:
             Section {
-                Picker("外观", selection: $settings.appearance) {
+                Picker("Appearance", selection: $settings.appearance) {
                     ForEach(AppAppearance.allCases) { Text($0.title).tag($0) }
                 }
             }
             Section { link(.accessibility, "accessibility") }
         case .help:
-            Section { link(.diagnostics, "stethoscope", detail: "本地、蓝牙与云端状态"); link(.permissions, "hand.raised") }
+            Section { link(.diagnostics, "stethoscope", detail: "Local, Bluetooth and cloud status"); link(.permissions, "hand.raised") }
             Section { link(.logs, "doc.text.magnifyingglass"); link(.feedback, "bubble.left.and.bubble.right") }
             Section { link(.guide, "book") }
         case .diagnostics:
@@ -843,16 +843,16 @@ struct SimHelpSettingsView: View {
             }
         case .localCheck:
             Section {
-                Button("检查本地连接", systemImage: "stethoscope") { checkLocalConnection() }
+                Button("Check local connection", systemImage: "stethoscope") { checkLocalConnection() }
                     .disabled(localCheckRunning || updateCallBusy)
-                if localCheckRunning { ProgressView("正在验证网关…") }
+                if localCheckRunning { ProgressView("Verifying gateway...") }
                 if let localCheckStatus {
                     Text(localCheckStatus)
                     if let localCheckDate { Text(localCheckDate, style: .time).font(.caption).foregroundStyle(.secondary) }
-                } else { Text("点击后验证已配对网关，不拨号或读取音频。").foregroundStyle(.secondary) }
+                } else { Text("Clicking to verify that the gateway is paired does not dial or read audio.").foregroundStyle(.secondary) }
             }
             Section {
-                Text(updateCallBusy ? "通话结束后可重新检查连接。" : "网关验证仅确认控制链路，PCM 双向音频需要通话实测。")
+                Text(updateCallBusy ? "You can recheck the connection after the call ends." : "Gateway verification only confirms the control link, and PCM two-way audio requires actual call testing.")
                 link(.network, "wifi"); link(.permissions, "hand.raised"); link(.logs, "doc.text")
             }
         case .cloudCheck:
@@ -871,14 +871,14 @@ struct SimHelpSettingsView: View {
         case .feedbackPreview:
             Section("手动上传的范围") {
                 Text("上传应用与系统版本、设备型号、连接状态、诊断记录及可读取的安卓日志。")
-                Text("不会录制或上传通话音频。请勿在描述和备注中粘贴密码、验证码、配对密钥或其他个人信息。")
-                Text("日志处理与原始 TXT 导出是不同流程；原始导出请先检查内容，再分享。")
+                Text("Call audio will not be recorded or uploaded. Don't paste passwords, verification codes, pairing keys, or other personal information in descriptions and notes.")
+                Text("Log processing and original TXT export are different processes; please check the content of the original export before sharing.")
             }
             Section("你的文字") {
-                Text(feedbackDescription.isEmpty ? "未填写描述" : feedbackDescription).textSelection(.enabled)
-                Text(feedbackRemark.isEmpty ? "未填写备注" : feedbackRemark).textSelection(.enabled)
+                Text(feedbackDescription.isEmpty ? "Description not filled in" : feedbackDescription).textSelection(.enabled)
+                Text(feedbackRemark.isEmpty ? "Remarks not filled in" : feedbackRemark).textSelection(.enabled)
             }
-            Section { Text("只有点按“上传反馈”才会提交；失败保留草稿。本页只展示上传范围，不是服务器实际接收内容的完整预览。").font(.footnote) }
+            Section { Text("Submit only if you click \"Upload Feedback\"; fail as a draft. This page only shows the upload range, not a full preview of what the server actually receives.").font(.footnote) }
         case .about: aboutSection
         case .guide:
             Section {
@@ -889,22 +889,22 @@ struct SimHelpSettingsView: View {
                 link(.widgetGuide, "rectangle.on.rectangle")
             }
         case .networkGuide:
-            guideSection("局域网与热点", steps: ["两台设备连接同一 Wi-Fi，或让 iPhone 连接安卓热点。", "安卓开启一次性配对窗口；自动发现不可用时，使用安卓的 IP 与当前配对端口。", "配对身份验证与音频准备是不同步骤。网关已认证后仍需实测通话。"])
-            guideSection("Tailscale 与其他 VPN", steps: ["两端加入同一隧道，并允许相互访问。", "填写安卓在 VPN 内的地址，不是 iPhone 的地址。配对端口和控制、音频端口均需可达。", "Tailscale 的 100.64/10 已内置支持，无需打开 SimHelp 云端通话。"])
+            guideSection("LAN and hotspot", steps: ["两台设备连接同一 Wi-Fi，或让 iPhone 连接安卓热点。", "Android opens a one-time pairing window; when automatic discovery is unavailable, Android's IP and current pairing port are used.", "Pair authentication and audio preparation are separate steps. After the gateway has been authenticated, actual calls still need to be tested."])
+            guideSection("Tailscale 与其他 VPN", steps: ["Both ends join the same tunnel and allow mutual access.", "Fill in the Android address within the VPN, not the iPhone address. The pairing port and control and audio ports must all be accessible.", "Tailscale's 100.64/10 has built-in support, no need to open SimHelp cloud calling."])
             Section { link(.pairManual, "network"); link(.localCheck, "stethoscope") }
         case .widgetGuide:
-            guideSection("添加小组件", steps: ["长按主屏幕空白处，选择编辑 → 添加小组件。", "搜索 SimHelp，选取尺寸并添加。", "大尺寸的最近通话和短信每栏最多显示 5 条；中尺寸按空间显示摘要。", "设备与模式按钮可在小组件内切换；记录入口打开对应内容。"])
-            Section { Text("小组件展示最近同步的信息，更新频率由系统调度。配对数据与未读角标需要打开 App 同步。"); link(.order, "arrow.up.arrow.down") }
+            guideSection("Add widget", steps: ["Long press an empty space on the home screen and select Edit → Add Widget.", "Search for SimHelp, select a size and add it.", "Large size shows up to 5 recent calls and text messages per column; medium size shows summary by space.", "设备与模式按钮可在小组件内切换；记录入口打开对应内容。"])
+            Section { Text("The widget displays the recently synchronized information, and the update frequency is scheduled by the system. Pairing data and unread tags require opening the app for synchronization."); link(.order, "arrow.up.arrow.down") }
         case .islandGuide:
-            guideSection("灵动岛与锁屏", steps: ["开启“显示灵动岛”后展示设备状态。", "系统会限制实时活动持续时间，到期不代表设备离线。", "回到 SimHelp 前台会恢复展示；来电 PushKit／CallKit 链路独立于实时活动。"])
-            Section { Text("不要把后台保活或实时活动当作强制退出 App 后必定收到来电的保证。") }
+            guideSection("Smart island and lock screen", steps: ["Display the device status after turning on \"Show Smart Island\".", "The system will limit the duration of real-time activities, and expiration does not mean that the device is offline.", "Returning to the SimHelp frontend resumes presentation; incoming PushKit/CallKit links are independent of live activity."])
+            Section { Text("Don't treat background keepalives or live activities as a guarantee that you'll receive a call after force-quitting the app.") }
         case .accessibility:
             Section {
-                Picker("语言", selection: $settings.language) {
+                Picker("language", selection: $settings.language) {
                     ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
                 }
             }
-            guideSection("跟随 iPhone 设置", steps: ["在系统设置 → 辅助功能中调整文字大小、减少动态效果或减少透明度。", "SimHelp 的列表和表单跟随系统文字大小，重要状态同时使用文字与图标。", "滑块也支持 VoiceOver 的开启／关闭操作，无需精确拖动。"])
+            guideSection("跟随 iPhone 设置", steps: ["在系统设置 → 辅助功能中调整文字大小、减少动态效果或减少透明度。", "SimHelp's lists and forms follow the system text size, and important states use both text and icons.", "The slider also supports VoiceOver on/off operations without the need for precise dragging."])
         default: EmptyView()
         }
     }
@@ -928,12 +928,12 @@ struct SimHelpSettingsView: View {
     }
 
     private var deviceListSection: some View {
-        Section("已配对设备") {
+        Section("Paired device") {
             ForEach(model.pairedDeviceHistory) { device in
                 NavigationLink(value: SimHelpSettingsPage.device(device.id)) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(device.deviceName)
-                        Text(device.isCurrent ? "当前设备" : "已保存配对").font(.caption).foregroundStyle(.secondary)
+                        Text(device.isCurrent ? "当前设备" : "Pairing saved").font(.caption).foregroundStyle(.secondary)
                     }.padding(.vertical, 4)
                 }
             }
@@ -946,37 +946,37 @@ struct SimHelpSettingsView: View {
         if let device = model.pairedDeviceHistory.first(where: { $0.id == id }) {
             Section {
                 Text(device.deviceName).font(.title2.bold())
-                LabeledContent("号码", value: device.phoneNumber ?? "运营商未提供号码")
-                LabeledContent("VoWLAN", value: device.vowlanOnline ? "在线" : "未连接")
-                LabeledContent("蓝牙", value: device.bluetoothOnline ? "在线" : "未连接")
-                LabeledContent("云端", value: device.cloudOnline ? "在线" : "尚未确认在线")
+                LabeledContent("Number", value: device.phoneNumber ?? "The operator did not provide a number")
+                LabeledContent("VoWLAN", value: device.vowlanOnline ? "online" : "Not connected")
+                LabeledContent("Bluetooth", value: device.bluetoothOnline ? "online" : "Not connected")
+                LabeledContent("云端", value: device.cloudOnline ? "online" : "Not confirmed online yet")
             }
             Section { link(.deviceInfo(id), "info.circle"); link(.diagnostics, "stethoscope") }
             Section {
-                Button("忘记此设备", role: .destructive) { deviceDeletionError = nil; deletingDevice = device }
+                Button("Forgot this device", role: .destructive) { deviceDeletionError = nil; deletingDevice = device }
                     .disabled(deviceDeletionInProgress || updateCallBusy)
                 if let deviceDeletionError { Text(deviceDeletionError).font(.footnote).foregroundStyle(.red) }
-            } footer: { Text("仅清除本机配对；不会删除手机系统短信或通话记录。") }
+            } footer: { Text("Only the local pairing will be cleared; the mobile phone system text messages or call records will not be deleted.") }
         } else {
-            Section { Text("此设备的本机配对记录已移除。"); link(.add, "plus.circle") }
+            Section { Text("The local pairing record for this device has been removed."); link(.add, "plus.circle") }
         }
     }
 
     @ViewBuilder
     private func deviceInformation(_ id: String) -> some View {
-        Section("设备身份") { Text("身份 …\(id.suffix(8))").font(.body.monospaced()).textSelection(.enabled) }
+        Section("Device identity") { Text("身份 …\(id.suffix(8))").font(.body.monospaced()).textSelection(.enabled) }
         if let record = VoWLANPairingRecordStore.records().first(where: { $0.agentID == id }) {
             Section {
                 LabeledContent("本机记录", value: String(record.id.prefix(8)))
-                LabeledContent("已保存端点", value: "\(record.endpoints.count)")
+                LabeledContent("Endpoint saved", value: "\(record.endpoints.count)")
                 ForEach(Array(record.endpoints.enumerated()), id: \.offset) { _, endpoint in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(endpoint.host).textSelection(.enabled)
-                        Text("控制 \(endpoint.controlPort) · 音频 \(endpoint.pcmPort) · \(endpoint.tls == true ? "TLS" : "私网直连")")
+                        Text("control \\(endpoint.controlPort) · audio \\(endpoint.pcmPort) · \\(endpoint.tls == true ?"TLS" : "私网直连")")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
-                Text("配对密钥保存在本机安全存储，不在页面显示。").font(.footnote)
+                Text("The pairing key is stored in the local secure storage and is not displayed on the page.").font(.footnote)
             }
         }
     }
@@ -984,15 +984,15 @@ struct SimHelpSettingsView: View {
     private var relaySections: some View {
         Group {
             Section {
-                LabeledContent("云端通话", value: pureLocalEnabled ? "纯本地已阻止" : runtimePolicy.startsCloud ? "当前模式启用" : "当前未使用")
+                LabeledContent("Cloud call", value: pureLocalEnabled ? "纯本地已阻止" : runtimePolicy.startsCloud ? "Current mode enabled" : "当前未使用")
                 TextField("https://relay.example.com", text: $relayURL)
                     .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .accessibilityIdentifier("settings.relayURL")
-                Button(relaySaving ? "正在保存…" : "保存 Relay 地址") { saveRelay() }
+                Button(relaySaving ? "Saving…" : "Save Relay address") { saveRelay() }
                     .disabled(pureLocalEnabled || updateCallBusy || relaySaving)
                 if let message { Text(message).font(.footnote).foregroundStyle(.secondary) }
             } footer: {
-                Text(pureLocalEnabled ? "纯本地模式已阻止 Relay，请先关闭纯本地模式。" : "保存地址与设备注册是不同步骤。当前未使用云端通话，也可手动自检。")
+                Text(pureLocalEnabled ? "Pure local mode has blocked Relay, please turn off pure local mode first." : "Saving an address is a separate step from device registration. If you are not currently using cloud calling, you can also perform manual self-check.")
             }
             Section { link(.cloudCheck, "stethoscope") }
         }
@@ -1002,13 +1002,13 @@ struct SimHelpSettingsView: View {
         Group {
             Section {
                 LabeledContent("通知权限", value: notificationPermission)
-                Text("本地网络与蓝牙权限请在系统设置中核对。iOS 不提供统一的查询接口，未连接不一定是权限被拒绝。")
-                Button("打开 SimHelp 系统设置", systemImage: "gearshape") {
+                Text("Please check the local network and Bluetooth permissions in the system settings. iOS does not provide a unified query interface, and failure to connect does not necessarily mean that permission is denied.")
+                Button("Open SimHelp System Settings", systemImage: "gearshape") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
                 }
             }
             Section {
-                Text("安卓端还需检查电话、短信及 Shizuku／Root 音频桥授权。通话时才验证 PCM 双向音频。")
+                Text("The Android side also needs to check phone calls, text messages, and Shizuku/Root audio bridge authorization. PCM two-way audio is only verified during a call.")
                 link(.diagnostics, "stethoscope")
             }
         }.task { await readNotificationPermission() }
@@ -1052,7 +1052,7 @@ struct SimHelpSettingsView: View {
         relayURL = VoIPPushController.shared.configuredRelayURL()
         selfTestTask?.cancel(); selfTestReport = nil; selfTestPhase = .idle
         diagnosticCloudOnline = nil
-        message = "地址已保存；设备注册状态请运行自检确认。"
+        message = "The address has been saved; please run a self-check to confirm the device registration status."
         Task { @MainActor in
             defer { relaySaving = false }
             if let (api, _) = await model.readyVoWLANRoute() {
@@ -1065,46 +1065,46 @@ struct SimHelpSettingsView: View {
     private func readNotificationPermission() async {
         let value = await UNUserNotificationCenter.current().notificationSettings()
         switch value.authorizationStatus {
-        case .authorized: notificationPermission = "已允许"
+        case .authorized: notificationPermission = "allowed"
         case .provisional, .ephemeral: notificationPermission = "临时允许"
         case .denied: notificationPermission = "未允许"
         case .notDetermined: notificationPermission = "尚未请求"
-        @unknown default: notificationPermission = "请在系统设置中确认"
+        @unknown default: notificationPermission = "Please confirm in system settings"
         }
     }
 
     private var backgroundSection: some View {
         Section {
-            Toggle("后台静音音频保活", isOn: $backgroundStandbyEnabled)
+            Toggle("Background mute audio keep alive", isOn: $backgroundStandbyEnabled)
                 .onChange(of: backgroundStandbyEnabled) { enabled in
                     model.setBackgroundStandbyEnabled(enabled)
                 }
                 .accessibilityIdentifier("backgroundStandby")
             Text(backgroundStandbyEnabled
-                 ? "已开启：App 退到后台时播放静音音频，尽量维持轮询、CallKit 与 Push 处理；会明显增加耗电。"
-                 : "已关闭：不播放后台静音音频，降低耗电；iOS 仍可通过 PushKit 唤醒，但后台轮询可能被挂起。")
+                 ? "Enabled: The app plays mute audio when it exits to the background, and tries to maintain polling, CallKit and Push processing; this will significantly increase power consumption."
+                 : "Off: Does not play background silent audio to reduce power consumption; iOS can still be woken up through PushKit, but background polling may be suspended.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         } header: {
-            Text("后台保活")
+            Text("background keepalive")
         } footer: {
-            Text("这是全局开关，关闭后所有后台静音音频保活路径都会停止；不会关闭 VoWLAN、蓝牙或云端 Push 功能。")
+            Text("This is a global switch that will stop all background mute audio keep-alive paths when turned off; it will not turn off VoWLAN, Bluetooth, or Cloud Push functionality.")
         }
     }
 
     private var connectionStatusSection: some View {
-        Section("当前连接") {
-            LabeledContent("当前模式", value: model.connectionModePresentation.title)
-            LabeledContent("连接状态", value: model.connectionModePresentation.status)
+        Section("Current connection") {
+            LabeledContent("Current mode", value: model.connectionModePresentation.title)
+            LabeledContent("connection status", value: model.connectionModePresentation.status)
             LabeledContent("VoWLAN", value: VoWLANStatusCopy.text(for: model.vowlan.availability))
             LabeledContent(
-                "云端 Relay",
+                "Cloud Relay",
                 value: CloudRelayStatusCopy.text(pureLocal: pureLocalEnabled,
                     cloudOnline: runtimePolicy.startsCloud ? model.cloudAgentStatus?.cloudOnline : diagnosticCloudOnline,
                     usesCloudCalls: runtimePolicy.startsCloud)
             )
             if !pureLocalEnabled && !runtimePolicy.startsCloud {
-                Text("当前通话使用本地链路；云端通话未启用，但仍可手动检查 Relay、注册与 Agent 心跳。")
+                Text("The current call uses the local link; cloud calling is not enabled, but Relay, registration, and Agent heartbeats can still be manually checked.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
@@ -1122,7 +1122,7 @@ struct SimHelpSettingsView: View {
     private var networkPrefixesSection: some View {
         Section {
             // 单行输入 + 默认回车键：按“返回”直接收起键盘，多行输入会让回车变成换行。
-            TextField("例如 30.0.0.0/8, 100.64.0.0/10", text: $networkPrefixesText)
+            TextField("For example 30.0.0.0/8, 100.64.0.0/10", text: $networkPrefixesText)
                 .keyboardType(.numbersAndPunctuation)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
@@ -1136,25 +1136,25 @@ struct SimHelpSettingsView: View {
             if let networkPrefixError {
                 Text(networkPrefixError).font(.footnote).foregroundStyle(.red)
             } else {
-                Text("用逗号分隔多个网段，例如 30.0.0.0/8, 100.64.0.0/10。保存后重新配对或重新发现即可使用。")
+                Text("Separate multiple network segments with commas, such as 30.0.0.0/8, 100.64.0.0/10. Save and re-pair or rediscover to use.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            Button("保存私有网段") {
+            Button("Save private network segment") {
                 networkPrefixesFocused = false
                 saveNetworkPrefixes()
             }
             .accessibilityIdentifier("savePrivateNetworkPrefixes")
         } header: {
-            Text("私有网络")
+            Text("private network")
         } footer: {
-            Text("内置支持 10/8、172.16/12、192.168/16、169.254/16 与 100.64/10（Tailscale）。"
+            Text("Built-in support for 10/8, 172.16/12, 192.168/16, 169.254/16 and 100.64/10 (Tailscale)."
                 + "公网地址始终不会被视为私有网段。")
         }
     }
 
     private var bluetoothSection: some View {
-        Section("蓝牙连接") {
+        Section("Bluetooth connection") {
             LabeledContent("VoBLE", value: voBLEStatus)
             link(.bluetoothPair, "wave.3.right")
             Button("重新扫描蓝牙 Agent", systemImage: "arrow.clockwise") {
@@ -1165,16 +1165,16 @@ struct SimHelpSettingsView: View {
     }
 
     private var bluetoothDiagnosticsSection: some View {
-        Section("蓝牙诊断（已脱敏）") {
+        Section("Bluetooth diagnostics (desensitized)") {
             let diagnostics = model.vobleDiagnostics
-            LabeledContent("认证", value: diagnostics.peerAuthenticated ? "通过" : "未完成")
-            LabeledContent("PCM", value: diagnostics.pcmReady ? "运行中" : "待启动")
-            LabeledContent("编码", value: diagnostics.codec)
+            LabeledContent("Certification", value: diagnostics.peerAuthenticated ? "pass" : "Not completed")
+            LabeledContent("PCM", value: diagnostics.pcmReady ? "Running" : "To be started")
+            LabeledContent("coding", value: diagnostics.codec)
             LabeledContent("发送队列", value: "\(diagnostics.queuedFrames) / 8 帧")
             LabeledContent("丢帧", value: "\(diagnostics.droppedFrames)")
             LabeledContent("抖动缓冲", value: "\(diagnostics.jitterFrames) 帧")
-            LabeledContent("最近错误", value: diagnostics.lastError.rawValue)
-            Text("诊断不会显示号码、密钥、nonce、认证标签或音频内容。")
+            LabeledContent("recent errors", value: diagnostics.lastError.rawValue)
+            Text("Diagnostics do not display numbers, keys, nonces, authentication tags, or audio content.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -1183,15 +1183,15 @@ struct SimHelpSettingsView: View {
     private var liveActivitySection: some View {
         Section {
             Toggle(isOn: $liveActivityEnabled) {
-                Label("显示灵动岛", systemImage: "platter.filled.top.iphone")
+                Label("Show smart island", systemImage: "platter.filled.top.iphone")
             }
             .onChange(of: liveActivityEnabled) { enabled in
                 model.setLiveActivityEnabled(enabled)
             }
         } header: {
-            Text("灵动岛与实时活动")
+            Text("Smart Island and real-time activities")
         } footer: {
-            Text("关闭后结束 SimHelp 的灵动岛与锁屏实时活动；通话和短信仍可正常使用。")
+            Text("Closing ends SimHelp's smart island and lock screen real-time activities; calls and text messages can still be used normally.")
         }
     }
 
@@ -1218,7 +1218,7 @@ struct SimHelpSettingsView: View {
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel(LiveActivityAgentOrder.isPinned(agent.id)
-                        ? "取消置顶 \(agent.deviceName)" : "置顶 \(agent.deviceName)")
+                        ? "取消置顶 \(agent.deviceName)" : "Pin to top \\(agent.deviceName)")
                     Button {
                         model.moveLiveActivityAgent(agent.id, by: -1)
                     } label: {
@@ -1234,13 +1234,13 @@ struct SimHelpSettingsView: View {
                     }
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel("下移 \(agent.deviceName)")
+                    .accessibilityLabel("Move down \\(agent.deviceName)")
                 }
             }
         } header: {
-            Text("设备显示顺序")
+            Text("Device display order")
         } footer: {
-            Text("置顶设备固定在前；其余按这里排序。灵动岛每页最多显示 5 台，右上角按钮翻到下一页。")
+            Text("Top devices are pinned to the front; the rest are sorted here. Each page of Smart Island displays up to 5 units, and the button in the upper right corner turns to the next page.")
         }
     }
 
@@ -1276,43 +1276,43 @@ struct SimHelpSettingsView: View {
                     }
                 }
                 if selfTestPhase == .completed {
-                    Text(report.allPassed ? "云端模式自检通过" : "自检未通过，请按失败步骤修复后重试")
+                    Text(report.allPassed ? "云端模式自检通过" : "The self-test failed, please follow the failed steps to repair and try again.")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(report.allPassed ? .green : .orange)
                     Button {
                         UIPasteboard.general.string = report.copyText
                         selfTestCopied = true
                     } label: {
-                        Label(selfTestCopied ? "已复制自检结果" : "复制自检结果", systemImage: "doc.on.doc")
+                        Label(selfTestCopied ? "Self-test results copied" : "Copy self-test results", systemImage: "doc.on.doc")
                     }
                     .font(.footnote)
                 }
             }
         } header: {
-            Text("云端连接自检")
+            Text("Cloud connection self-test")
         } footer: {
             Text(pureLocalEnabled
-                ? "纯本地模式已开启，禁止访问 Relay；关闭后可手动自检。"
+                ? "Pure local mode is turned on and access to Relay is prohibited; after it is turned off, manual self-test can be performed."
                 : "依次验证本机 Push 凭据、Relay 身份、设备注册、Agent 记录、150 秒心跳和命令路由；失败步骤会给出具体卡点，不会拨号或发送短信。")
         }
     }
 
     private var smsSection: some View {
-        Section("短信") {
-            Toggle("自动复制验证码到剪贴板", isOn: $autoCopySMSCode)
-            Text("收到新验证码短信后自动复制，便于系统键盘显示粘贴建议。会覆盖当前剪贴板内容，可随时关闭。")
+        Section("Short message") {
+            Toggle("Automatically copy verification code to clipboard", isOn: $autoCopySMSCode)
+            Text("After receiving the new verification code text message, it will be automatically copied so that the system keyboard can display paste suggestions. The current clipboard content will be overwritten and can be closed at any time.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
     }
 
     private var aboutSection: some View {
-        Section("关于") {
-            LabeledContent("项目", value: "SimHelp")
-            LabeledContent("版本", value: AppInformation.version)
+        Section("about") {
+            LabeledContent("project", value: "SimHelp")
+            LabeledContent("Version", value: AppInformation.version)
                 .textSelection(.enabled)
-            Button("当前版本更新内容") { appUpdatePresentation = .notes }
-            Button(appUpdates.checking ? "正在检查应用更新…" : "检查应用更新") {
+            Button("Updates to the current version") { appUpdatePresentation = .notes }
+            Button(appUpdates.checking ? "Checking for app updates…" : "Check for app updates") {
                 Task {
                     if let result = await appUpdates.check(manual: true) {
                         appUpdateInbox.receive(result)
@@ -1322,21 +1322,21 @@ struct SimHelpSettingsView: View {
             }
             .disabled(appUpdates.checking)
             Text(appUpdates.status).font(.footnote).foregroundStyle(.secondary)
-            LabeledContent("更新渠道", value: AppUpdateChannel.title)
-            Link("GitHub 仓库", destination: AppInformation.repositoryURL)
-            Link("版本发布与下载", destination: AppInformation.releasesURL)
+            LabeledContent("Update channel", value: AppUpdateChannel.title)
+            Link("GitHub repository", destination: AppInformation.repositoryURL)
+            Link("Version release and download", destination: AppInformation.releasesURL)
         }
     }
 
     private var feedbackSection: some View {
-        Section("反馈") {
-            TextField("用户描述（可选）", text: $feedbackDescription, axis: .vertical)
+        Section("feedback") {
+            TextField("User description (optional)", text: $feedbackDescription, axis: .vertical)
                 .accessibilityIdentifier("settings.feedbackDescription")
                 .lineLimit(2...4)
                 .focused($feedbackFocusedField, equals: .description)
                 .submitLabel(.done)
                 .onSubmit { feedbackFocusedField = nil }
-            TextField("备注（可选）", text: $feedbackRemark, axis: .vertical)
+            TextField("Remarks (optional)", text: $feedbackRemark, axis: .vertical)
                 .lineLimit(2...4)
                 .focused($feedbackFocusedField, equals: .remark)
                 .submitLabel(.done)
@@ -1345,7 +1345,7 @@ struct SimHelpSettingsView: View {
                 guard !pureLocalEnabled else { return }
                 feedbackFocusedField = nil
                 feedbackUploading = true
-                feedbackUploadStatus = "正在收集并上传…"
+                feedbackUploadStatus = "Collecting and uploading..."
                 Task {
                     defer { feedbackUploading = false }
                     let result = await FeedbackUploader.shared.upload(
@@ -1357,16 +1357,16 @@ struct SimHelpSettingsView: View {
                     feedbackUploadStatus = result
                 }
             } label: {
-                Label(feedbackUploading ? "正在上传…" : "上传反馈", systemImage: "paperplane")
+                Label(feedbackUploading ? "Uploading…" : "Upload feedback", systemImage: "paperplane")
             }
             .disabled(feedbackUploading || pureLocalEnabled)
-            if pureLocalEnabled { Text("纯本地模式已阻止上传，草稿仍会保留。").font(.footnote) }
+            if pureLocalEnabled { Text("Pure local mode has blocked uploads, drafts will remain.").font(.footnote) }
             if !feedbackUploadStatus.isEmpty {
                 Text(feedbackUploadStatus)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            Text("仅手动上传诊断信息。请先检查上传范围，避免在文字中包含个人信息。")
+            Text("Only manually upload diagnostic information. Please check the upload scope first to avoid including personal information in the text.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -1379,7 +1379,7 @@ struct SimHelpSettingsView: View {
         selfTestPhase = .idle
         selfTestReport = nil
         diagnosticCloudOnline = nil
-        guard !updateCallBusy else { pureLocalError = "通话中不能切换纯本地模式"; return }
+        guard !updateCallBusy else { pureLocalError = "Unable to switch to pure local mode during a call"; return }
         pureLocalBusy = true; pureLocalError = nil
         defer { pureLocalBusy = false }
         if enabled {
@@ -1388,7 +1388,7 @@ struct SimHelpSettingsView: View {
             RelayEgressGate.shared.setPersistentBlocked(true)
             pureLocalEnabled = true
             guard await RelayEgressGate.shared.disableAndDrain() else {
-                pureLocalError = "云端连接尚未完全排空，请稍后重试"
+                pureLocalError = "The cloud connection has not been completely drained, please try again later."
                 return
             }
             cloudSignalingEnabled = false
@@ -1406,7 +1406,7 @@ struct SimHelpSettingsView: View {
                 cloudSignalingEnabled = cloud
                 model.setCloudSignalingEnabled(cloud)
                 model.setConnectionMode(SimHelpConnectionMode(rawValue: raw) ?? .automatic)
-            } catch { pureLocalError = "本地退出尚未完成：\(error.localizedDescription)" }
+            } catch { pureLocalError = "Local exit not yet completed: \\(error.localizedDescription)" }
         }
     }
 
@@ -1466,7 +1466,7 @@ struct SimHelpSettingsView: View {
             .map(String.init)
             .filter { NetworkRoutePreferences.parse($0) == nil }
         guard invalid.isEmpty else {
-            networkPrefixError = "网段格式无效：\(invalid.joined(separator: "、"))"
+            networkPrefixError = "The network segment format is invalid: \\(invalid.joined(separator:"、"))"
             return
         }
         NetworkRoutePreferences.save(networkPrefixesText)
@@ -1477,13 +1477,13 @@ struct SimHelpSettingsView: View {
 
     private var voBLEStatus: String {
         switch model.vobleHub.pairingState {
-        case .stopped: return runtimePolicy.startsBluetooth ? "待启动" : "当前模式已关闭"
-        case .bluetoothUnavailable: return "蓝牙不可用"
-        case .scanning: return "正在发现"
-        case .connecting, .connected: return "正在连接"
-        case .authenticating: return "正在认证"
-        case .ready: return "已认证"
-        case .failed(let message): return "失败：\(message)"
+        case .stopped: return runtimePolicy.startsBluetooth ? "To be started" : "Current mode is off"
+        case .bluetoothUnavailable: return "Bluetooth is not available"
+        case .scanning: return "discovering"
+        case .connecting, .connected: return "Connecting"
+        case .authenticating: return "Authenticating"
+        case .ready: return "Certified"
+        case .failed(let message): return "Failure: \\(message)"
         }
     }
 
@@ -1529,11 +1529,11 @@ enum NotificationForwardingChannel: String, CaseIterable, Codable, Identifiable,
         case .bark: return "Bark"
         case .discord: return "Discord"
         case .slack: return "Slack"
-        case .wecom: return "企业微信"
+        case .wecom: return "Enterprise WeChat"
         case .feishu: return "飞书自定义机器人"
         case .telegram: return "Telegram Bot"
-        case .qq: return "QQ 官方 Bot"
-        case .webhook: return "通用 Webhook"
+        case .qq: return "QQ Official Bot"
+        case .webhook: return "Universal Webhook"
         }
     }
 }
@@ -1553,14 +1553,12 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
     var sendMissedCall = true
     var includeBody = true
     var includeNumber = true
-    var template = """
-    {event}
-    设备：{device}
-    号码：{number}
-    发件人：{sender}
-    内容：{content}
-    时间：{time}
-    """
+    var template = """{event}
+    Device: {device}
+    Number: {number}
+    Sender: {sender}
+    Content: {content}
+    Time: {time}"""
     var missedTemplate: String? = nil
 
 
@@ -1573,7 +1571,7 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
             guard let parts, ["http", "https"].contains(parts.scheme?.lowercased() ?? ""),
                   let host = parts.host, !host.isEmpty, !host.contains(where: { $0.isWhitespace }),
                   parts.user == nil, parts.password == nil, parts.fragment == nil else {
-                return "请输入有效的 Webhook 地址。"
+                return "Please enter a valid webhook address."
             }
         }
         switch channel {
@@ -1581,14 +1579,14 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
             if !value.isEmpty && parts?.scheme?.lowercased() != "https" { return "Bark 地址需要 HTTPS。" }
             let pathKey = parts?.path.split(separator: "/").last.map(String.init) ?? ""
             if (deviceKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-               value.isEmpty || pathKey.isEmpty || pathKey == "push" { return "请填写 Bark Device Key。" }
+               value.isEmpty || pathKey.isEmpty || pathKey == "push" { return "Please fill in the Bark Device Key." }
         case .telegram, .qq:
-            if chatID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "请填写 Chat ID 或 OpenID。" }
+            if chatID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Please fill in Chat ID or OpenID." }
             if (value.isEmpty || channel == .qq), token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return "请填写 Bot Token。"
+                return "Please fill in Bot Token."
             }
         default:
-            if value.isEmpty { return "请填写 Webhook 地址。" }
+            if value.isEmpty { return "Please fill in the webhook address." }
         }
         return nil
     }
@@ -1625,11 +1623,11 @@ struct NotificationForwardingView: View {
         Form {
             Section {
                 Toggle("启用通知转发", isOn: $config.enabled)
-                Text("配置随下一次配对发送给 Android。Android 直接发送 Webhook，不依赖 Relay、APNs 或 iPhone 是否运行。")
+                Text("The configuration is sent to Android with the next pairing. Android sends webhooks directly, without relying on Relay, APNs, or whether the iPhone is running.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
-            Section("转发目标") {
+            Section("Forward target") {
                 ForEach(config.destinations) { destination in
                     Button {
                         editing = destination
@@ -1637,7 +1635,7 @@ struct NotificationForwardingView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(destination.name.isEmpty ? destination.channel.title : destination.name)
-                                Text(destination.channel.title + (destination.enabled ? "" : " · 已停用"))
+                                Text(destination.channel.title + (destination.enabled ? "" : "· Deactivated"))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -1653,11 +1651,11 @@ struct NotificationForwardingView: View {
                 Button {
                     showingAdd = true
                 } label: {
-                    Label("添加转发目标", systemImage: "plus.circle")
+                    Label("Add forwarding target", systemImage: "plus.circle")
                 }
             }
         }
-        .navigationTitle("通知转发")
+        .navigationTitle("Notification forwarding")
         .onChange(of: config) { _ in save() }
         .sheet(isPresented: $showingAdd) {
             NotificationForwardingEditor(destination: NotificationForwardingDestination()) { value in
@@ -1691,9 +1689,9 @@ private struct NotificationForwardingEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("目标") {
-                    TextField("备注名称", text: $destination.name)
-                    Picker("渠道", selection: $destination.channel) {
+                Section("Target") {
+                    TextField("Note name", text: $destination.name)
+                    Picker("channel", selection: $destination.channel) {
                         ForEach(NotificationForwardingChannel.allCases) { channel in
                             Text(channel.title).tag(channel)
                         }
@@ -1705,7 +1703,7 @@ private struct NotificationForwardingEditor: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if destination.channel == .bark {
-                        TextField("Bark Device Key（URL 不含 key 时填写）", text: Binding(
+                        TextField("Bark Device Key (fill in when URL does not contain key)", text: Binding(
                             get: { destination.deviceKey ?? "" },
                             set: { destination.deviceKey = $0 }
                         ))
@@ -1719,7 +1717,7 @@ private struct NotificationForwardingEditor: View {
                         TextField("Chat ID / OpenID", text: $destination.chatID)
                     }
                     if destination.channel == .feishu {
-                        SecureField("签名 Secret（可选）", text: $destination.secret)
+                        SecureField("Signature Secret (optional)", text: $destination.secret)
                             .textInputAutocapitalization(.never)
                     }
                 }
@@ -1727,11 +1725,11 @@ private struct NotificationForwardingEditor: View {
                     Section { Text(validation).font(.footnote).foregroundStyle(.red) }
                 }
                 Section("事件") {
-                    Toggle("短信", isOn: $destination.sendSMS)
+                    Toggle("Short message", isOn: $destination.sendSMS)
                     Toggle("来电", isOn: $destination.sendIncomingCall)
-                    Toggle("未接来电", isOn: $destination.sendMissedCall)
-                    Toggle("包含短信正文", isOn: $destination.includeBody)
-                    Toggle("包含号码", isOn: $destination.includeNumber)
+                    Toggle("missed call", isOn: $destination.sendMissedCall)
+                    Toggle("Contains text message text", isOn: $destination.includeBody)
+                    Toggle("Contains numbers", isOn: $destination.includeNumber)
                 }
                 Section {
                     NavigationLink("消息模板") {
@@ -1740,21 +1738,21 @@ private struct NotificationForwardingEditor: View {
                     TextEditor(text: $destination.template)
                         .frame(minHeight: 150)
                         .font(.system(.footnote, design: .monospaced))
-                    Text("可用占位符：{event} {device} {number} {sender} {content} {time}")
+                    Text("Available placeholders: {event} {device} {number} {sender} {content} {time}")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } header: {
-                    Text("短信 / 来电格式")
+                    Text("SMS/call format")
                 }
                 Section {
                     TextEditor(text: Binding(
-                        get: { destination.missedTemplate ?? "{event}\n设备：{device}\n号码：{number}\n时间：{time}" },
+                        get: { destination.missedTemplate ?? "{event}\\nDevice: {device}\\nNumber: {number}\\nTime: {time}" },
                         set: { destination.missedTemplate = $0 }
                     ))
                         .frame(minHeight: 100)
                         .font(.system(.footnote, design: .monospaced))
                 } header: {
-                    Text("未接来电格式")
+                    Text("Missed call format")
                 }
                         }.navigationTitle("消息模板")
                     }
@@ -1762,19 +1760,19 @@ private struct NotificationForwardingEditor: View {
 
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationTitle("转发目标")
+            .navigationTitle("Forward target")
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled()
             .confirmationDialog("放弃本次编辑？", isPresented: $confirmingDiscard, titleVisibility: .visible) {
-                Button("放弃编辑", role: .destructive) { dismiss() }
-                Button("继续编辑", role: .cancel) {}
+                Button("Give up editing", role: .destructive) { dismiss() }
+                Button("Continue editing", role: .cancel) {}
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { confirmingDiscard = true }
+                    Button("Cancel") { confirmingDiscard = true }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button("keep") {
                         guard destination.validationMessage == nil else { return }
                         onSave(destination)
                         dismiss()
@@ -1804,7 +1802,7 @@ final class FeedbackUploader {
         /*
         // Reject before collecting Android logs or contacting either endpoint.
         guard Self.permitsUpload(trigger: trigger) else { return "自动反馈上传已关闭，请手动上传" }
-        guard !RelayEgressGate.shared.isBlocked else { return "纯本地模式已开启，反馈上传已关闭" }
+        guard !RelayEgressGate.shared.isBlocked else { return "Pure local mode is on, feedback upload is off" }
 
         let snapshot: AgentFeedbackSnapshot?
         if let api {
@@ -1849,7 +1847,7 @@ final class FeedbackUploader {
             "android_log": androidLog,
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: body) else {
-            return "反馈数据生成失败"
+            return "Feedback data generation failed"
         }
         guard let endpoint = Self.endpoint else { return "Feedback upload is disabled in this personal build." }
         var request = URLRequest(url: endpoint)
@@ -1860,11 +1858,11 @@ final class FeedbackUploader {
         do {
             let (responseData, response) = try await RelayEgressGate.shared.send(request)
             guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                return "上传失败（HTTP \( (response as? HTTPURLResponse)?.statusCode ?? 0)）"
+                return "Upload failed (HTTP \\( (response as? HTTPURLResponse)?.statusCode ?? 0))"
             }
             if let object = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
                let url = object["url"] as? String, !url.isEmpty {
-                return "已上传：\(url)"
+                return "Uploaded: \\(url)"
             }
             return "已上传到 Notion"
         } catch {

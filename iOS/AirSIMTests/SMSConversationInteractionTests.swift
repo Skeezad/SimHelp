@@ -46,7 +46,7 @@ final class SMSConversationInteractionTests: XCTestCase {
         defer { window.isHidden = true; previous?.makeKeyAndVisible(); controller = nil }
         try await Task.sleep(nanoseconds: 300_000_000)
         let text = try XCTUnwrap(descendants(controller.view).compactMap { $0 as? UITextView }.first)
-        let select = try XCTUnwrap(text.accessibilityCustomActions?.first { $0.name == L10n.t("选择文本") })
+        let select = try XCTUnwrap(text.accessibilityCustomActions?.first { $0.name == L10n.t("Select text") })
         XCTAssertTrue(try XCTUnwrap(select.actionHandler)(select))
         XCTAssertTrue(text.isFirstResponder)
         XCTAssertFalse(text.isEditable)
@@ -54,10 +54,10 @@ final class SMSConversationInteractionTests: XCTestCase {
 
         let previousPasteboard = UIPasteboard.general.items
         defer { UIPasteboard.general.items = previousPasteboard }
-        let range = (records[0].content as NSString).range(of: "合成短信 😀")
+        let range = (records[0].content as NSString).range(of: "Synthetic SMS 😀")
         text.selectedRange = range
         text.copy(nil)
-        XCTAssertEqual(UIPasteboard.general.string, "合成短信 😀")
+        XCTAssertEqual(UIPasteboard.general.string, "Synthetic SMS 😀")
 
         let composer = UITextField(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
         window.addSubview(composer)
@@ -70,7 +70,7 @@ final class SMSConversationInteractionTests: XCTestCase {
         XCTAssertTrue(try XCTUnwrap(select.actionHandler)(select))
         composer.removeFromSuperview()
 
-        let more = try XCTUnwrap(text.accessibilityCustomActions?.first { $0.name == L10n.t("更多…") })
+        let more = try XCTUnwrap(text.accessibilityCustomActions?.first { $0.name == L10n.t("More…") })
         XCTAssertTrue(try XCTUnwrap(more.actionHandler)(more))
         XCTAssertEqual(selection.selectedIDs, [records[0].id])
         XCTAssertFalse(text.isFirstResponder)

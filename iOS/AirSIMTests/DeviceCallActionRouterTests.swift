@@ -192,7 +192,7 @@ final class DeviceCallActionRouterTests: XCTestCase {
         XCTAssertTrue(model.callLifecycleSnapshot.state.isTerminal)
         XCTAssertEqual(model.callLifecycleSnapshot.callUUID, route.systemUUID)
         XCTAssertEqual(service.commands, ["dial:fixture"])
-        XCTAssertEqual(model.errorMessage, "呼叫未接通，通话已结束。")
+        XCTAssertEqual(model.errorMessage, "The call was not connected and the call has ended.")
     }
     func testUnknownSubmissionCleanupDoesNotClaimRemoteEnd() async throws {
         let tone = FixtureToneOutput(), service = DeviceBackendProbe(id: "A")
@@ -205,7 +205,7 @@ final class DeviceCallActionRouterTests: XCTestCase {
         let before = tone.plays
         await Task.yield()
         XCTAssertEqual(tone.plays, before)
-        XCTAssertNotEqual(model.errorMessage, "呼叫未接通，通话已结束。")
+        XCTAssertNotEqual(model.errorMessage, "The call was not connected and the call has ended.")
         XCTAssertEqual(model.callLifecycleSnapshot.source, .app)
         XCTAssertEqual(model.callHistory, historyBefore)
     }
@@ -228,7 +228,7 @@ final class DeviceCallActionRouterTests: XCTestCase {
         XCTAssertFalse(audio.active)
         await Task.yield()
         XCTAssertEqual(tone.plays, before + 1)
-        XCTAssertEqual(model.errorMessage, "呼叫未接通，通话已结束。")
+        XCTAssertEqual(model.errorMessage, "The call was not connected and the call has ended.")
         _ = model.receiveOwnedCallEvent(terminal)
         await Task.yield()
         XCTAssertEqual(tone.plays, before + 1)

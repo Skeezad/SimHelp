@@ -633,17 +633,17 @@ private enum WiredHTTPError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidRequest: return "VoWLAN 请求格式无效"
-        case .wiredPathUnavailable: return "未找到可用的 VoWLAN 网络路径"
-        case let .connectionFailed(message): return "VoWLAN 连接失败：\(message)"
-        case .connectionClosed: return "VoWLAN 连接已关闭"
-        case let .sendFailed(message): return "VoWLAN 请求发送失败：\(message)"
-        case let .receiveFailed(message): return "VoWLAN 响应接收失败：\(message)"
-        case .timedOut: return "VoWLAN 请求超时"
-        case .responseTooLarge: return "VoWLAN 响应超过安全大小限制"
-        case .invalidResponse: return "Agent 代理返回了无效 HTTP 响应"
-        case .incompleteResponse: return "Agent 代理返回的 HTTP 响应不完整"
-        case .unreadableUpload: return "无法读取更新包"
+        case .invalidRequest: return "VoWLAN request format is invalid"
+        case .wiredPathUnavailable: return "No available VoWLAN network path found"
+        case let .connectionFailed(message): return "VoWLAN connection failed: \\(message)"
+        case .connectionClosed: return "VoWLAN connection is closed"
+        case let .sendFailed(message): return "VoWLAN request failed: \\(message)"
+        case let .receiveFailed(message): return "VoWLAN response reception failed: \\(message)"
+        case .timedOut: return "VoWLAN request timeout"
+        case .responseTooLarge: return "VoWLAN response exceeds safe size limit"
+        case .invalidResponse: return "Agent returned an invalid HTTP response"
+        case .incompleteResponse: return "Agent The HTTP response returned by the agent is incomplete"
+        case .unreadableUpload: return "Unable to read update package"
         }
     }
 }

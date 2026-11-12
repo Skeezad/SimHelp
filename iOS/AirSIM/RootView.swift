@@ -28,11 +28,11 @@ enum SystemCommunicationURL {
 }
 
 enum PhoneTab: String, CaseIterable, Identifiable {
-    case dial = "拨号"
-    case recents = "最近通话"
-    case messages = "短信"
+    case dial = "dial"
+    case recents = "recent calls"
+    case messages = "Short message"
     case contacts = "通讯录"
-    case settings = "设置"
+    case settings = "set up"
 
     var id: String { rawValue }
 
@@ -59,7 +59,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
     var tabTitle: String {
         switch self {
         case .recents: return "最近"
-        case .contacts: return "联系人"
+        case .contacts: return "Contact person"
         default: return rawValue
         }
     }
@@ -121,7 +121,7 @@ struct RootView: View {
                                     state: $messageListState,
                                     openConversation: showSMSConversation
                                 )
-                                .navigationTitle(L10n.t("短信"))
+                                .navigationTitle(L10n.t("Short message"))
                                 .navigationBarTitleDisplayMode(.large)
                                 .toolbar { SMSConversationListToolbar(state: $messageListState) }
                                 .navigationDestination(isPresented: $showingConversation) {
@@ -179,7 +179,7 @@ struct RootView: View {
                 Button {
                     _ = model.openOtherDeviceCallNotification(reminder.userInfo)
                 } label: {
-                    Label("\(reminder.deviceName) 来电 · 其他设备 \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
+                    Label("\\(reminder.deviceName) Incoming calls · Other devices \\(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
                         .font(.subheadline.weight(.semibold)).padding(12)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -271,7 +271,7 @@ struct RootView: View {
             appUpdatePresentation = .notes
         } else if firstConnectionComplete && selectedTabRawValue == PhoneTab.dial.rawValue,
                   let candidate = appUpdates.pendingUpdate {
-            appUpdatePresentation = .result(.init(message: "发现应用新版本", candidate: candidate))
+            appUpdatePresentation = .result(.init(message: "Discover new app versions", candidate: candidate))
         }
     }
 
@@ -615,7 +615,7 @@ private struct AdaptiveMessagesView: View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
             MessagesView(pendingRecipient: $pendingRecipient, state: $state,
                          openConversation: openConversation)
-                .navigationTitle(L10n.t("短信"))
+                .navigationTitle(L10n.t("Short message"))
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar { SMSConversationListToolbar(state: $state) }
                 .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 400)
@@ -624,7 +624,7 @@ private struct AdaptiveMessagesView: View {
                 MessageThreadView(sender: sender)
                     .id(sender)
             } else {
-                ContentUnavailableView("选择一段对话", systemImage: "message",
+                ContentUnavailableView("Select a conversation", systemImage: "message",
                     description: Text("从左侧选择短信，或新建一条短信。"))
             }
         }

@@ -11,16 +11,16 @@ import WidgetKit
 
 final class PhoneNavigationPolicyTests: XCTestCase {
     func testMessageSearchMatchesContactNumberAndOlderBody() {
-        let contents = ["旧消息：会议改到周五", "最新消息：收到"]
-        XCTAssertTrue(SMSConversationSearch.matches("周五", sender: "138-0013-8000", contactName: "小王", contents: contents))
-        XCTAssertTrue(SMSConversationSearch.matches("小王", sender: "138-0013-8000", contactName: "小王", contents: contents))
+        let contents = ["OLD NEWS: Meeting rescheduled to Friday", "Latest News: Received"]
+        XCTAssertTrue(SMSConversationSearch.matches("Friday", sender: "138-0013-8000", contactName: "Xiao Wang", contents: contents))
+        XCTAssertTrue(SMSConversationSearch.matches("Xiao Wang", sender: "138-0013-8000", contactName: "Xiao Wang", contents: contents))
         XCTAssertTrue(SMSConversationSearch.matches("13800138000", sender: "+86 138-0013-8000", contactName: nil, contents: []))
         XCTAssertTrue(SMSConversationSearch.matches("１３８００１３８０００", sender: "138-0013-8000", contactName: nil, contents: []))
         XCTAssertTrue(SMSConversationSearch.matches("  \n ", sender: "", contactName: nil, contents: []))
         XCTAssertTrue(SMSConversationSearch.contains("Résumé ABC", query: "resume abc"))
         XCTAssertFalse(SMSConversationSearch.matches("code138", sender: "13800138000", contactName: nil, contents: contents))
-        XCTAssertFalse(SMSConversationSearch.matches("不存在", sender: "13800138000", contactName: nil, contents: contents))
-        XCTAssertFalse(SMSConversationSearch.contains("正文", query: " "))
+        XCTAssertFalse(SMSConversationSearch.matches("does not exist", sender: "13800138000", contactName: nil, contents: contents))
+        XCTAssertFalse(SMSConversationSearch.contains("text", query: " "))
     }
 
 
@@ -291,7 +291,7 @@ final class CallKitNumberPresentationTests: XCTestCase {
         for number: String? in [nil, "", "   "] {
             let unknown = CallKitNumberPresentation.update(number: number, callerName: nil)
             XCTAssertEqual(unknown.remoteHandle?.type, .generic)
-            XCTAssertEqual(unknown.remoteHandle?.value, "未知号码")
+            XCTAssertEqual(unknown.remoteHandle?.value, "unknown number")
         }
     }
 
@@ -548,7 +548,7 @@ final class RemoteDirectTests: XCTestCase {
         XCTAssertEqual(endpoint.controlBaseURL.absoluteString, "https://phone.example.com:443/")
         XCTAssertTrue(endpoint.usesTLS)
         for host in ["8.8.8.8", "192.168.1.2", "::1", "https://phone.example.com", "a.example/path",
-                     "user@a.example", "a.example:443", "a..example", "-a.example", "a.example.", "localhost", "a.例子", "0x7f.1", "127.0x1"] {
+                     "user@a.example", "a.example:443", "a..example", "-a.example", "a.example.", "localhost", "a.Example", "0x7f.1", "127.0x1"] {
             XCTAssertThrowsError(try RemoteDirectConfiguration.route(agentID: "A", host: host,
                                                                      controlPort: "443", pcmPort: "7593"), host)
         }
@@ -925,8 +925,8 @@ final class CloudStandbyLifecycleRegressionTests: XCTestCase {
         XCTAssertEqual(model.currentAndroidAgent?.cloudOnline, true, "background query rearming must not expire a received result")
         now.addTimeInterval(600)
         let deadline = ContinuousClock.now.advanced(by: .seconds(6))
-        while model.connectionMessage?.contains("模块云端在线") != true,
-              model.connectionMessage?.hasPrefix("模块本地与云端均不可达") != true,
+        while model.connectionMessage?.contains("Module cloud online") != true,
+              model.connectionMessage?.hasPrefix("The module is unreachable both locally and in the cloud.") != true,
               ContinuousClock.now < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }
@@ -2428,8 +2428,8 @@ final class SimHelpTests: XCTestCase {
             XCTAssertThrowsError(try SamsungPairingHTTPResponse.decode(response, metadata: metadata)) { error in
                 XCTAssertEqual(error as? SamsungPairingClientError, .networkNotAllowed,
                                   "Network refusal is not a failed six-digit-code authentication")
-                XCTAssertFalse(error.localizedDescription.contains("核对验证码"))
-                XCTAssertTrue(error.localizedDescription.contains("网络"))
+                XCTAssertFalse(error.localizedDescription.contains("Check verification code"))
+                XCTAssertTrue(error.localizedDescription.contains("network"))
             }
         }
     }
@@ -2605,9 +2605,9 @@ final class SimHelpTests: XCTestCase {
         contact.familyName = ""
         contact.middleName = "Augusta"
         XCTAssertEqual(ContactFetcher.contact(from: contact)?.name, "Augusta")
-        contact.givenName = "小明"
+        contact.givenName = "Xiao Ming"
         contact.middleName = ""
-        contact.familyName = "王"
+        contact.familyName = "king"
         XCTAssertEqual(ContactFetcher.contact(from: contact)?.name,
                        CNContactFormatter.string(from: contact, style: .fullName))
     }
@@ -2654,7 +2654,7 @@ final class SimHelpTests: XCTestCase {
 
     func testAppVersionReadsBundleMetadataAndHandlesMissingValues() {
         XCTAssertEqual(AppInformation.version(info: ["CFBundleShortVersionString": "1.2.3", "CFBundleVersion": "456"]), "1.2.3 (456)")
-        XCTAssertEqual(AppInformation.version(info: [:]), "未知版本")
+        XCTAssertEqual(AppInformation.version(info: [:]), "Unknown version")
         XCTAssertFalse(AppInformation.version.isEmpty)
         XCTAssertEqual(AppInformation.repositoryURL.host, "github.com")
         XCTAssertEqual(AppInformation.releasesURL.path, "/kai-wu-cortex/SimHelp/releases")
@@ -3000,20 +3000,20 @@ final class SimHelpTests: XCTestCase {
     func testLocalRejectKeepsObservedAgentDuringReconnect() {
         XCTAssertEqual(LocalCallControlTarget.select(
             locked: Optional<String>.none,
-            observed: (callID: "call-on-samsung", service: "三星"),
-            fallback: "小米",
+            observed: (callID: "call-on-samsung", service: "Samsung"),
+            fallback: "Millet",
             targetCallID: "call-on-samsung"
-        ), "三星")
+        ), "Samsung")
         XCTAssertNil(LocalCallControlTarget.select(
             locked: Optional<String>.none,
-            observed: (callID: "call-on-samsung", service: "三星"),
-            fallback: "小米",
+            observed: (callID: "call-on-samsung", service: "Samsung"),
+            fallback: "Millet",
             targetCallID: nil
         ))
         XCTAssertNil(LocalCallControlTarget.select(
             locked: Optional<String>.none,
-            observed: (callID: "old-call", service: "三星"),
-            fallback: "小米",
+            observed: (callID: "old-call", service: "Samsung"),
+            fallback: "Millet",
             targetCallID: "new-call"
         ))
     }
@@ -3170,19 +3170,19 @@ final class SimHelpTests: XCTestCase {
     }
 
     func testSMSFetchUsesReportingAgentAfterDiscoverySwitchesPhones() async throws {
-        let samsung = AgentSMSInboxProbe(name: "三星", inbox: [SMSMessage(
+        let samsung = AgentSMSInboxProbe(name: "Samsung", inbox: [SMSMessage(
             sender: "10086", content: "来自三星", code: nil,
             timestamp: Date(timeIntervalSince1970: 1_791_448_212),
             deliveryID: "samsung-sms-1", direction: .incoming
         )])
-        let xiaomi = AgentSMSInboxProbe(name: "小米", inbox: [])
+        let xiaomi = AgentSMSInboxProbe(name: "Millet", inbox: [])
 
         let fetched = try await AgentSMSInboxFetch.fetch(
             reportingAgent: samsung, discoveredAgent: xiaomi
         )
 
         XCTAssertEqual(fetched.messages.map(\.content), ["来自三星"])
-        XCTAssertEqual(fetched.agent.name, "三星")
+        XCTAssertEqual(fetched.agent.name, "Samsung")
     }
 
     func testPCMReconnectCreatesFreshHandshakeForEveryAttempt() throws {
@@ -3202,11 +3202,11 @@ final class SimHelpTests: XCTestCase {
             "event": "incoming_sms",
             "delivery_id": "sms-nano-1",
             "sender": "10086",
-            "content": "短信正文",
+            "content": "SMS text",
             "timestamp": "2026-10-08T08:30:12.123456789Z",
         ])
         XCTAssertEqual(pushed.deliveryID, "sms-nano-1")
-        XCTAssertEqual(pushed.message.content, "短信正文")
+        XCTAssertEqual(pushed.message.content, "SMS text")
         XCTAssertEqual(pushed.timestamp.timeIntervalSince1970, 1_791_448_212.123456789, accuracy: 0.001)
     }
 
@@ -3215,7 +3215,7 @@ final class SimHelpTests: XCTestCase {
             "event": "incoming_sms",
             "delivery_id": "sms-second-1",
             "sender": "10086",
-            "content": "短信正文",
+            "content": "SMS text",
             "timestamp": "2026-10-08T08:30:12Z",
         ])
         XCTAssertEqual(pushed.deliveryID, "sms-second-1")
@@ -3232,12 +3232,12 @@ final class SimHelpTests: XCTestCase {
 
     func testSMSDeliveryIDDeduplicatesPushAndAgentCopies() {
         let pushed = SMSMessage(
-            sender: "10086", content: "短信正文", code: nil,
+            sender: "10086", content: "SMS text", code: nil,
             timestamp: Date(timeIntervalSince1970: 1_791_448_212),
             deliveryID: "sms-stable-1", direction: .incoming
         )
         let synchronized = SMSMessage(
-            sender: "10086", content: "短信正文", code: nil,
+            sender: "10086", content: "SMS text", code: nil,
             timestamp: Date(timeIntervalSince1970: 1_791_448_212.123456789),
             deliveryID: "sms-stable-1", direction: .incoming
         )
@@ -3493,7 +3493,7 @@ final class SimHelpTests: XCTestCase {
     }
 
     func testSMSVerificationCodeExtractor() {
-        XCTAssertEqual(SMSVerificationCodeExtractor.extract(from: "验证码为 123456，5 分钟内有效"), "123456")
+        XCTAssertEqual(SMSVerificationCodeExtractor.extract(from: "The verification code is 123456, valid within 5 minutes"), "123456")
         XCTAssertEqual(SMSVerificationCodeExtractor.extract(from: "Your verification code: 9876"), "9876")
         XCTAssertEqual(SMSVerificationCodeExtractor.extract(from: "Your code is 4321"), "4321")
     }
@@ -3637,11 +3637,11 @@ final class SimHelpTests: XCTestCase {
         for cloud in [CloudCallAudioState.idle, .failed("old relay failure")] {
             XCTAssertEqual(CallAudioStatusPresentation.text(
                 transport: .bluetooth, bluetoothRunning: true, bluetoothError: nil,
-                localAudioActive: false, cloudState: cloud), "已连接蓝牙 PCM 链路")
+                localAudioActive: false, cloudState: cloud), "Bluetooth PCM link connected")
         }
         XCTAssertEqual(CallAudioStatusPresentation.text(
-            transport: .bluetooth, bluetoothRunning: false, bluetoothError: "音频启动失败",
-            localAudioActive: true, cloudState: .connected), "音频启动失败")
+            transport: .bluetooth, bluetoothRunning: false, bluetoothError: "Audio startup failed",
+            localAudioActive: true, cloudState: .connected), "Audio startup failed")
     }
 
     func testVoBLEReconnectWaitsForOldDisconnectionAndIgnoresUnrelatedCallback() {
@@ -3872,7 +3872,7 @@ final class SimHelpTests: XCTestCase {
             vowlanOnline: false,
             cloudOnline: false, bluetoothReady: true)
         XCTAssertEqual(route?.transport, .bluetooth)
-        XCTAssertEqual(route?.title, "蓝牙")
+        XCTAssertEqual(route?.title, "Bluetooth")
     }
 
     func testVoBLEControlEnvelopeRoundTripsAndRejectsBadMagic() throws {
@@ -4001,7 +4001,7 @@ final class SimHelpTests: XCTestCase {
     func testVoBLEPairingFailureExplainsHowToRecoverStaleCredentials() {
         XCTAssertEqual(
             VoBLEPairingRecovery.userMessage(for: "peer is already paired; authenticated reconnect required"),
-            "Android 仍保存旧的 VoBLE 凭据。请在 Android SimHelp → 设置 → VoBLE 认证中清除旧配对，再重新配对。"
+            "Android still saves old VoBLE credentials. Please clear the old pairing in Android SimHelp → Settings → VoBLE Authentication and pair again."
         )
         XCTAssertEqual(
             VoBLEPairingRecovery.userMessage(for: "reconnect authentication failed"),
@@ -4009,7 +4009,7 @@ final class SimHelpTests: XCTestCase {
         )
         XCTAssertEqual(
             VoBLEPairingRecovery.userMessage(for: "peer is not paired"),
-            "Android 已没有对应的 VoBLE 凭据。请清除本机旧凭据，然后重新核对安全码。"
+            "There is no corresponding VoBLE credential for Android. Please clear the old credentials for this machine and recheck the security code."
         )
         XCTAssertEqual(VoBLEPairingRecovery.userMessage(for: "蓝牙配对失败"), "蓝牙配对失败")
     }
@@ -4165,7 +4165,7 @@ final class SimHelpTests: XCTestCase {
                 cloudAttempts += 1
                 return "cloud-call"
             }
-            XCTFail("Agent 已明确拒绝时不得通过云端重放非幂等拨号")
+            XCTFail("Non-idempotent dialing must not be replayed through the cloud when the Agent has explicitly rejected it.")
         } catch APIError.http(let status, _) {
             XCTAssertEqual(status, 502)
         } catch {
@@ -4252,7 +4252,7 @@ final class SimHelpTests: XCTestCase {
         guard case .requestLimitExceeded = error else {
             return XCTFail("Cloudflare 1027 must not be reported as an invalid Relay response")
         }
-        XCTAssertTrue(error.localizedDescription.contains("额度"))
+        XCTAssertTrue(error.localizedDescription.contains("Quota"))
     }
 
     func testCurrentModePrefersVoWLANAndReportsCloudFailure() {
@@ -4274,7 +4274,7 @@ final class SimHelpTests: XCTestCase {
             cloudOnline: true
         )
         XCTAssertEqual(bluetooth.mode, .bluetooth)
-        XCTAssertEqual(bluetooth.status, "已连接")
+        XCTAssertEqual(bluetooth.status, "Connected")
         let cloud = ConnectionModePresentation.make(
             selectedMode: .automatic,
             vowlanOnline: false,
@@ -4283,7 +4283,7 @@ final class SimHelpTests: XCTestCase {
             cloudOnline: true
         )
         XCTAssertEqual(cloud.mode, .cloud)
-        XCTAssertEqual(cloud.status, "已连接")
+        XCTAssertEqual(cloud.status, "Connected")
 
         let unreachable = ConnectionModePresentation.make(
             selectedMode: .cloud,
@@ -4293,7 +4293,7 @@ final class SimHelpTests: XCTestCase {
             cloudOnline: false
         )
         XCTAssertEqual(unreachable.mode, .cloud)
-        XCTAssertEqual(unreachable.status, "不可达")
+        XCTAssertEqual(unreachable.status, "Not reachable")
     }
 
     func testExplicitCloudAnswerDoesNotFallBackToVoWLAN() {
@@ -4343,14 +4343,14 @@ final class SimHelpTests: XCTestCase {
         XCTAssertEqual(report.steps.map(\.id), CloudSelfTestStepID.allCases)
 
         for id in CloudSelfTestStepID.allCases {
-            report.update(id, state: .passed, detail: "通过")
+            report.update(id, state: .passed, detail: "pass")
         }
         report.completedAt = Date()
         XCTAssertTrue(report.allPassed)
 
-        report.update(.agentHeartbeat, state: .failed, detail: "无心跳")
+        report.update(.agentHeartbeat, state: .failed, detail: "No heartbeat")
         XCTAssertFalse(report.allPassed)
-        XCTAssertTrue(report.copyText.contains("Agent 心跳"))
+        XCTAssertTrue(report.copyText.contains("Agent heartbeat"))
         XCTAssertTrue(report.copyText.contains("FAIL"))
         XCTAssertFalse(report.copyText.contains("device_secret"))
     }
@@ -4402,7 +4402,7 @@ final class SimHelpTests: XCTestCase {
         XCTAssertEqual(LiveActivityNumberFormatter.display("+8615502030017"), "+8615502030017")
         XCTAssertEqual(LiveActivityNumberFormatter.display("+85291234567"), "+85291234567")
         XCTAssertEqual(LiveActivityNumberFormatter.display("13800138000"), "13800138000")
-        XCTAssertEqual(LiveActivityNumberFormatter.display(""), "未配置")
+        XCTAssertEqual(LiveActivityNumberFormatter.display(""), "Not configured")
     }
 
     func testLiveActivityAgentPagingUsesThreePerPage() {
@@ -4546,7 +4546,7 @@ final class SimHelpTests: XCTestCase {
                 bluetoothOnline: true, isCurrent: true
             ),
             AndroidAgentPresentation(
-                id: "xiaomi", deviceName: "小米 15 Pro", phoneNumber: nil,
+                id: "xiaomi", deviceName: "Xiaomi 15 Pro", phoneNumber: nil,
                 agentKind: "standalone", cloudOnline: true, vowlanOnline: false,
                 bluetoothOnline: false, isCurrent: false
             )
@@ -4592,7 +4592,7 @@ final class SimHelpTests: XCTestCase {
     func testVoWLANRecoveryRetriesAfterTemporaryVPNRouteLoss() {
         var recovery = VoWLANRecoveryGate()
         let start = Date(timeIntervalSince1970: 1_800_000_000)
-        let unavailable = VoWLANAvailability.unavailable("VPN 路由切换")
+        let unavailable = VoWLANAvailability.unavailable("VPN route switching")
 
         XCTAssertTrue(recovery.shouldAttempt(for: unavailable, at: start))
         XCTAssertFalse(recovery.shouldAttempt(for: unavailable, at: start.addingTimeInterval(3)))
@@ -4633,7 +4633,7 @@ final class SimHelpTests: XCTestCase {
         let state = SimHelpCallActivityAttributes.ContentState(
             callID: "",
             number: "",
-            displayName: "等待模块来电",
+            displayName: "Waiting for module call",
             phase: .standby,
             startedAt: Date(timeIntervalSince1970: 1),
             transport: .vowlan
@@ -4868,12 +4868,12 @@ final class SimHelpWidgetTests: XCTestCase {
     }
 
     func testSMSContentPreviewNormalizesWhitespaceAndSupportsOldMetadata() throws {
-        XCTAssertEqual(SimHelpWidgetSnapshot.messagePreview("  包裹已送达\n请查收\t "), "包裹已送达 请查收")
-        XCTAssertEqual(SimHelpWidgetSnapshot.messagePreview("\n \t"), "（空短信）")
+        XCTAssertEqual(SimHelpWidgetSnapshot.messagePreview("The package has been delivered\\nPlease check\\t"), "The package has been delivered. Please check it.")
+        XCTAssertEqual(SimHelpWidgetSnapshot.messagePreview("\n \t"), "(empty message)")
         XCTAssertEqual(SimHelpWidgetSnapshot.messagePreview(String(repeating: "📱", count: 130)).count, 120)
         let old = Data(#"{"agentID":"a","maskedNumber":"139 •••• 2580","date":0,"incoming":true}"#.utf8)
         let message = try JSONDecoder().decode(SimHelpWidgetSnapshot.RecentMessage.self, from: old)
-        XCTAssertEqual(message.displayText, "打开查看短信内容")
+        XCTAssertEqual(message.displayText, "Open to view text message content")
     }
 
     func testWidgetModeCycleCannotSelectCloudWhilePureLocalIsEnabled() {
@@ -4940,8 +4940,8 @@ final class SimHelpWidgetTests: XCTestCase {
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         let snapshot = SimHelpWidgetSnapshot.preview(at: now)
         let device = snapshot.devices[0]
-        XCTAssertEqual(device.status(at: now), "最近在线")
-        XCTAssertEqual(device.status(at: now.addingTimeInterval(300)), "状态待刷新")
+        XCTAssertEqual(device.status(at: now), "Recently online")
+        XCTAssertEqual(device.status(at: now.addingTimeInterval(300)), "Status to be refreshed")
         XCTAssertTrue(device.recentlyReachable, "Expiry is a display condition, not an offline event")
         XCTAssertEqual(snapshot.expirationDates(after: now), [now.addingTimeInterval(300)])
     }
@@ -4955,7 +4955,7 @@ final class SimHelpWidgetTests: XCTestCase {
         XCTAssertTrue(store.save(sample))
         XCTAssertEqual(store.load(), sample)
         XCTAssertEqual(SimHelpWidgetSnapshot.mask("13812346028"), "138 •••• 6028")
-        XCTAssertEqual(SimHelpWidgetSnapshot.mask("10086"), "号码已隐藏")
+        XCTAssertEqual(SimHelpWidgetSnapshot.mask("10086"), "Number has been hidden")
         XCTAssertFalse(String(decoding: try Data(contentsOf: url), as: UTF8.self).contains("13812346028"))
         try Data("broken".utf8).write(to: url)
         XCTAssertEqual(store.load(), .empty)
@@ -4966,10 +4966,10 @@ final class SimHelpWidgetTests: XCTestCase {
 
     func testWidgetLinksAreNavigationOnlyAndRoundTripOpaqueDeviceIDs() throws {
         for destination in SimHelpWidgetDestination.allCases {
-            let url = destination.url(agentID: "Android / A?B&名称")
+            let url = destination.url(agentID: "Android/A?B&Name")
             let parsed = try XCTUnwrap(SimHelpWidgetDestination.parse(url))
             XCTAssertEqual(parsed.destination, destination)
-            XCTAssertEqual(parsed.agentID, "Android / A?B&名称")
+            XCTAssertEqual(parsed.agentID, "Android/A?B&Name")
             XCTAssertFalse(url.absoluteString.contains("tel:"))
         }
         for value in ["https://widget/dial", "airsim://widget/dial/extra", "airsim://widget/hangup", "airsim://user@widget/dial"] {
@@ -5396,7 +5396,7 @@ final class MinimalSMSAndHangupTests: XCTestCase {
             recipient: "10086", content: "synthetic", at: Date(), to: [], limit: 20,
             sourceAgentID: "android-A", simSlot: "SIM 2").first)
         let restored = try JSONDecoder().decode(SMSMessage.self, from: JSONEncoder().encode(sent))
-        XCTAssertEqual(restored.simDeliveryLabel, "通过 SIM 2")
+        XCTAssertEqual(restored.simDeliveryLabel, "Via SIM 2")
         XCTAssertEqual(restored.sourceAgentID, "android-A")
     }
 
@@ -5433,14 +5433,14 @@ final class MinimalSMSAndHangupTests: XCTestCase {
             let incoming = try IncomingRemoteSMS(userInfo: ["event": "incoming_sms", "delivery_id": "fixture",
                 "sender": "fixture", "content": "synthetic", "timestamp": "2026-11-03T09:00:00Z", "sim_slot": slot])
             XCTAssertEqual(incoming.message.simSlot, slot)
-            XCTAssertEqual(incoming.message.simDeliveryLabel, "接收于 \(slot)")
+            XCTAssertEqual(incoming.message.simDeliveryLabel, "received in \\(slot)")
             let data = try JSONEncoder().encode(incoming.message)
             XCTAssertEqual(try JSONDecoder().decode(SMSMessage.self, from: data).simSlot, slot)
         }
         let legacy = try IncomingRemoteSMS(userInfo: ["event": "incoming_sms", "delivery_id": "legacy",
             "sender": "fixture", "content": "synthetic", "timestamp": "2026-11-03T09:00:00Z"])
         XCTAssertNil(legacy.message.simSlot)
-        XCTAssertEqual(legacy.message.simDeliveryLabel, "接收于 SIM 未知")
+        XCTAssertEqual(legacy.message.simDeliveryLabel, "Received from SIM unknown")
     }
 }
 

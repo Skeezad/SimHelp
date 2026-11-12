@@ -536,7 +536,7 @@ final class LocalDeviceDirectoryTests: XCTestCase {
         let model = AppModel(audioController: AudioSessionController(toneOutput: FixtureToneOutput()), localDirectory: directory)
         defer { model.stop() }
         XCTAssertEqual(model.pairedAndroidAgents.first { $0.id == "A" }?.vowlanOnline, true)
-        XCTAssertEqual(model.connectionModePresentation.status, "已连接")
+        XCTAssertEqual(model.connectionModePresentation.status, "Connected")
         XCTAssertTrue(model.canStartOutgoingCommand)
         XCTAssertEqual(model.dialPadTransportPresentation?.transport, .vowlan)
         XCTAssertEqual(model.currentAndroidAgent?.id, "A")

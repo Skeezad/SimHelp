@@ -152,7 +152,7 @@ enum LiveActivityStateBuilder {
         return .init(
             callID: "",
             number: "",
-            displayName: cloudOnly ? "公网中继已连接" : "等待 Agent 来电",
+            displayName: cloudOnly ? "公网中继已连接" : "Waiting for Agent to call",
             phase: cloudOnly ? .cloudStandby : .standby,
             startedAt: idleStartedAt,
             transport: cloudOnly ? .cloud : transport,

@@ -67,13 +67,13 @@ enum CallAudioStatusPresentation {
                      bluetoothError: String?, localAudioActive: Bool,
                      cloudState: CloudCallAudioState) -> String {
         if transport == .bluetooth {
-            if bluetoothRunning { return "已连接蓝牙 PCM 链路" }
-            return bluetoothError ?? "正在建立蓝牙语音链路"
+            if bluetoothRunning { return "Bluetooth PCM link connected" }
+            return bluetoothError ?? "Establishing Bluetooth voice link"
         }
         switch cloudState {
-        case .idle: return localAudioActive ? "语音链路已连接" : "正在建立语音链路"
-        case let .connecting(attempt, maximum): return "正在重试云端语音 \(attempt)/\(maximum)"
-        case .connected: return "云端语音已连接"
+        case .idle: return localAudioActive ? "Voice link is connected" : "Establishing voice link"
+        case let .connecting(attempt, maximum): return "Retrying Cloud Voice \\(attempt)/\\(maximum)"
+        case .connected: return "Cloud Voice is connected"
         case let .failed(message): return message
         }
     }
@@ -720,7 +720,7 @@ final class AppModel: ObservableObject {
                     || self.localDevices.transportEpoch(for: key.agentID) != epoch,
                   self.deviceCallRouter.route(for: key) != nil else { return }
             try? await self.deviceCallRouter.end(key, rejectIfRinging: false)
-            self.errorMessage = "当前安卓的 VoWLAN 链路已断开；本通未切换设备或音频链路，请重新拨号"
+            self.errorMessage = "The current Android VoWLAN link is disconnected; this channel has not switched devices or audio links, please dial again."
         }
     }
 
@@ -1012,7 +1012,7 @@ final class AppModel: ObservableObject {
             let information = central.deviceInformation
             values[bluetoothID] = AndroidAgentPresentation(
                 id: bluetoothID,
-                deviceName: information?.deviceName ?? central.currentDeviceName ?? "Android 蓝牙 Agent",
+                deviceName: information?.deviceName ?? central.currentDeviceName ?? "Android Bluetooth Agent",
                 // A fresh device_info is authoritative even when the new SIM
                 // cannot expose its number. Falling back would retain the old
                 // number after a SIM swap.
@@ -1227,7 +1227,7 @@ final class AppModel: ObservableObject {
     func forgetAndroidDevice(_ agentID: String) async throws {
         guard !callLifecycleSnapshot.state.representsCall else {
             throw NSError(domain: "SimHelp.Pairing", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "请先结束当前通话，再删除配对设备"])
+                          userInfo: [NSLocalizedDescriptionKey: "Please end the current call before deleting the paired device"])
         }
         // Block before awaiting unpair, so delayed discovery/status callbacks cannot restore it.
         PairedAndroidDeviceStore.forget(agentID)
@@ -1526,7 +1526,7 @@ final class AppModel: ObservableObject {
 
     var callAudioStatusText: String {
         if callLifecycleSnapshot.state == .connecting, audio.receiveOnly {
-            return audio.hasReceivedEarlyMedia ? "运营商语音 · 尚未接通" : "正在连接运营商语音 · 尚未接通"
+            return audio.hasReceivedEarlyMedia ? "Operator voice · Not connected yet" : "Connecting to operator voice · Not connected yet"
         }
         if currentCallTransport == .vowlan,
            !audio.transportReady, let error = audio.errorMessage { return error }
@@ -1813,7 +1813,7 @@ final class AppModel: ObservableObject {
         let key = deviceCalls.key(agentID: agentID, callID: identity.callID)
         let adopted = key != nil && deviceCalls.latestEvent(for: key!)?.state == state
         Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "voble",
-            phase: "call_state", title: "蓝牙通话身份衔接",
+            phase: "call_state", title: "Bluetooth call identity connection",
             fields: ["state": state.rawValue, "generation": String(identity.generation),
                      "epoch": String(epoch), "alias": String(provisional != nil),
                      "adopted": String(adopted), "provisional": String(identity.isProvisional)],
@@ -2212,7 +2212,7 @@ final class AppModel: ObservableObject {
         let ready = voble.state == .ready
         if isOnline { isOnline = false }
         if isReconnecting != !ready { isReconnecting = !ready }
-        let message = ready ? "蓝牙 Agent 已连接" : "正在连接蓝牙 Agent"
+        let message = ready ? "Bluetooth Agent is connected" : "Connecting Bluetooth Agent"
         if connectionMessage != message { connectionMessage = message }
         consecutivePollFailures = 0
         eventStreamSupported = nil
@@ -2507,11 +2507,11 @@ final class AppModel: ObservableObject {
             consecutivePollFailures += 1
             isReconnecting = true
             let failedRouteName: String = {
-                guard let route = lastSuccessfulLocalAPI?.route else { return "本地控制链路" }
+                guard let route = lastSuccessfulLocalAPI?.route else { return "local control link" }
                 if case .vowlan = route { return "VoWLAN" }
                 return "模块本地链路"
             }()
-            connectionMessage = "正在重新连接\(failedRouteName)：\(error.localizedDescription)"
+            connectionMessage = "Reconnecting\\(failedRouteName):\\(error.localizedDescription)"
 
             // 一次长轮询中断不能代表 VoWLAN 已离线。通话动作后的 8 秒保护期内
             // 保留最后一次在线状态；其后也必须连续失败三次并让独立 health 请求失败。
@@ -2542,7 +2542,7 @@ final class AppModel: ObservableObject {
                 if health?.ok == false {
                     connectionMessage = health?.cellularRecovery?.isEmpty == false
                         ? "模块已连接，AT 通道恢复中 · \(health!.cellularRecovery!)"
-                        : "模块已连接，AT 通道正在自动恢复"
+                        : "The module is connected and the AT channel is recovering automatically"
                 }
                 return
             }
@@ -2560,8 +2560,8 @@ final class AppModel: ObservableObject {
                     cellularState: cloudAgentStatus?.cellularState ?? modemStatus?.cellularState
                 )
                 connectionMessage = IPhoneCloudCallSession.shared.isRecovering
-                    ? "云端通话在线，公网 PCM 正在重新连接"
-                    : "云端通话在线，本地网络正在重新连接"
+                    ? "Cloud call is online, public network PCM is reconnecting"
+                    : "Cloud call is online, local network is reconnecting"
                 var lifecycleCall = lifecycleRecord(from: activeCall ?? remoteCall)
                 await awaitCloudStatusForLiveActivity(call: lifecycleCall)
                 lifecycleCall = lifecycleRecord(from: activeCall ?? remoteCall)
@@ -2836,8 +2836,8 @@ final class AppModel: ObservableObject {
         case .localOnlineNoService:
             let detail = modemStatus?.cellularRecovery ?? modemStatus?.registrationText
             connectionMessage = detail?.isEmpty == false
-                ? "本地网络已连接 · \(detail!)"
-                : "本地网络已连接，蜂窝网络正在恢复"
+                ? "The local network is connected · \\(detail!)"
+                : "Local network connected, cellular network recovering"
         case .cloudOnly, .offline:
             break
         }
@@ -2846,11 +2846,11 @@ final class AppModel: ObservableObject {
     private func cloudConnectionMessage(for status: CloudAgentStatus) -> String {
         let local = "本地网络中断，Android 云端在线"
         if status.cellularState == "registered" {
-            return local + "，来电将通过云端接听"
+            return local + ", incoming calls will be answered via the cloud"
         }
         let detail = status.cellularRecovery?.isEmpty == false
             ? status.cellularRecovery!
-            : (status.cellularRegistration?.isEmpty == false ? status.cellularRegistration! : "蜂窝网络恢复中")
+            : (status.cellularRegistration?.isEmpty == false ? status.cellularRegistration! : "Cellular network restoring")
         return local + " · " + detail
     }
 
@@ -2875,7 +2875,7 @@ final class AppModel: ObservableObject {
             endedAt: nil,
             missed: false
         )
-        debugDialLog(LocalModePreference.isEnabled() ? "本地模式直接呼出" : "开始提交 CallKit 系统呼出")
+        debugDialLog(LocalModePreference.isEnabled() ? "本地模式直接呼出" : "Start submitting CallKit system outbound calls")
         await perform {
             if LocalModePreference.isEnabled() {
                 try await self.callKitStart(number: number)
@@ -2883,12 +2883,12 @@ final class AppModel: ObservableObject {
             }
             do {
                 try await self.callKit.startOutgoingCall(number: number, intentID: intentID)
-                debugDialLog("CallKit 呼出事务已提交")
+                debugDialLog("CallKit outbound transaction has been submitted")
             } catch CallKitBridgeError.unavailable {
                 // 受限签名或系统禁用 CallKit 时仍允许用户拨出，但不伪造系统 UUID。
                 // 仍复用标准路由选择，确保 VoWLAN 在线时控制与 PCM 都锁定到热点。
                 try await self.callKitStart(number: number)
-                debugDialLog("CallKit 不可用，已按当前传输路由直拨")
+                debugDialLog("CallKit is not available. Direct dialing has been made according to the current transmission route.")
             }
         }
     }
@@ -3083,7 +3083,7 @@ final class AppModel: ObservableObject {
     ) async {
         if let key = presentedDeviceCall, deviceCallRouter.route(for: key) != nil {
             guard callID == localPresentationID(key), deviceCalls.latestEvent(for: key)?.state.isTerminal == false else {
-                errorMessage = "该本地通话已结束或已被另一通电话替换"; return
+                errorMessage = "The local call has ended or been replaced by another call"; return
             }
             switch action {
             case .answer: await answer()
@@ -3095,7 +3095,7 @@ final class AppModel: ObservableObject {
         }
         guard let identity = vobleCalls.currentIdentity,
               identity.callID == callID else {
-            errorMessage = "该蓝牙通话已经结束或被另一通电话替换"
+            errorMessage = "The Bluetooth call has ended or been replaced by another call"
             return
         }
         switch action {
@@ -3200,7 +3200,7 @@ final class AppModel: ObservableObject {
                     audio.setMuted(target)
                     errorMessage = nil
                 } else {
-                    errorMessage = "系统静音切换失败：\(error.localizedDescription)"
+                    errorMessage = "System mute switching failed: \\(error.localizedDescription)"
                 }
             }
             return
@@ -3233,7 +3233,7 @@ final class AppModel: ObservableObject {
             isRecording = response.recording
             errorMessage = nil
         } catch {
-            debugDialLog("操作失败：\(error.localizedDescription)")
+            debugDialLog("Operation failed: \\(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }
@@ -3283,7 +3283,7 @@ final class AppModel: ObservableObject {
             Task {
                 await AgentVerboseTraceRecorder.shared.recordEvent(
                     source: "ios", category: "sms", phase: "send_start",
-                    title: "发送短信",
+                    title: "sending a text message",
                     fields: ["route": startRoute, "slot": startSlot,
                              "chars": String(startChars),
                              "bound": String(startBound)]
@@ -3312,14 +3312,14 @@ final class AppModel: ObservableObject {
                     CloudAgentTargetStore.remember(route.agentID)
                 }
                 if smsSlot != nil, route.agentID != smsAgentID {
-                    throw CloudCommandError.failed("短信发送设备已变化，请重新选择发送卡")
+                    throw CloudCommandError.failed("The SMS sending device has changed, please select the sending card again.")
                 }
                 result = try await VoIPPushController.shared.sendCloudSMS(to: target, message: body, target: route, simAccount: smsSlot)
             } else {
                 throw CloudCommandError.cloudModeDisabled
             }
             let sentPhase = result.sent ? "sent" : "not_sent"
-            let sentTitle = result.sent ? "短信已发送" : "短信未发送"
+            let sentTitle = result.sent ? "短信已发送" : "SMS not sent"
             let sentSegments = result.segments ?? 0
             let sentRoute = smsRoute
             let sentSlot = smsSlotLabel
@@ -3352,7 +3352,7 @@ final class AppModel: ObservableObject {
             Task {
                 await AgentVerboseTraceRecorder.shared.recordEvent(
                     source: "ios", category: "sms", phase: "send_failed",
-                    title: "短信发送失败",
+                    title: "SMS sending failed",
                     detail: failureDetail,
                     fields: ["route": failureRoute, "slot": failureSlot,
                              "error_type": failureType],
@@ -3372,7 +3372,7 @@ final class AppModel: ObservableObject {
             ?? ISO8601DateFormatter().date(from: sms.timestamp)
             ?? Date()
         var message = SMSMessage(
-            sender: sms.sender.isEmpty ? "未知号码" : sms.sender,
+            sender: sms.sender.isEmpty ? "unknown number" : sms.sender,
             content: sms.content,
             code: nil,
             timestamp: timestamp,
@@ -3396,7 +3396,7 @@ final class AppModel: ObservableObject {
         Task {
             await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "ios", category: "sms", phase: "received_voble",
-                title: "VoBLE 收到短信",
+                title: "VoBLE receives text message",
                 fields: ["slot": message.simSlot ?? "-"]
             )
         }
@@ -3477,7 +3477,7 @@ final class AppModel: ObservableObject {
         guard !ids.isEmpty else { return }
         let remaining = callHistory.filter { !ids.contains($0.id) }
         guard historyStore.saveCallHistory(remaining) else {
-            errorMessage = "无法删除本机通话记录，请稍后重试"
+            errorMessage = "Unable to delete local call history, please try again later"
             return
         }
         callHistory = remaining
@@ -3599,8 +3599,8 @@ final class AppModel: ObservableObject {
     private static func isSystemSMSStatus(_ message: SMSMessage) -> Bool {
         // MIUI Messages posts a service-status notification with this text;
         // it is not an SMS and must not appear in the conversation list.
-        (message.sender.contains("短信") && message.sender.contains("正在运行"))
-            || message.content.contains("点按即可了解详情或停止应用")
+        (message.sender.contains("Short message") && message.sender.contains("Running"))
+            || message.content.contains("Tap to learn more or stop the app")
     }
 
     private func perform(
@@ -3719,7 +3719,7 @@ final class AppModel: ObservableObject {
                     return true
                 })
             await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "early-media",
-                phase: "negotiation_finished", title: "接通前语音协商结束", fields: ["outcome": outcome.rawValue])
+                phase: "negotiation_finished", title: "Voice negotiation ends before connection", fields: ["outcome": outcome.rawValue])
         }
     }
 
@@ -3774,7 +3774,7 @@ final class AppModel: ObservableObject {
         do {
             guard let localAPI = reachableLocalAPI else {
                 backgroundStandby.resumeAfterCall()
-                errorMessage = "本地语音路由尚未锁定"
+                errorMessage = "Local voice routing is not locked yet"
                 return
             }
             let pcmRoute = currentPCMRoute ?? Self.pcmRoute(for: localAPI.route)
@@ -3827,7 +3827,7 @@ final class AppModel: ObservableObject {
             // The coordinator already rolled back only this startup's resources.
             guard isCurrent() else { return }
             backgroundStandby.resumeAfterCall()
-            errorMessage = "无法登记通话音频：\(error.localizedDescription)"
+            errorMessage = "Unable to register call audio: \\(error.localizedDescription)"
             return
         }
     }
@@ -3889,7 +3889,7 @@ final class AppModel: ObservableObject {
         Task {
             await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "ios", category: "call_transport", phase: "locked",
-                title: transport == .vowlan ? "本通已锁定 VoWLAN" : "本通已锁定模块本地链路",
+                title: transport == .vowlan ? "VoWLAN is locked" : "本通已锁定模块本地链路",
                 fields: ["generation": String(callLifecycleSnapshot.generation)]
             )
         }
@@ -3911,7 +3911,7 @@ final class AppModel: ObservableObject {
         guard callLifecycleSnapshot.callID == ending.callID,
               callLifecycleSnapshot.callUUID == ending.callUUID,
               callLifecycleSnapshot.generation == ending.generation else { return }
-        errorMessage = "VoWLAN 局域网已断开；当前通话已结束，下一通将自动选择云端"
+        errorMessage = "VoWLAN LAN has been disconnected; the current call has ended and the next call will automatically select the cloud"
         await AgentVerboseTraceRecorder.shared.recordEvent(
             source: "ios", category: "call_transport", phase: "ended",
             title: "hotspot_lost_no_midcall_handover",
@@ -3992,7 +3992,7 @@ final class AppModel: ObservableObject {
         // pairing identities, endpoints or authentication material.
         Task {
             await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "call-terminal",
-                phase: phase, title: "通话终态处理", fields: fields)
+                phase: phase, title: "Call end status processing", fields: fields)
         }
     }
 
@@ -4077,7 +4077,7 @@ final class AppModel: ObservableObject {
                           self.callLifecycleSnapshot.state.isTerminal,
                           self.pendingOutgoingCall == nil else { return }
                     self.callEndFeedbackRevision &+= 1
-                    self.errorMessage = "呼叫未接通，通话已结束。"
+                    self.errorMessage = "The call was not connected and the call has ended."
                     self.audio.playOutgoingEndedTone()
                 }
             }
@@ -4808,7 +4808,7 @@ extension AppModel: CallKitActionHandling {
                       resolvedPushIdentity || [incoming.id, incoming.androidID].compactMap({ $0 }).contains(answeringCall.callID ?? ""),
                       pushedCall?.agentID == nil || pushedCall?.agentID == agentID else { throw DeviceCallRoutingError.stale }
                 await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "call", phase: "answer_resolved",
-                    title: "来电身份已解析", fields: ["call_id": incoming.androidID ?? incoming.id,
+                    title: "The calling identity has been resolved", fields: ["call_id": incoming.androidID ?? incoming.id,
                         "call_uuid": uuid.uuidString, "device_id": agentID,
                         "generation": String(answeringCall.generation), "status_revision": String(status.revision ?? 0),
                         "answer_source": origin == .system ? "callkit" : "app", "previous_state": answeringCall.state.rawValue,

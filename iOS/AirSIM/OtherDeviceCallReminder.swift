@@ -47,8 +47,8 @@ final class OtherDeviceCallReminderController: ObservableObject {
             guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else { return }
             guard lookup(reminder.key)?.stillRinging == true else { return }
             let content = UNMutableNotificationContent()
-            content.title = "其他安卓来电 · \(reminder.deviceName)"
-            content.body = reminder.number ?? "号码未提供"
+            content.title = "Other Android calls · \\(reminder.deviceName)"
+            content.body = reminder.number ?? "Number not provided"
             content.userInfo = reminder.userInfo
             content.sound = nil // Never mix a second ringtone into the current call.
             try? await center.add(UNNotificationRequest(identifier: reminder.id, content: content, trigger: nil))
@@ -99,7 +99,7 @@ struct OtherDeviceCallSheet: View {
         NavigationStack {
             Form {
                 if model.otherDeviceCallReminders.count > 1 {
-                    Section("选择来电设备") {
+                    Section("Select calling device") {
                         ForEach(model.otherDeviceCallReminders) { item in
                             Button {
                                 _ = model.openOtherDeviceCallNotification(item.userInfo)
@@ -114,13 +114,13 @@ struct OtherDeviceCallSheet: View {
                         }
                     }
                 }
-                Section("来电设备") {
+                Section("Calling device") {
                     Text(reminder.deviceName).font(.headline)
-                    Text(reminder.number ?? "号码未提供")
+                    Text(reminder.number ?? "Number not provided")
                     Text(model.cloudCallOwnsPrimaryPresentation
                          ? "当前云端通话继续；请先结束当前通话再接听"
                          : (model.deviceCalls.active == nil
-                            ? "接听将使用此设备的本地链路"
+                            ? "Listening will use this device's local link"
                             : "当前通话继续；请先结束当前通话再接听"))
                         .font(.footnote).foregroundStyle(.secondary)
                 }

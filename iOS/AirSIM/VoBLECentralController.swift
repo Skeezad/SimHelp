@@ -127,11 +127,11 @@ enum VoBLECentralError: LocalizedError, Equatable {
     case bluetooth(String)
     var errorDescription: String? {
         switch self {
-        case .notReady: "蓝牙 Agent 尚未完成认证"
-        case .invalidResponse: "蓝牙 Agent 响应无效"
-        case .authenticationFailed: "蓝牙消息认证失败"
-        case .commandTimedOut: "蓝牙命令响应超时"
-        case .disconnected: "蓝牙连接已断开"
+        case .notReady: "Bluetooth Agent has not yet completed certification"
+        case .invalidResponse: "Bluetooth Agent response is invalid"
+        case .authenticationFailed: "Bluetooth message authentication failed"
+        case .commandTimedOut: "Bluetooth command response timeout"
+        case .disconnected: "Bluetooth connection disconnected"
         case let .bluetooth(message): message
         }
     }
@@ -141,13 +141,13 @@ enum VoBLEPairingRecovery {
     static func userMessage(for message: String) -> String {
         let normalized = message.lowercased()
         if normalized.contains("already paired") {
-            return "Android 仍保存旧的 VoBLE 凭据。请在 Android SimHelp → 设置 → VoBLE 认证中清除旧配对，再重新配对。"
+            return "Android still saves old VoBLE credentials. Please clear the old pairing in Android SimHelp → Settings → VoBLE Authentication and pair again."
         }
         if normalized.contains("reconnect authentication failed") {
             return "两端 VoBLE 密钥不一致。请在 Android SimHelp → 设置 → VoBLE 认证中清除旧配对，再重新配对。"
         }
         if normalized.contains("peer is not paired") {
-            return "Android 已没有对应的 VoBLE 凭据。请清除本机旧凭据，然后重新核对安全码。"
+            return "There is no corresponding VoBLE credential for Android. Please clear the old credentials for this machine and recheck the security code."
         }
         return message
     }
@@ -685,7 +685,7 @@ final class VoBLECentralController: NSObject, ObservableObject, VoBLECentralCont
             }
             guard let self, self.enabled,
                   self.reconnectBarrier.disconnectingID == value.identifier else { return }
-            self.apply(.authenticationFailed("旧蓝牙连接尚未释放，请稍后重试"))
+            self.apply(.authenticationFailed("The old Bluetooth connection has not been released, please try again later"))
         }
     }
 
@@ -773,7 +773,7 @@ final class VoBLECentralController: NSObject, ObservableObject, VoBLECentralCont
 
     private func enqueuePairingMessage(_ data: Data) {
         guard queuedPairingMessages < 16 else {
-            failAuthentication("蓝牙配对消息过多，请重新连接")
+            failAuthentication("Too many Bluetooth pairing messages, please reconnect.")
             return
         }
         queuedPairingMessages += 1
@@ -1013,12 +1013,12 @@ extension VoBLECentralController: @preconcurrency CBCentralManagerDelegate {
         guard enabled, reconnectBarrier.permitsConnection, self.peripheral === peripheral else {
             localCancelRequested = true
             central.cancelPeripheralConnection(peripheral)
-            traceConnectionEvent(phase: "connect_guard_cancelled", title: "VoBLE 连接被本地取消")
+            traceConnectionEvent(phase: "connect_guard_cancelled", title: "VoBLE connection was canceled locally")
             return
         }
         connectionTimeoutTask?.cancel(); connectionTimeoutTask = nil
         systemReconnecting = false
-        traceConnectionEvent(phase: "connected", title: "VoBLE 已连接")
+        traceConnectionEvent(phase: "connected", title: "VoBLE is connected")
         apply(.connected); peripheral.discoverServices([Self.serviceUUID])
     }
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
@@ -1048,7 +1048,7 @@ extension VoBLECentralController: @preconcurrency CBCentralManagerDelegate {
         localCancelRequested = false
         traceConnectionEvent(
             phase: "disconnected",
-            title: "VoBLE 连接断开",
+            title: "VoBLE connection lost",
             fields: [
                 "is_reconnecting": isReconnecting ? "true" : "false",
                 "local_cancel": localCancel ? "true" : "false"
@@ -1101,7 +1101,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didModifyServices invalidatedServices: [CBService]) {
         guard acceptsCallback(from: peripheral),
               invalidatedServices.contains(where: { $0.uuid == Self.serviceUUID }) else { return }
-        traceConnectionEvent(phase: "services_invalidated", title: "VoBLE 服务失效")
+        traceConnectionEvent(phase: "services_invalidated", title: "VoBLE service failure")
         invalidateServices()
         peripheral.discoverServices([Self.serviceUUID])
     }
@@ -1110,7 +1110,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
         guard acceptsCallback(from: peripheral) else { return }
         if let error { apply(.authenticationFailed(error.localizedDescription)); return }
         guard let service = peripheral.services?.first(where: { $0.uuid == Self.serviceUUID }) else {
-            apply(.authenticationFailed("未发现 SimHelp 蓝牙服务")); return
+            apply(.authenticationFailed("SimHelp Bluetooth service not found")); return
         }
         currentService = service
         peripheral.discoverCharacteristics([Self.capabilityUUID, Self.pairingUUID, Self.controlRXUUID,
@@ -1121,11 +1121,11 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
         if let error { apply(.authenticationFailed(error.localizedDescription)); return }
         pairing = nil; controlRX = nil; controlTX = nil; audioUplink = nil; audioDownlink = nil
         let required: [(CBUUID, CBCharacteristicProperties, String)] = [
-            (Self.pairingUUID, [.write, .indicate], "配对"),
+            (Self.pairingUUID, [.write, .indicate], "pair"),
             (Self.controlRXUUID, .write, "控制接收"),
-            (Self.controlTXUUID, .indicate, "控制通知"),
+            (Self.controlTXUUID, .indicate, "Control notifications"),
             (Self.audioUplinkUUID, .writeWithoutResponse, "音频上行"),
-            (Self.audioDownlinkUUID, .notify, "音频下行")
+            (Self.audioDownlinkUUID, .notify, "Audio downlink")
         ]
         let values = service.characteristics ?? []
         let missing = required.compactMap { uuid, properties, name in
@@ -1135,7 +1135,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
             let attempt = discoveryRetries + 1
             Task { await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "APP", category: "bluetooth", phase: "service_discovery",
-                title: "VoBLE 服务发现", fields: ["attempt": String(attempt), "missing": missing.joined(separator: ",")],
+                title: "VoBLE service discovery", fields: ["attempt": String(attempt), "missing": missing.joined(separator: ",")],
                 isFailure: true
             ) }
             if discoveryRetries < 2 {
@@ -1146,7 +1146,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
                 // silently accept an incomplete/old GATT database.
                 peripheral.discoverServices([Self.serviceUUID])
             } else {
-                apply(.authenticationFailed("SimHelp 蓝牙特征不完整：缺少\(missing.joined(separator: "、"))；请确认安卓 App 版本并重新连接"))
+                apply(.authenticationFailed("SimHelp Bluetooth feature is incomplete: missing\\(missing.joined(separator:"、")); Please confirm the Android App version and reconnect"))
             }
             return
         }
@@ -1164,7 +1164,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
             }
         }
         guard pairing != nil, controlRX != nil, controlTX != nil, audioUplink != nil, audioDownlink != nil else {
-            apply(.authenticationFailed("SimHelp 蓝牙特征不完整")); return
+            apply(.authenticationFailed("SimHelp Bluetooth features are incomplete")); return
         }
         apply(.characteristicsReady)
         beginPairingIfPossible()

@@ -310,9 +310,9 @@ final class SMSConversationTimelineController: UIViewController, UICollectionVie
         return UIContextMenuConfiguration(identifier: id as NSString, previewProvider: nil) { [weak self] _ in
             guard let self else { return nil }
             return UIMenu(children: [
-                UIAction(title: L10n.t("复制"), image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in self?.copyMessage(id) },
-                UIAction(title: L10n.t("选择文本"), image: UIImage(systemName: "text.cursor")) { [weak self] _ in self?.pendingMenuAction = .text(id) },
-                UIAction(title: L10n.t("更多…"), image: UIImage(systemName: "ellipsis.circle")) { [weak self] _ in self?.pendingMenuAction = .more(id) }
+                UIAction(title: L10n.t("copy"), image: UIImage(systemName: "doc.on.doc")) { [weak self] _ in self?.copyMessage(id) },
+                UIAction(title: L10n.t("Select text"), image: UIImage(systemName: "text.cursor")) { [weak self] _ in self?.pendingMenuAction = .text(id) },
+                UIAction(title: L10n.t("More…"), image: UIImage(systemName: "ellipsis.circle")) { [weak self] _ in self?.pendingMenuAction = .more(id) }
             ])
         }
     }
@@ -474,7 +474,7 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         body.textAlignment = .natural
         body.accessibilityLanguage = locale.identifier
         let outgoing = item.message.isOutgoing
-        body.accessibilityHint = outgoing ? L10n.t("已发送") : nil
+        body.accessibilityHint = outgoing ? L10n.t("Sent") : nil
         body.textColor = outgoing ? .white : .label
         body.linkTextAttributes = [.foregroundColor: outgoing ? UIColor.white : UIColor.link,
                                    .underlineStyle: NSUnderlineStyle.single.rawValue]
@@ -484,7 +484,7 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         dateLabel.isHidden = !item.showsTimestamp
         var details: [String] = []
         details.append(item.message.simDeliveryLabel)
-        if outgoing && item.showsTail { details.append(L10n.t("已发送")) }
+        if outgoing && item.showsTail { details.append(L10n.t("Sent")) }
         detailLabel.text = details.joined(separator: " · ")
         detailLabel.isHidden = details.isEmpty
         detailLabel.textAlignment = outgoing ? .right : .left
@@ -504,13 +504,13 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
             endTextSelection()
             accessibilityLabel = [dateLabel.text, body.text, detailLabel.text].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ", ")
             accessibilityTraits = selected ? [.button, .selected] : .button
-            accessibilityCustomActions = [UIAccessibilityCustomAction(name: L10n.t(selected ? "取消选择" : "选择短信")) { [weak self] _ in self?.onToggle?(); return true }]
+            accessibilityCustomActions = [UIAccessibilityCustomAction(name: L10n.t(selected ? "Deselect" : "Select SMS")) { [weak self] _ in self?.onToggle?(); return true }]
         } else {
             accessibilityCustomActions = nil
             body.accessibilityCustomActions = [
-                UIAccessibilityCustomAction(name: L10n.t("复制")) { [weak self] _ in self?.onCopy?(); return true },
-                UIAccessibilityCustomAction(name: L10n.t("选择文本")) { [weak self] _ in self?.onSelectText?(); return true },
-                UIAccessibilityCustomAction(name: L10n.t("更多…")) { [weak self] _ in self?.onMore?(); return true }
+                UIAccessibilityCustomAction(name: L10n.t("copy")) { [weak self] _ in self?.onCopy?(); return true },
+                UIAccessibilityCustomAction(name: L10n.t("Select text")) { [weak self] _ in self?.onSelectText?(); return true },
+                UIAccessibilityCustomAction(name: L10n.t("More…")) { [weak self] _ in self?.onMore?(); return true }
             ]
         }
         setNeedsLayout()

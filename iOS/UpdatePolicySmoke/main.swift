@@ -86,7 +86,7 @@ let failure = await MainActor.run {
     })
 }
 let failed = await failure.check(manual: true)
-check(failed != nil && failed?.candidate == nil && failed?.message.contains("失败") == true,
+check(failed != nil && failed?.candidate == nil && failed?.message.contains("fail") == true,
       "offline failure must not claim latest version")
 let automaticRetry = await failure.check(manual: false)
 check(automaticRetry == nil, "failure must not trigger foreground request storm")

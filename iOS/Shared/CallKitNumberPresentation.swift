@@ -4,7 +4,7 @@ import Foundation
 /// A remote SIM's national number is not necessarily in the iPhone/Watch's region.
 /// Never infer a calling code from the local device's locale or account region.
 enum CallKitNumberPresentation {
-    static func handle(number: String?, fallback: String = "未知号码") -> CXHandle {
+    static func handle(number: String?, fallback: String = "unknown number") -> CXHandle {
         let value = number.flatMap {
             $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0
         } ?? fallback
@@ -12,7 +12,7 @@ enum CallKitNumberPresentation {
                         value: value)
     }
 
-    static func update(number: String?, callerName: String?, fallback: String = "未知号码") -> CXCallUpdate {
+    static func update(number: String?, callerName: String?, fallback: String = "unknown number") -> CXCallUpdate {
         let update = CXCallUpdate()
         let handle = handle(number: number, fallback: fallback)
         update.remoteHandle = handle

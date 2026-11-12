@@ -153,7 +153,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     if state.phase == .standby {
                         HStack(spacing: 5) {
                             Circle().fill(Color.green).frame(width: 7, height: 7)
-                            Text(connectionStatusLine(state) ?? "Agent 在线")
+                            Text(connectionStatusLine(state) ?? "Agent online")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.green)
                         }
@@ -164,11 +164,11 @@ struct SimHelpLiveActivityWidget: Widget {
                     } else if state.phase == .cloudStandby {
                         HStack(spacing: 5) {
                             Circle().fill(Color.cyan).frame(width: 7, height: 7)
-                            Text("云端在线")
+                            Text("Cloud online")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.cyan)
                         }
-                        Text("公网中继保持连接 · 可接收来电与短信")
+                        Text("Public network relay remains connected · Can receive incoming calls and text messages")
                             .font(.caption2)
                             .foregroundStyle(.white.opacity(0.62))
                             .lineLimit(1)
@@ -234,11 +234,11 @@ struct SimHelpLiveActivityWidget: Widget {
                         .background(Color.white.opacity(0.10), in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("切换到下一页 Android Agent")
+                .accessibilityLabel("Switch to next page Android Agent")
             }
             Text(pages > 1
-                ? "第 \(page + 1)/\(pages) 页 · 共 \(count) 台"
-                : "共 \(count) 台")
+                ? "Page \\(page + 1)/\\(pages) · Total \\(count) units"
+                : "Total \\(count) units")
                 .font(.system(size: 9.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.52))
                 .lineLimit(1)
@@ -256,7 +256,7 @@ struct SimHelpLiveActivityWidget: Widget {
             let page = LiveActivityAgentPaging.pageIndex(state.agentPage, for: count)
             return "第 \(page + 1)/\(pages) 页 · 右上角翻页"
         }
-        return count > 1 ? "轻点设备，切换下一通拨号" : "Android Agent 列表"
+        return count > 1 ? "Tap the device to switch to the next dialing call" : "Android Agent List"
     }
 
     private func agentListCenter(
@@ -422,7 +422,7 @@ struct SimHelpLiveActivityWidget: Widget {
                         .minimumScaleFactor(0.72)
                         .layoutPriority(1)
                     if agent.isCurrent {
-                        Text("当前")
+                        Text("current")
                             .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(.green)
                             .padding(.horizontal, 4)
@@ -554,7 +554,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             } else if state.phase == .offline {
-                Label("等待 Android Agent 恢复", systemImage: "wifi.exclamationmark")
+                Label("Wait for Android Agent to resume", systemImage: "wifi.exclamationmark")
                     .lineLimit(1)
             } else {
                 Text(standbyNetworkLine(state))
@@ -588,7 +588,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+            .accessibilityLabel("Switch Android Agent, total \\(state.pairedAgentCount ?? 0) units")
         } else {
             pairedAgentCountView(state)
         }
@@ -599,7 +599,7 @@ struct SimHelpLiveActivityWidget: Widget {
     ) -> some View {
         Group {
             if let count = state.pairedAgentCount, count > 1 {
-                Text("\(count) 台")
+                Text("\\(count) Taiwan")
             } else {
                 Image(systemName: state.phase == .cloudStandby ? "icloud.fill" : "smartphone")
             }
@@ -626,7 +626,7 @@ struct SimHelpLiveActivityWidget: Widget {
                         .minimumScaleFactor(0.8)
                         .layoutPriority(1)
                     if let count = state.pairedAgentCount, count > 1 {
-                        Text("共 \(count) 台")
+                        Text("Total \\(count) units")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.white.opacity(0.52))
                             .fixedSize(horizontal: true, vertical: false)
@@ -636,7 +636,7 @@ struct SimHelpLiveActivityWidget: Widget {
                         Button(intent: SwitchSimHelpAgentIntent()) {
                             HStack(spacing: 3) {
                                 Image(systemName: "arrow.triangle.2.circlepath")
-                                Text("切换")
+                                Text("switch")
                             }
                             .font(.caption2.weight(.semibold))
                             .foregroundStyle(.white.opacity(0.85))
@@ -646,7 +646,7 @@ struct SimHelpLiveActivityWidget: Widget {
                             .background(Color.white.opacity(0.10), in: Capsule())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+                        .accessibilityLabel("Switch Android Agent, total \\(state.pairedAgentCount ?? 0) units")
                     }
                 }
                 Text(agentDetailLine(state))
@@ -709,7 +709,7 @@ struct SimHelpLiveActivityWidget: Widget {
             }
         }
         .frame(height: 14)
-        .accessibilityLabel(dbm.map { "信号 \($0) dBm" } ?? "信号未知")
+        .accessibilityLabel(dbm.map { "Signal \\($0) dBm" } ?? "信号未知")
     }
 
     private func nonEmpty(_ value: String?) -> String? {
@@ -766,9 +766,9 @@ struct SimHelpLiveActivityWidget: Widget {
         _ state: SimHelpCallActivityAttributes.ContentState
     ) -> String? {
         var values: [String] = []
-        if vowlanIsOnline(state) { values.append("VoWLAN 在线") }
-        if bluetoothIsOnline(state) { values.append("VoBLE 在线") }
-        if cloudIsOnline(state) { values.append("云端在线") }
+        if vowlanIsOnline(state) { values.append("VoWLAN online") }
+        if bluetoothIsOnline(state) { values.append("VoBLE online") }
+        if cloudIsOnline(state) { values.append("Cloud online") }
         return values.isEmpty ? nil : values.joined(separator: " · ")
     }
 
@@ -778,13 +778,13 @@ struct SimHelpLiveActivityWidget: Widget {
         var parts: [String] = []
         if let mode = state.networkMode, !mode.isEmpty { parts.append(mode) }
         if let band = state.radioBand, !band.isEmpty { parts.append(band) }
-        return parts.isEmpty ? "正在读取蜂窝网络" : parts.joined(separator: " · ")
+        return parts.isEmpty ? "Reading cellular network" : parts.joined(separator: " · ")
     }
 
     private func standbyCarrierName(
         _ state: SimHelpCallActivityAttributes.ContentState
     ) -> String {
-        nonEmpty(state.operatorName) ?? "蜂窝网络"
+        nonEmpty(state.operatorName) ?? "cellular network"
     }
 
     private func idleTitle(
@@ -794,7 +794,7 @@ struct SimHelpLiveActivityWidget: Widget {
         case .standby:
             return nonEmpty(state.agentDeviceName) ?? standbyCarrierName(state)
         case .cloudStandby:
-            return nonEmpty(state.agentDeviceName) ?? "云端在线"
+            return nonEmpty(state.agentDeviceName) ?? "Cloud online"
         case .incoming, .active, .held, .offline:
             return state.displayName
         }
@@ -864,7 +864,7 @@ struct SimHelpLiveActivityWidget: Widget {
             return "\(state.phase.title) · \(transport.title)"
         case .standby:
             if let status = connectionStatusLine(state) { return status }
-            if let transport = state.transport { return "\(transport.title) 在线" }
+            if let transport = state.transport { return "\\(transport.title) Online" }
             return state.phase.title
         case .cloudStandby:
             return connectionStatusLine(state) ?? state.phase.title

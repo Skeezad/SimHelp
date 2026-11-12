@@ -193,7 +193,7 @@ final class VoBLECallCoordinator {
             let generation = previous + 1
             defaults.set(Int(generation), forKey: generationKey)
             await traceRecorder.recordEvent(source: "APP", category: "voble", phase: "generation_sync",
-                title: "蓝牙拨号序号已同步", fields: ["peer_floor": String(floor), "generation": String(generation)])
+                title: "Bluetooth dial-up sequence number has been synchronized", fields: ["peer_floor": String(floor), "generation": String(generation)])
             // Keep the cancellable reservation across every pre-dial await,
             // including diagnostics; a completed hangup must never dial later.
             guard !Task.isCancelled, pendingOutgoing?.token == token, reducer.current == nil else {
@@ -212,7 +212,7 @@ final class VoBLECallCoordinator {
                 throw VoBLECentralError.bluetooth(response.detail.isEmpty ? response.code : response.detail)
             }
             await traceRecorder.recordEvent(source: "APP", category: "voble", phase: "dial_reply",
-                title: "蓝牙拨号已接受", fields: ["generation": String(generation), "success": "true"])
+                title: "Bluetooth dialing accepted", fields: ["generation": String(generation), "success": "true"])
             // Telecom events may arrive before the dial response. Never restore
             // the provisional ID or regress an already active call to connecting.
             guard let current = reducer.current, current.generation == generation else {
@@ -337,7 +337,7 @@ final class VoBLECallCoordinator {
         }
         let permitted = mediaPermission(identity), matches = reducer.current == identity
         Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "voble",
-            phase: "media_admission", title: "蓝牙媒体归属检查",
+            phase: "media_admission", title: "Bluetooth media ownership check",
             fields: ["permitted": String(permitted), "identity_current": String(matches),
                      "generation": String(identity.generation)], isFailure: !permitted || !matches) }
         guard permitted, matches else { return }

@@ -128,10 +128,10 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
 
             var title: String {
                 switch self {
-                case .standby: return "Agent 待机"
-                case .cloudStandby: return "云端在线"
+                case .standby: return "Agent standby"
+                case .cloudStandby: return "Cloud online"
                 case .incoming: return "Agent 来电"
-                case .active: return "通话中"
+                case .active: return "In call"
                 case .held: return "通话保持"
                 case .offline: return "Agent 离线"
                 }
@@ -152,7 +152,7 @@ extension SimHelpCallActivityAttributes.ContentState {
         return Self(
             callID: "",
             number: "",
-            displayName: "等待 Agent 来电",
+            displayName: "Waiting for Agent to call",
             phase: .standby,
             startedAt: startedAt,
             transport: transport,
@@ -298,7 +298,7 @@ struct AnswerSimHelpCallIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "接听模块来电"
     static var openAppWhenRun = false
 
-    @Parameter(title: "通话 ID") var callID: String
+    @Parameter(title: "Call ID") var callID: String
 
     init() { callID = "" }
     init(callID: String) { self.callID = callID }
@@ -316,7 +316,7 @@ struct RejectSimHelpCallIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "拒绝模块来电"
     static var openAppWhenRun = false
 
-    @Parameter(title: "通话 ID") var callID: String
+    @Parameter(title: "Call ID") var callID: String
 
     init() { callID = "" }
     init(callID: String) { self.callID = callID }
@@ -333,7 +333,7 @@ struct RejectSimHelpCallIntent: LiveActivityIntent {
 /// 跨设备漂移。单台设备仍可通过行内点击选择。
 @available(iOS 17.0, *)
 struct SwitchSimHelpAgentIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "下一页 Android Agent"
+    static var title: LocalizedStringResource = "Next page Android Agent"
     static var openAppWhenRun = false
 
     init() {}
@@ -348,7 +348,7 @@ struct SwitchSimHelpAgentIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct SelectSimHelpAgentIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "切换到这台 Android Agent"
+    static var title: LocalizedStringResource = "Switch to this Android Agent"
     static var openAppWhenRun = false
 
     @Parameter(title: "Agent ID") var agentID: String
@@ -366,10 +366,10 @@ struct SelectSimHelpAgentIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct HangUpSimHelpCallIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "挂断模块通话"
+    static var title: LocalizedStringResource = "Hang up module call"
     static var openAppWhenRun = false
 
-    @Parameter(title: "通话 ID") var callID: String
+    @Parameter(title: "Call ID") var callID: String
 
     init() { callID = "" }
     init(callID: String) { self.callID = callID }
@@ -403,13 +403,13 @@ enum SimHelpWidgetControlBridge {
 
 @available(iOS 17.0, *)
 struct SimHelpWidgetSwitchIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "切换 SimHelp 连接"
+    static var title: LocalizedStringResource = "Switch SimHelp connection"
     static var openAppWhenRun = false
     @available(iOS 26.0, *)
     static var supportedModes: IntentModes { .background }
-    @Parameter(title: "操作") var action: String
+    @Parameter(title: "operate") var action: String
     @Parameter(title: "当前值") var expected: String
-    @Parameter(title: "目标值") var target: String
+    @Parameter(title: "target value") var target: String
 
     init() { action = ""; expected = ""; target = "" }
     init(action: String, expected: String, target: String) {
@@ -425,7 +425,7 @@ struct SimHelpWidgetSwitchIntent: LiveActivityIntent {
 
 private enum SimHelpWidgetSwitchError: LocalizedError {
     case unavailable
-    var errorDescription: String? { "当前不能切换。请结束通话或等待小组件刷新后重试。" }
+    var errorDescription: String? { "Switching is currently not possible. Please end the call or wait for the widget to refresh and try again." }
 }
 
 private enum LiveActivityActionError: LocalizedError {
@@ -433,7 +433,7 @@ private enum LiveActivityActionError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .appUnavailable: return "请在 SimHelp App 内处理该通话"
+        case .appUnavailable: return "Please handle the call within SimHelp App"
         }
     }
 }
@@ -464,7 +464,7 @@ enum LiveActivityNumberFormatter {
     /// country-code/last-four displays.
     static func display(_ raw: String?) -> String {
         let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !trimmed.isEmpty else { return "未配置" }
+        guard !trimmed.isEmpty else { return "Not configured" }
         var digits = String(trimmed.filter(\.isNumber))
         guard digits.count >= 7 else { return trimmed }
         if trimmed.hasPrefix("00"), digits.hasPrefix("00") { digits.removeFirst(2) }

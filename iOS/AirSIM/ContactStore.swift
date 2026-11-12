@@ -192,7 +192,7 @@ final class ContactStore: ObservableObject {
                 return
             case .blocked:
                 isAuthorized = false
-                errorMessage = "通讯录权限已关闭，请在系统设置中开启"
+                errorMessage = "The address book permission has been turned off. Please turn it on in the system settings."
                 return
             }
 
@@ -208,7 +208,7 @@ final class ContactStore: ObservableObject {
                 try fetcher.fetchAll()
             }.value
             guard cache.save(contacts) else {
-                errorMessage = "通讯录已读取，但保存到本机失败"
+                errorMessage = "The address book has been read but failed to be saved to the local machine."
                 return
             }
             errorMessage = nil
@@ -231,7 +231,7 @@ final class ContactStore: ObservableObject {
     }
 
     func displayName(for number: String?) -> String {
-        guard let number, !number.isEmpty else { return "未知号码" }
+        guard let number, !number.isEmpty else { return "unknown number" }
         return contact(for: number)?.name ?? number
     }
 }
@@ -276,7 +276,7 @@ final class ContactCacheStore {
             needsNameRefresh = true
             return try JSONDecoder().decode([ContactStore.Contact].self, from: data)
         } catch {
-            Self.log("读取通讯录缓存失败：\(error.localizedDescription)")
+            Self.log("Failed to read address book cache: \\(error.localizedDescription)")
             return []
         }
     }
@@ -290,7 +290,7 @@ final class ContactCacheStore {
             needsNameRefresh = false
             return true
         } catch {
-            Self.log("保存通讯录缓存失败：\(error.localizedDescription)")
+            Self.log("Failed to save address book cache: \\(error.localizedDescription)")
             return false
         }
     }

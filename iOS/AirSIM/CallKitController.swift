@@ -167,7 +167,7 @@ final class CallKitController: NSObject {
         audioSessionIsActive = false
         resetCurrentCall()
 #if DEBUG
-        debugLog("本地模式已关闭 CallKit")
+        debugLog("Local mode is turned off for CallKit")
 #endif
     }
 
@@ -238,7 +238,7 @@ final class CallKitController: NSObject {
             return
         }
         guard incomingDeduplicator.shouldAccept(callID: call.callID, uuid: call.uuid) else {
-            debugLog("忽略已结束通话的晚到 PushKit 事件")
+            debugLog("Ignore late PushKit events for ended calls")
             completion(nil)
             return
         }
@@ -257,7 +257,7 @@ final class CallKitController: NSObject {
             }
             incomingReportCompletions.append(completion)
             reportIncomingIfNeeded(number: currentNumber, callerName: call.callerName,
-                                   source: "PushKit 重投", genericHandle: call.isVirtual)
+                                   source: "PushKit resubmission", genericHandle: call.isVirtual)
             handler?.callKitDidReceiveIncoming(call)
             return
         }
@@ -292,7 +292,7 @@ final class CallKitController: NSObject {
                 || model?.ownsSystemPresentation(for: call) == true) {
             // This real call is already reported. Reporting and then ending the
             // duplicate UUID would otherwise end the active CallKit surface.
-            PushDiagnostics.record("PushKit 复用已有通话会话", fields: ["call_uuid": currentUUID!.uuidString])
+            PushDiagnostics.record("PushKit reuses existing call sessions", fields: ["call_uuid": currentUUID!.uuidString])
             completion(nil)
             return
         }
@@ -312,7 +312,7 @@ final class CallKitController: NSObject {
         let end = systemEnd ?? { [provider] uuid in
             provider.reportCall(with: uuid, endedAt: Date(), reason: .unanswered)
         }
-        PushDiagnostics.record("PushKit 来电未进入主通话展示", fields: [
+        PushDiagnostics.record("PushKit incoming calls do not enter the main call display", fields: [
             "callkit_available": String(isAvailable),
             "signaling_enabled": String(CloudSignalingPreference.isEnabled()),
             "local_owner_busy": String(localOwnerBusy),
@@ -466,7 +466,7 @@ final class CallKitController: NSObject {
                                         genericHandle: Bool = false) {
         guard !incomingReportRequested, !systemCallReported, let uuid = currentUUID else { return }
         incomingReportRequested = true
-        debugLog("请求系统来电界面；来源=\(source)")
+        debugLog("Request system call interface; source=\\(source)")
         let report: RequiredSystemReporter = incomingSystemReporter ?? { [provider] uuid, update, done in
             provider.reportNewIncomingCall(with: uuid, update: update, completion: done)
         }
@@ -475,10 +475,10 @@ final class CallKitController: NSObject {
                 guard let self else { return }
                 guard self.currentUUID == uuid else { return }
                 if let error {
-                    PushDiagnostics.record("CallKit 系统来电上报失败", error: error)
+                    PushDiagnostics.record("CallKit system fails to report incoming calls", error: error)
                     let diagnosticError = error as NSError
                     self.debugLog(
-                        "系统来电上报失败；domain=\(diagnosticError.domain) code=\(diagnosticError.code) "
+                        "The system fails to report incoming calls; domain=\\(diagnosticError.domain) code=\\(diagnosticError.code)"
                             + "message=\(diagnosticError.localizedDescription)"
                     )
                     if self.disableCallKitIfUnentitled(error) {
@@ -488,11 +488,11 @@ final class CallKitController: NSObject {
                     }
                     self.systemCallReported = false
                     self.incomingReportFailed = true
-                    self.handler?.callKitDidFail("系统来电界面启动失败：\(error.localizedDescription)")
+                    self.handler?.callKitDidFail("System call interface failed to start: \\(error.localizedDescription)")
                     self.finishIncomingReport(error)
                 } else {
-                    PushDiagnostics.record("CallKit 系统来电上报成功")
-                    self.debugLog("系统来电上报成功")
+                    PushDiagnostics.record("CallKit system successfully reports incoming calls")
+                    self.debugLog("System call reporting successful")
                     self.systemCallReported = true
                     self.finishIncomingReport(nil)
                 }
@@ -515,7 +515,7 @@ final class CallKitController: NSObject {
         Task { @MainActor in
             await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "APP", category: "callkit", phase: "finish",
-                title: "CallKit 通话结束",
+                title: "CallKit call ended",
                 fields: [
                     "call_uuid": uuid.uuidString.lowercased(),
                     "state": self.currentState ?? "none",
@@ -544,7 +544,7 @@ final class CallKitController: NSObject {
 
     private func update(number: String?, callerName: String?, genericHandle: Bool) -> CXCallUpdate {
         let update = CallKitNumberPresentation.update(number: number, callerName: callerName)
-        let value = number?.isEmpty == false ? number! : "未知号码"
+        let value = number?.isEmpty == false ? number! : "unknown number"
         if genericHandle {
             // Dashboard virtual calls use a title, not a phone number. A
             // .phoneNumber handle can be rejected/blank for non-numeric text.
@@ -594,7 +594,7 @@ final class CallKitController: NSObject {
         }
         entitlementAvailable = false
         audioSessionIsActive = false
-        debugLog("CallKit 被系统判定为无权限，已降级到 App 内通话")
+        debugLog("CallKit was determined by the system to have no permissions and has been downgraded to in-app calling.")
         return true
     }
 
@@ -647,7 +647,7 @@ final class CallKitController: NSObject {
             do {
                 try handler.callKitPrepareAudioSession()
             } catch {
-                debugLog("接听前音频预配置失败，继续系统接听：\(error.localizedDescription)")
+                debugLog("Audio preconfiguration failed before answering, continue to system answer: \\(error.localizedDescription)")
             }
             acceptedAnswerUUID = action.callUUID
             action.fulfill()
@@ -656,7 +656,7 @@ final class CallKitController: NSObject {
                 guard currentUUID == action.callUUID else { return }
             } catch {
                 guard currentUUID == action.callUUID else { return }
-                PushDiagnostics.record("CallKit 接听事务失败", error: error, fields: [
+                PushDiagnostics.record("CallKit failed to answer transaction", error: error, fields: [
                     "finish_source": "answer_backend_error", "failure_reason": String(describing: type(of: error)),
                     "call_id": currentBackendID ?? "none", "call_uuid": action.callUUID.uuidString,
                     "device_id": currentIncomingPush?.agentID ?? "none",
@@ -833,7 +833,7 @@ extension CallKitController: CXProviderDelegate {
                 source: "APP",
                 category: "callkit-audio",
                 phase: "activated",
-                title: "CallKit 音频会话已激活",
+                title: "CallKit audio session activated",
                 fields: self.audioTraceFields(audioSession)
             )
             await self.handler?.callKitAudioSessionDidActivate()
@@ -883,13 +883,13 @@ enum CallKitBridgeError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noSystemCall: return "系统通话尚未建立"
-        case .staleSystemCall: return "系统通话状态已刷新"
-        case .handlerUnavailable: return "通话控制器尚未就绪"
-        case .unavailable: return "系统 CallKit 当前不可用"
-        case .callInProgress: return "当前已有进行中的系统通话"
+        case .noSystemCall: return "System call has not been established yet"
+        case .staleSystemCall: return "System call status has been refreshed"
+        case .handlerUnavailable: return "Call controller is not ready yet"
+        case .unavailable: return "System CallKit is currently unavailable"
+        case .callInProgress: return "There is currently an ongoing system call"
         case .noReachableTransport: return "三星本地链路和云端语音当前都不可达"
-        case .cloudMediaDisabled: return "三星本地链路不可达，云端语音中继已关闭"
+        case .cloudMediaDisabled: return "Samsung local link is unreachable and cloud voice relay is closed"
         }
     }
 }

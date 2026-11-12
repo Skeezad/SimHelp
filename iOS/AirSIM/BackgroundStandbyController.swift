@@ -54,12 +54,12 @@ enum IncomingCallNotification {
     static func registerCategory() {
         let answer = UNNotificationAction(
             identifier: answerActionIdentifier,
-            title: "接听",
+            title: "Answer",
             options: []
         )
         let reject = UNNotificationAction(
             identifier: rejectActionIdentifier,
-            title: "拒绝",
+            title: "reject",
             options: [.destructive]
         )
         let category = UNNotificationCategory(
@@ -167,7 +167,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
         guard CloudSignalingPreference.isEnabled() else { return }
         VoIPPushController.shared.storeAlertToken(deviceToken)
 #if DEBUG
-        print("[SimHelp APNs] 普通通知 token 已更新；字节数=\(deviceToken.count)")
+        print("[SimHelp APNs] General notification token has been updated; number of bytes =\\(deviceToken.count)")
 #endif
     }
 
@@ -178,7 +178,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
         guard CloudSignalingPreference.isEnabled() else { return }
         VoIPPushController.shared.clearAlertToken()
 #if DEBUG
-        print("[SimHelp APNs] 普通通知 token 注册失败：\(error.localizedDescription)")
+        print("[SimHelp APNs] Common notification token registration failed: \\(error.localizedDescription)")
 #endif
     }
 
@@ -237,7 +237,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
             completionHandler(.noData)
         } catch {
 #if DEBUG
-            print("[SimHelp APNs] 短信推送解析失败：\(error.localizedDescription)")
+            print("[SimHelp APNs] SMS push parsing failed: \\(error.localizedDescription)")
 #endif
             completionHandler(.failed)
         }
@@ -345,7 +345,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
 
     private static func reportActionFailure(_ error: Error) {
         let content = UNMutableNotificationContent()
-        content.title = "SimHelp 操作失败"
+        content.title = "SimHelp operation failed"
         content.body = error.localizedDescription
         content.sound = .default
         UNUserNotificationCenter.current().add(
@@ -705,9 +705,9 @@ final class IncomingCallNotifier {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
 #if DEBUG
             if let error {
-                print("[SimHelp APNs] 通知授权失败：\(error.localizedDescription)")
+                print("[SimHelp APNs] Notification authorization failed: \\(error.localizedDescription)")
             } else {
-                print("[SimHelp APNs] 通知授权状态：\(granted ? "已允许" : "未允许")")
+                print("[SimHelp APNs] Notification grant status: \\(granted ?"已允许" : "未允许")")
             }
 #endif
             Task { @MainActor in
@@ -736,9 +736,9 @@ final class IncomingCallNotifier {
         if notifiedCallIDs.count > 32 { notifiedCallIDs.removeFirst() }
 
         let content = UNMutableNotificationContent()
-        let number = call.number?.isEmpty == false ? call.number! : "未知号码"
+        let number = call.number?.isEmpty == false ? call.number! : "unknown number"
         let displayName = callerName?.isEmpty == false ? callerName! : number
-        content.title = "SimHelp 来电"
+        content.title = "SimHelp call"
         // 同时保留姓名和号码，用户可以在锁屏直接确认来电者。
         content.body = displayName == number ? number : "\(displayName) · \(number)"
         content.sound = .default

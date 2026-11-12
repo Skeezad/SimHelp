@@ -26,7 +26,7 @@ struct SimHelpDeviceWidget: Widget {
             SimHelpDeviceWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("安卓设备与最近通话")
-        .description("查看最近同步的连接状态，快速打开拨号、短信与通讯录。")
+        .description("Check the recently synchronized connection status and quickly open dialing, text messages and contacts.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
                             .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }

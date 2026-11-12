@@ -13,19 +13,19 @@ enum SimHelpConnectionMode: String, CaseIterable, Codable, Identifiable, Sendabl
     var title: String {
         switch self {
         case .vowlan: return "VoWLAN"
-        case .bluetooth: return "蓝牙"
+        case .bluetooth: return "Bluetooth"
         case .cloud: return "云端"
-        case .automatic: return "自动"
+        case .automatic: return "automatic"
         case .localDual: return "VoWLAN+VoBLE"
         }
     }
 
     var detail: String {
         switch self {
-        case .vowlan: return "通话使用 Wi-Fi、手机热点或手动 VPN 地址直连；纯本地关闭时可手动自检 Relay"
-        case .bluetooth: return "通话使用蓝牙控制与音频；纯本地关闭时可手动自检 Relay"
-        case .cloud: return "仅使用 Relay、PushKit 与 CallKit"
-        case .automatic: return "按 VoWLAN、蓝牙、云端的可用性自动选择"
+        case .vowlan: return "Calls are directly connected using Wi-Fi, mobile hotspot or manual VPN address; manual self-check Relay can be used when purely local is turned off"
+        case .bluetooth: return "Calls use Bluetooth control and audio; manual self-test Relay can be performed when purely local is turned off"
+        case .cloud: return "Only use Relay, PushKit and CallKit"
+        case .automatic: return "Automatic selection by availability of VoWLAN, Bluetooth, Cloud"
         case .localDual: return "通话优先 Wi-Fi、其次蓝牙，途中不切换音频链路；纯本地关闭时可手动自检 Relay"
         }
     }
@@ -33,9 +33,9 @@ enum SimHelpConnectionMode: String, CaseIterable, Codable, Identifiable, Sendabl
 
 enum CloudRelayStatusCopy {
     static func text(pureLocal: Bool, cloudOnline: Bool?, usesCloudCalls: Bool) -> String {
-        if pureLocal { return "纯本地模式已阻断" }
+        if pureLocal { return "Pure local mode blocked" }
         guard let cloudOnline else { return "尚未检查，可手动自检" }
-        let status = cloudOnline ? "Agent 在线" : "Agent 无有效心跳"
+        let status = cloudOnline ? "Agent online" : "Agent has no valid heartbeat"
         return usesCloudCalls ? status : "最近自检：\(status)"
     }
 }
@@ -45,7 +45,7 @@ enum CloudSignalingPreference {
 
     /// Relay/APNs is a notification channel, independent from call media.
     /// It defaults off for a fresh install and is enabled when cloud pairing is
-    /// written or the user turns on "云端通知".
+    /// written or the user turns on "Cloud notification".
     static func isEnabled(defaults: UserDefaults = .standard) -> Bool {
         if defaults.bool(forKey: RelayEgressGate.persistenceKey) { return false }
         return false

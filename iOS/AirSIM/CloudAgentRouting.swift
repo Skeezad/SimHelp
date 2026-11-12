@@ -33,8 +33,8 @@ enum CloudAgentRoutingError: LocalizedError {
     case updateRequired, unavailable, ambiguous
     var errorDescription: String? {
         switch self {
-        case .updateRequired: return "请先更新 Relay 和安卓 Agent，以安全使用定向云端命令"
-        case .unavailable: return "选定安卓手机当前没有可用的云端路由"
+        case .updateRequired: return "Please update Relay and Android Agent first to use directed cloud commands safely"
+        case .unavailable: return "There is currently no available cloud router for the selected Android phone"
         case .ambiguous: return "有多部安卓手机在线，请先选择要使用的设备"
         }
     }

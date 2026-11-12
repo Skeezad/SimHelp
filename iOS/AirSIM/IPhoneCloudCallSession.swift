@@ -13,10 +13,10 @@ enum IPhoneCloudCallError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .mediaUnavailable: return "来电没有可用的云端媒体凭证"
-        case .microphonePermissionDenied: return "需要麦克风权限才能进行云端通话"
+        case .microphonePermissionDenied: return "Microphone permission is required for cloud calls"
         case .microphoneUnavailable: return "当前没有可用的麦克风输入"
-        case .invalidAudioFormat: return "无法建立云端通话音频格式"
-        case .connectionClosed: return "模块云端语音连接已经断开"
+        case .invalidAudioFormat: return "Unable to create cloud call audio format"
+        case .connectionClosed: return "The module cloud voice connection has been disconnected"
         }
     }
 }
@@ -593,10 +593,10 @@ enum CloudCallControlClientError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidRelayURL: return "Relay 地址无效"
-        case .invalidResponse: return "Relay 返回了无效的通话控制响应"
+        case .invalidRelayURL: return "Relay address is invalid"
+        case .invalidResponse: return "Relay returned an invalid call control response"
         case let .rejected(message): return message
-        case .timeout: return "等待 Agent 确认通话控制超时"
+        case .timeout: return "Waiting for Agent to acknowledge call control timeout"
         }
     }
 }
@@ -780,7 +780,7 @@ final class IPhoneCloudCallSession {
                     source: relayStatuses.contains(status) ? "RELAY" : "AGENT",
                     category: relayStatuses.contains(status) ? "relay" : "cloud-call-control",
                     phase: status,
-                    title: control.action.map { "通话控制 · \($0)" } ?? "云端通话状态",
+                    title: control.action.map { "Call Control · \\($0)" } ?? "Cloud call status",
                     detail: control.message ?? "",
                     fields: control.traceFields,
                     isFailure: status == "action_error"
@@ -977,9 +977,9 @@ final class IPhoneCloudCallSession {
                     phase: final.confirmationPhase,
                     detail: [
                         final.result?.modemConfirmed == true
-                            ? "CLCC 检查 \(final.result?.clccAttempts ?? 0) 次"
-                            : "Android Telecom 已确认通话结束",
-                        final.rescueCommandID.map { "救援命令 \($0)" },
+                            ? "CLCC checked \\(final.result?.clccAttempts ?? 0) times"
+                            : "Android Telecom has confirmed that the call has ended",
+                        final.rescueCommandID.map { "Rescue command \\($0)" },
                     ].compactMap { $0 }.joined(separator: " · ")
                 )
                 emitLifecycle(from: envelope, state: .ended, source: .relay)
@@ -1054,8 +1054,8 @@ final class IPhoneCloudCallSession {
             source: "APP",
             category: "cloud-call-control",
             phase: "credentials_unavailable",
-            title: "通话控制 · \(action)",
-            detail: "缺少 Relay 设备凭证",
+            title: "Call control · \\(action)",
+            detail: "Missing Relay device credentials",
             fields: [
                 "action": action,
                 "call_id": call.callID,
@@ -1126,7 +1126,7 @@ final class IPhoneCloudCallSession {
                 guard isPrepared else { continue }
                 traceAudio(
                     phase: "start_attempt",
-                    title: "启动 iPhone 云端音频",
+                    title: "Launch iPhone Cloud Audio",
                     attempt: index + 1
                 )
                 do {
@@ -1144,7 +1144,7 @@ final class IPhoneCloudCallSession {
                     let nsError = error as NSError
                     traceAudio(
                         phase: "start_failed",
-                        title: "iPhone 云端音频启动失败",
+                        title: "iPhone cloud audio startup fails",
                         detail: "\(nsError.domain) \(nsError.code) · \(error.localizedDescription)",
                         attempt: index + 1,
                         isFailure: true
@@ -1156,7 +1156,7 @@ final class IPhoneCloudCallSession {
                     }
                 }
             }
-            audioState = .failed("云端 PCM 多次启动失败，请检查麦克风与网络")
+            audioState = .failed("Cloud PCM failed to start multiple times, please check the microphone and network")
         }
     }
 
@@ -1283,7 +1283,7 @@ final class IPhoneCloudCallSession {
                 }
             }
             guard answered, !answerAcknowledged, call?.uuid == incoming.uuid else { return }
-            audioState = .failed("模块未确认接听，正在等待 Agent 控制通道恢复")
+            audioState = .failed("The module has not confirmed the answer and is waiting for the Agent control channel to be restored.")
         }
     }
 
@@ -1305,7 +1305,7 @@ final class IPhoneCloudCallSession {
             mediaHealthTracker = CloudMediaHealthTracker(startedAt: Date(), maximumRebuilds: 3)
         }
         guard mediaHealthTracker?.beginRebuild(for: issue, at: Date()) == true else {
-            audioState = .failed("云端媒体已完成 3 次重建，停止自动重试")
+            audioState = .failed("Cloud media has been rebuilt 3 times, stop automatically retrying")
             publishMediaHealth()
             traceMediaHealth(issue: issue, phase: "rebuild_exhausted", call: call, isFailure: true)
             return
@@ -1333,7 +1333,7 @@ final class IPhoneCloudCallSession {
                     requestMediaRebuild(issue)
                     return
                 case let .failed(issue):
-                    audioState = .failed("云端媒体质量异常：\(issue.rawValue)")
+                    audioState = .failed("Abnormal cloud media quality: \\(issue.rawValue)")
                     if let call {
                         traceMediaHealth(issue: issue, phase: "failed", call: call, isFailure: true)
                     }
@@ -1359,7 +1359,7 @@ final class IPhoneCloudCallSession {
                 source: "APP",
                 category: "cloud-media-health",
                 phase: phase,
-                title: "云端媒体自愈",
+                title: "Cloud media self-healing",
                 detail: issue.rawValue,
                 fields: [
                     "call_id": call.callID,
@@ -1815,7 +1815,7 @@ private final class IPhoneCloudCallMediaBridge: @unchecked Sendable {
             Task {
                 await AgentVerboseTraceRecorder.shared.recordEvent(
                     source: "APP", category: "cloud-call-audio", phase: "quality",
-                    title: "云端 PCM 缓冲统计", detail: "", fields: fields, isFailure: false
+                    title: "Cloud PCM Buffer Statistics", detail: "", fields: fields, isFailure: false
                 )
             }
         }

@@ -5,12 +5,12 @@ enum VoBLEDiagnosticErrorCategory: String, Codable, Sendable {
 
     static func classify(_ message: String?) -> Self {
         guard let value = message?.lowercased(), !value.isEmpty else { return .none }
-        if value.contains("认证") || value.contains("auth") || value.contains("key") { return .authentication }
-        if value.contains("pcm") || value.contains("媒体") { return .pcm }
-        if value.contains("audio") || value.contains("音频") { return .audio }
+        if value.contains("Certification") || value.contains("auth") || value.contains("key") { return .authentication }
+        if value.contains("pcm") || value.contains("media") { return .pcm }
+        if value.contains("audio") || value.contains("Audio") { return .audio }
         if value.contains("超时") || value.contains("timeout") { return .timeout }
-        if value.contains("control") || value.contains("命令") { return .control }
-        if value.contains("蓝牙") || value.contains("bluetooth") { return .bluetooth }
+        if value.contains("control") || value.contains("Order") { return .control }
+        if value.contains("Bluetooth") || value.contains("bluetooth") { return .bluetooth }
         return .unknown
     }
 }

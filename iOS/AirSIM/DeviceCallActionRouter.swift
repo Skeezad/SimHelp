@@ -60,11 +60,11 @@ enum DeviceCallRoutingError: LocalizedError, Equatable {
     case unavailable, noSelection, busy, stale, unsupportedPeer
     var errorDescription: String? {
         switch self {
-        case .unavailable: return "所选安卓没有可用的拨号链路，不会切换到另一台设备"
-        case .noSelection: return "有多台安卓在线，请先在拨号页选择要使用的设备"
-        case .busy: return "当前通话尚未结束，其他设备来电仅提醒"
+        case .unavailable: return "The selected Android has no available dial-up link and will not switch to another device"
+        case .noSelection: return "There are multiple Android devices online. Please select the device you want to use on the dialing page first."
+        case .busy: return "The current call has not ended yet. Incoming calls from other devices will only remind you."
         case .stale: return "此通话已结束或已失效"
-        case .unsupportedPeer: return "安卓端尚不支持设备归属明确的通话回执，请更新对应 App／Agent"
+        case .unsupportedPeer: return "The Android version does not yet support call receipts with clear device ownership, please update the corresponding App/Agent."
         }
     }
 }
@@ -376,7 +376,7 @@ final class DeviceCallActionRouter {
             "device_id": key.agentID, "previous_state": context.registry.latestEvent(for: key)?.state.rawValue ?? "none",
             "next_state": nextState.rawValue, "duplicate": String(next == .connecting && state != .ringing)]
         Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "call",
-            phase: next == .connecting ? "answer_intent" : "end_intent", title: "设备通话操作", fields: fields) }
+            phase: next == .connecting ? "answer_intent" : "end_intent", title: "Device call operation", fields: fields) }
     }
     private func pruneRetiredCalls() {
         // Keep lightweight UUID tombstones only as long as the registry's

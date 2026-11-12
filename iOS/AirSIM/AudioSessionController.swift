@@ -366,9 +366,9 @@ final class AudioSessionController: ObservableObject {
             playbackQueue.reset()
             active = true
             transportReady = false
-            routeDescription = route.isOverlayHost ? "正在连接 VPN 直连语音…"
-                : (route.requiresWiFi ? "正在连接 VoWLAN 语音…" : "正在连接模块网络语音…")
-            diagnosticDescription = "\(DeviceContext.displayName) PCM 尚未握手"
+            routeDescription = route.isOverlayHost ? "Connecting VPN Direct Voice…"
+                : (route.requiresWiFi ? "Connecting VoWLAN Voice…" : "Connecting module network voice...")
+            diagnosticDescription = "\\(DeviceContext.displayName) PCM handshake not yet"
             moduleDiagnosticDescription = ""
             errorMessage = nil
             if !receiveOnly { retryRequestedSpeakerRoute() }
@@ -379,7 +379,7 @@ final class AudioSessionController: ObservableObject {
             Task { await AgentVerboseTraceRecorder.shared.recordFailure(category: "vowlan", phase: phase, error: error) }
             recordStartup("failed")
             deactivate()
-            errorMessage = "无法启用通话音频：\(error.localizedDescription)"
+            errorMessage = "Unable to enable call audio: \\(error.localizedDescription)"
             return false
         }
     }
@@ -531,20 +531,20 @@ final class AudioSessionController: ObservableObject {
     func updateModuleDiagnostics(_ config: MaVoAudioHostConfig) {
         var details: [String] = []
         if let routeError = config.routeError, !routeError.isEmpty {
-            details.append("模块语音桥错误：\(routeError)")
+            details.append("Module voice bridge error: \\(routeError)")
         } else if config.routeRunning != true {
-            details.append("模块 PCM 未启动")
+            details.append("Module PCM not started")
         } else if config.routeSessionReady == false || config.routeReady == false {
-            details.append("模块语音路由尚未就绪")
+            details.append("Module voice routing is not ready yet")
         }
         if let statistics = config.statistics, config.statisticsAvailable == true {
-            details.append("D5 ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · D6 ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)")
+            details.append("D5 ↑\\(statistics.uplinkBytes)B 峰值\\(statistics.uplinkPeak) · D6 ↓\\(statistics.downlinkBytes)B 峰值\\(statistics.downlinkPeak)")
         } else if config.routeRunning == true {
-            details.append("模块 PCM 已启动，等待首个统计周期")
+            details.append("Module PCM has been started, waiting for the first statistical period")
         }
         // 只显示最后一条日志，保留真正的启动失败原因，同时避免通话页被日志刷屏。
         if let lastLog = config.logTail?.last, !lastLog.isEmpty {
-            details.append("日志：\(lastLog)")
+            details.append("Log:\\(lastLog)")
         }
         moduleDiagnosticDescription = details.joined(separator: "；")
     }
@@ -607,7 +607,7 @@ final class AudioSessionController: ObservableObject {
         } catch {
             toneOutput.stop(deactivateSession: !sessionActivationManagedByCallKit)
             currentCallTone = nil
-            errorMessage = "无法播放通话提示音：\(error.localizedDescription)"
+            errorMessage = "Unable to play call tone: \\(error.localizedDescription)"
         }
     }
 
@@ -645,12 +645,12 @@ final class AudioSessionController: ObservableObject {
                 "input_route": AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue).joined(separator: ","),
                 "output_route": AVAudioSession.sharedInstance().currentRoute.outputs.map(\.portType.rawValue).joined(separator: ",")]
             Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "vowlan",
-                phase: "media_statistics", title: "VoWLAN 实际音频状态", fields: fields) }
-            let handshakeState = transportReady ? "PCM 已握手" : "PCM 尚未握手"
+                phase: "media_statistics", title: "VoWLAN actual audio status", fields: fields) }
+            let handshakeState = transportReady ? "PCM 已握手" : "PCM has not shaken hands yet"
             let playbackDrops = playbackQueue.droppedFrames > 0
                 ? " · 播放丢弃\(playbackQueue.droppedFrames)帧"
                 : ""
-            diagnosticDescription = "\(DeviceContext.displayName) \(handshakeState) ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)\(playbackDrops)"
+            diagnosticDescription = "\\(DeviceContext.displayName) \\(handshakeState) ↑\\(statistics.uplinkBytes)B 峰值\\(statistics.uplinkPeak) · ↓\\(statistics.downlinkBytes)B 峰值\\(statistics.downlinkPeak)\\(playbackDrops)"
             refreshRouteDescription()
         case let .status(message):
             // 连接状态单独显示，避免把“尚未握手”误读成模块已经拒绝握手。
@@ -658,8 +658,8 @@ final class AudioSessionController: ObservableObject {
         case let .failed(message):
             recordStartup("failed")
             transportReady = false
-            routeDescription = "网络语音未连接"
-            diagnosticDescription = "\(DeviceContext.displayName) PCM 连接失败：\(message)"
+            routeDescription = "Internet voice not connected"
+            diagnosticDescription = "\\(DeviceContext.displayName) PCM connection failed: \\(message)"
             errorMessage = message
         case .closed:
             transportReady = false
@@ -679,8 +679,8 @@ final class AudioSessionController: ObservableObject {
             requestedSpeaker: requestedSpeakerOverride,
             currentRouteIsSpeaker: routedToSpeaker
         )
-        routeDescription = receiveOnly ? "仅接收 → \(output.isEmpty ? "无输出" : output)"
-            : "\(input.isEmpty ? "无输入" : input) ↔ 网络 PCM ↔ \(output.isEmpty ? "无输出" : output)（可用输入：\(inputs)）"
+        routeDescription = receiveOnly ? "Only accepts → \\(output.isEmpty ?"无输出" : output)"
+            : "\(input.isEmpty ? "无输入": input) ↔ Network PCM ↔ \\(output.isEmpty ?"无输出": output) (available inputs: \\(inputs))"
         IPhoneCloudCallSession.shared.recordAudioRoute(output.isEmpty ? "unknown" : output)
     }
 
@@ -800,8 +800,8 @@ private enum CallTone: Equatable {
     var ringtoneName: String {
         switch self {
         case let .incoming(name), let .preview(name): return name
-        case .outgoingWaiting: return "呼出等待"
-        case .outgoingEnded: return "呼叫结束"
+        case .outgoingWaiting: return "outgoing call waiting"
+        case .outgoingEnded: return "call ended"
         }
     }
 
@@ -883,7 +883,7 @@ private enum SynthesizedCallTone {
                 Segment(frequencies: [659, 988], duration: 0.32, amplitude: 0.38), .silence(0.16),
                 Segment(frequencies: [784, 1_046], duration: 0.48, amplitude: 0.34), .silence(1.5),
             ]
-        case "系统默认":
+        case "System default":
             return [
                 Segment(frequencies: [440, 480], duration: 0.8, amplitude: 0.38), .silence(0.35),
                 Segment(frequencies: [440, 480], duration: 0.8, amplitude: 0.38), .silence(2.0),
@@ -1025,7 +1025,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 self.queue.async {
                     guard !self.stopped, self.generation == attempt else { return }
                     if let error {
-                        self.retryOrFail("麦克风上行发送失败：\(error.localizedDescription)", attempt: attempt)
+                        self.retryOrFail("Microphone uplink transmission failed: \\(error.localizedDescription)", attempt: attempt)
                         return
                     }
                     self.uplinkBytes += UInt64(pcm.count)
@@ -1051,14 +1051,14 @@ final class NetworkPCMTransport: @unchecked Sendable {
         let connection = NWConnection(host: host, port: port, using: parameters)
         self.connection = connection
         readyForPCM = false
-        onEvent(.status(usesTLS ? "正在通过自建 TLS 网关连接音频" : isOverlayHost ? "正在通过 VPN 直连 PCM" : (requiresWiFi ? "正在通过 VoWLAN 连接 PCM" : "正在回退到普通 TCP 连接 PCM")))
+        onEvent(.status(usesTLS ? "Connecting audio via self-built TLS gateway" : isOverlayHost ? "Connecting directly to PCM via VPN" : (requiresWiFi ? "Connecting to PCM via VoWLAN" : "Falling back to plain TCP connection PCM")))
         connection.pathUpdateHandler = { [weak self, weak connection] path in
             guard let self, connection != nil else { return }
             self.queue.async {
                 guard !self.stopped, self.generation == attempt else { return }
                 let interfaces = path.availableInterfaces.map { String(describing: $0.type) }.joined(separator: ",")
-                let route = path.status == .satisfied ? "可用" : "不可用"
-                self.onEvent(.status("PCM 网络路径\(route)：\(interfaces.isEmpty ? "未知接口" : interfaces)"))
+                let route = path.status == .satisfied ? "Available" : "不可用"
+                self.onEvent(.status("PCM network path\\(route):\\(interfaces.isEmpty?"未知接口" : interfaces)"))
             }
         }
         connection.stateUpdateHandler = { [weak self, weak connection] state in
@@ -1085,7 +1085,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
         queue.asyncAfter(deadline: .now() + 8) { [weak self] in
             guard let self, !self.stopped, self.generation == attempt,
                   !self.readyForPCM else { return }
-            self.retryOrFail("连接 VoWLAN PCM 超时", attempt: attempt, allowFallback: !self.usesSystemRouting)
+            self.retryOrFail("Connect VoWLAN PCM timeout", attempt: attempt, allowFallback: !self.usesSystemRouting)
         }
     }
 
@@ -1125,7 +1125,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 }
                 guard var data, data.count >= Self.acknowledgement.count,
                       data.prefix(Self.acknowledgement.count) == Self.acknowledgement else {
-                    self.retryOrFail("模块网络 PCM 握手无效", attempt: attempt, allowFallback: !self.fallbackAttempted)
+                    self.retryOrFail("Module network PCM handshake is invalid", attempt: attempt, allowFallback: !self.fallbackAttempted)
                     return
                 }
                 data.removeFirst(Self.acknowledgement.count)
@@ -1137,7 +1137,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 self.emitStatisticsIfNeeded(force: true)
                 if !data.isEmpty { self.consumeDownlink(data) }
                 if isComplete {
-                    self.retryOrFail("模块网络 PCM 已断开", attempt: attempt)
+                    self.retryOrFail("Module network PCM disconnected", attempt: attempt)
                 } else {
                     self.receiveLoop(connection, attempt: attempt)
                 }
@@ -1155,7 +1155,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 if let error {
                     self.retryOrFail(error.localizedDescription, attempt: attempt, allowFallback: !self.fallbackAttempted)
                 } else if isComplete {
-                    self.retryOrFail("模块网络 PCM 已断开", attempt: attempt, allowFallback: !self.fallbackAttempted)
+                    self.retryOrFail("Module network PCM disconnected", attempt: attempt, allowFallback: !self.fallbackAttempted)
                 } else {
                     self.receiveLoop(connection, attempt: attempt)
                 }
@@ -1209,7 +1209,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
             // 本地 Wi-Fi 路径失败时放宽接口筛选，但不改变目标地址；
             // 远程/overlay 地址已经走系统路由，不需要这一步。
             fallbackAttempted = true
-            onEvent(.status("Wi-Fi 路径连接失败，正在重试 PCM"))
+            onEvent(.status("Wi-Fi path connection failed, retrying PCM"))
             queue.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.startAttempt() }
             return
         }
@@ -1220,7 +1220,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 self?.startAttempt()
             }
         } else if !stopped {
-            onEvent(.failed("等待 Android 语音桥就绪超时，请保持 Android 在线后重试通话"))
+            onEvent(.failed("Waiting for Android voice bridge ready timeout, please keep Android online and try the call again."))
         }
     }
 
@@ -1231,10 +1231,10 @@ final class NetworkPCMTransport: @unchecked Sendable {
 
     private func transientStatus(for message: String) -> String {
         let normalized = message.lowercased()
-        if normalized.contains("connection refused") || normalized.contains("错误 61") {
-            return "模块语音桥启动中，正在重试连接…"
+        if normalized.contains("connection refused") || normalized.contains("Error 61") {
+            return "The module voice bridge is starting and retrying to connect..."
         }
-        return "模块语音桥启动中，正在重试网络 PCM…"
+        return "Module voice bridge is starting, retrying network PCM..."
     }
 }
 
@@ -1341,9 +1341,9 @@ enum VoiceAudioError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .microphoneUnavailable: return "没有可用的麦克风输入设备"
-        case .invalidPlaybackFormat: return "无法创建 8 kHz 通话播放格式"
-        case .tonePlaybackFailed: return "系统拒绝启动提示音播放器"
+        case .microphoneUnavailable: return "No microphone input device available"
+        case .invalidPlaybackFormat: return "Unable to create 8 kHz call playback format"
+        case .tonePlaybackFailed: return "The system refuses to start the tone player"
         }
     }
 }

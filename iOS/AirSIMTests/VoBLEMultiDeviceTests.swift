@@ -165,7 +165,7 @@ final class VoBLEMultiDeviceTests: XCTestCase {
             call: nil, callerName: nil, moduleOnline: false, cloudOnline: false,
             radio: nil, agent: snapshot, idleStartedAt: Date())
         XCTAssertEqual(state.phase, .standby)
-        XCTAssertEqual(state.displayName, "等待 Agent 来电")
+        XCTAssertEqual(state.displayName, "Waiting for Agent to call")
         XCTAssertTrue(state.bluetoothOnline == true)
     }
 
@@ -192,10 +192,10 @@ final class VoBLEMultiDeviceTests: XCTestCase {
     func testBluetoothPCMStatusText() {
         XCTAssertEqual(CallAudioStatusPresentation.text(
             transport: .bluetooth, bluetoothRunning: true, bluetoothError: nil,
-            localAudioActive: false, cloudState: .idle), "已连接蓝牙 PCM 链路")
+            localAudioActive: false, cloudState: .idle), "Bluetooth PCM link connected")
         XCTAssertEqual(CallAudioStatusPresentation.text(
             transport: .bluetooth, bluetoothRunning: false, bluetoothError: nil,
-            localAudioActive: false, cloudState: .idle), "正在建立蓝牙语音链路")
+            localAudioActive: false, cloudState: .idle), "Establishing Bluetooth voice link")
     }
 
     func testPairingSheetObservesVerificationCodeWithoutAnotherTap() {

@@ -203,8 +203,8 @@ struct AndroidSIMSlot: Codable, Equatable, Identifiable, Sendable {
            !carrierName.isEmpty, !label.localizedCaseInsensitiveContains(carrierName) {
             values.append(carrierName)
         }
-        if isDefaultVoice == true { values.append("默认语音") }
-        if isDefaultSMS == true { values.append("默认短信") }
+        if isDefaultVoice == true { values.append("Default voice") }
+        if isDefaultSMS == true { values.append("Default SMS") }
         return values.isEmpty ? nil : values.joined(separator: " · ")
     }
 }
@@ -821,7 +821,7 @@ struct ESIMProfile: Codable, Sendable, Identifiable {
 
     var id: String { iccid ?? name ?? UUID().uuidString }
     var enabled: Bool { state == 1 }
-    var displayName: String { name ?? serviceProviderName ?? iccid ?? "未命名 Profile" }
+    var displayName: String { name ?? serviceProviderName ?? iccid ?? "Unnamed Profile" }
 
     enum CodingKeys: String, CodingKey {
         case iccid, name, state
@@ -1332,9 +1332,9 @@ enum DialOperationRecoveryError: LocalizedError {
     case unknown, rejected, invalidProof
     var errorDescription: String? {
         switch self {
-        case .unknown: return "拨号结果尚未确认。未自动重拨，请先检查设备通话状态。"
-        case .rejected: return "设备确认未执行本次拨号。请检查设备提示后手动重试。"
-        case .invalidProof: return "无法验证拨号状态回执，未恢复通话，也未自动重拨。"
+        case .unknown: return "The dialing result has not yet been confirmed. If the call is not redialed automatically, please check the call status of the device first."
+        case .rejected: return "The device confirmed that this dialing was not performed. Please check the device prompts and try again manually."
+        case .invalidProof: return "The dial status receipt could not be verified, the call was not resumed, and the call was not redialed automatically."
         }
     }
 }

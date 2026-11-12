@@ -52,16 +52,16 @@ struct WatchCallView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.black)
-        .alert("连接状态", isPresented: $showConnectionStatus) {
-            Button("好", role: .cancel) {}
+        .alert("connection status", isPresented: $showConnectionStatus) {
+            Button("good", role: .cancel) {}
         } message: {
             Text("\(session.pushStatus)\n\(session.microphoneStatus)\n拨号需要配对 iPhone 可达，且 VoWLAN 或云端可用。通话音频在手表收发；连接蓝牙设备时，输出由 watchOS 选择。")
         }
-        .alert("拨号失败", isPresented: Binding(
+        .alert("Dial failed", isPresented: Binding(
             get: { session.errorMessage != nil },
             set: { if !$0 { session.errorMessage = nil } }
         )) {
-            Button("好", role: .cancel) { session.errorMessage = nil }
+            Button("good", role: .cancel) { session.errorMessage = nil }
         } message: {
             Text(session.errorMessage ?? "")
         }
@@ -77,9 +77,9 @@ struct WatchCallView: View {
             }
             .buttonStyle(.plain)
             .disabled(session.isDialing)
-            .accessibilityLabel("输入加号")
+            .accessibilityLabel("Enter plus sign")
 
-            Text(dialNumber.isEmpty ? "输入号码" : dialNumber)
+            Text(dialNumber.isEmpty ? "Enter number" : dialNumber)
                 .font(.system(size: 23, weight: .semibold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(dialNumber.isEmpty ? .secondary : .primary)
@@ -87,7 +87,7 @@ struct WatchCallView: View {
                 .truncationMode(.head)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityLabel(dialNumber.isEmpty ? "尚未输入电话号码" : "电话号码，\(dialNumber)")
+                .accessibilityLabel(dialNumber.isEmpty ? "No phone number entered yet" : "Phone number,\\(dialNumber)")
 
             Button { showConnectionStatus = true } label: {
                 Image(systemName: "info.circle")
@@ -114,7 +114,7 @@ struct WatchCallView: View {
         }
         .buttonStyle(.plain)
         .disabled(session.isDialing)
-        .accessibilityLabel("数字 \(digit)")
+        .accessibilityLabel("Number \\(digit)")
     }
 
     private func deleteButton(width: CGFloat, height: CGFloat) -> some View {
@@ -128,7 +128,7 @@ struct WatchCallView: View {
         }
         .buttonStyle(.plain)
         .disabled(session.isDialing || dialNumber.isEmpty)
-        .accessibilityLabel("删除最后一位")
+        .accessibilityLabel("delete last digit")
     }
 
     private func callButton(width: CGFloat, height: CGFloat) -> some View {
@@ -143,7 +143,7 @@ struct WatchCallView: View {
         }
         .buttonStyle(.plain)
         .disabled(!session.isDialing && dialNumber.isEmpty)
-        .accessibilityLabel(session.isDialing ? "取消拨号" : "拨号")
+        .accessibilityLabel(session.isDialing ? "Cancel dialing" : "dial")
     }
 
     private var currentCall: some View {
@@ -169,7 +169,7 @@ struct WatchCallView: View {
                     .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
             } else if session.call.phase == .active {
-                Text("Apple Watch 网络语音已连接")
+                Text("Apple Watch Internet Voice Connected")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)

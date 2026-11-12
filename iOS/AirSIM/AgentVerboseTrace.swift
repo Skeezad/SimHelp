@@ -83,14 +83,14 @@ actor AgentVerboseTraceRecorder {
         append(
             context,
             stage: .request,
-            detail: bodyBytes > 0 ? "发起请求 · body \(bodyBytes) B" : "发起请求"
+            detail: bodyBytes > 0 ? "Initiate a request · body \\(bodyBytes) B" : "Make a request"
         )
         return context
     }
 
     func recordRoute(_ context: AgentVerboseTraceContext, route: String, attempt: Int, error: String? = nil) {
         guard enabled else { return }
-        var detail = "第 \(attempt) 次尝试 · \(route)"
+        var detail = "\\(attempt) attempt · \\(route)"
         if let error, !error.isEmpty { detail += " · \(error)" }
         append(context, stage: .route, detail: detail)
     }
@@ -186,7 +186,7 @@ actor AgentVerboseTraceRecorder {
             current = value.userInfo[NSUnderlyingErrorKey] as? NSError
         }
         recordEvent(source: "APP", category: category, phase: phase,
-                    title: "链路异常", detail: Self.redact(error.localizedDescription), fields: fields, isFailure: true)
+                    title: "Link abnormality", detail: Self.redact(error.localizedDescription), fields: fields, isFailure: true)
     }
 
     private static func redact(_ text: String) -> String {

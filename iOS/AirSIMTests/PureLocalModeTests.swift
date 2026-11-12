@@ -7,10 +7,10 @@ final class PureLocalModeTests: XCTestCase {
     func testLocalCallModesDoNotClaimRelayIsDisabled() {
         for mode in [SimHelpConnectionMode.vowlan, .bluetooth, .localDual, .cloud, .automatic] {
             let cloud = ConnectionModeRuntimePolicy(mode: mode).startsCloud
-            XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: true, cloudOnline: true, usesCloudCalls: cloud), "纯本地模式已阻断")
+            XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: true, cloudOnline: true, usesCloudCalls: cloud), "Pure local mode blocked")
             XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: nil, usesCloudCalls: cloud), "尚未检查，可手动自检")
-            XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: true, usesCloudCalls: cloud).contains("Agent 在线"))
-            XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: false, usesCloudCalls: cloud).contains("Agent 无有效心跳"))
+            XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: true, usesCloudCalls: cloud).contains("Agent online"))
+            XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: false, usesCloudCalls: cloud).contains("Agent has no valid heartbeat"))
         }
     }
     func testWireIdentifiersRejectTrailingLineBreaks() {

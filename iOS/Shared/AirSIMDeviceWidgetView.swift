@@ -42,10 +42,10 @@ struct SimHelpDeviceWidgetView: View {
             VStack(alignment: .leading, spacing: 10) {
                 brand(size: 36)
                 Text("连接你的安卓手机").font(.headline)
-                Text("打开 SimHelp 完成配对").font(.caption).foregroundStyle(secondaryText)
+                Text("Open SimHelp to complete pairing").font(.caption).foregroundStyle(secondaryText)
                 if family != .systemSmall {
                     Link(destination: SimHelpWidgetDestination.status.url()) {
-                        Label("打开 SimHelp", systemImage: "arrow.up.forward")
+                        Label("Open SimHelp", systemImage: "arrow.up.forward")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(accent)
                             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
@@ -73,7 +73,7 @@ struct SimHelpDeviceWidgetView: View {
                 if snapshot.controls != nil { switchControls(vertical: true, compact: true).frame(maxWidth: .infinity) }
                 else { VStack(spacing: 8) {
                     action("通话", symbol: nil, to: .recents, agent: d.id)
-                    action("短信", symbol: nil, to: .messages, agent: d.id)
+                    action("Short message", symbol: nil, to: .messages, agent: d.id)
                 }.frame(maxWidth: .infinity) }
             }
         } else if family == .systemExtraLarge {
@@ -116,7 +116,7 @@ struct SimHelpDeviceWidgetView: View {
             HStack { brand(size: 34); Spacer(); statusDot(d) }
             Spacer(minLength: 2)
             Text(d.name).font(.headline).lineLimit(1)
-            Label(d.transport.isEmpty ? "连接待确认" : d.transport, systemImage: transportSymbol(d))
+            Label(d.transport.isEmpty ? "Connection pending" : d.transport, systemImage: transportSymbol(d))
                 .font(.caption).foregroundStyle(secondaryText).lineLimit(1)
             Text(d.status(at: date)).font(.caption).lineLimit(1)
             if !textSize.isAccessibilitySize { Divider() }
@@ -143,11 +143,11 @@ struct SimHelpDeviceWidgetView: View {
             Divider()
             VStack(alignment: .leading, spacing: 8) {
                 let call = snapshot.latestCall(for: d.id)
-                recentSummary("最近通话", symbol: "phone.fill", text: call?.maskedNumber,
+                recentSummary("recent calls", symbol: "phone.fill", text: call?.maskedNumber,
                               timestamp: call?.date, to: .recents, agent: d.id, count: d.unseenMissedCalls ?? 0)
                 Divider()
                 let message = snapshot.latestMessage(for: d.id)
-                recentSummary("最近短信", symbol: "message.fill", text: message?.displayText,
+                recentSummary("recent text messages", symbol: "message.fill", text: message?.displayText,
                               timestamp: message?.date, to: .messages, agent: d.id, count: d.unreadMessages ?? 0)
             }.frame(maxWidth: .infinity)
         }
@@ -163,12 +163,12 @@ struct SimHelpDeviceWidgetView: View {
                     Spacer(minLength: 0)
                     attentionBadge(count, missed: destination == .recents)
                 }
-                Text(text ?? "暂无记录").font(.caption2).foregroundStyle(primaryText).lineLimit(1)
+                Text(text ?? "No record yet").font(.caption2).foregroundStyle(primaryText).lineLimit(1)
             }
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .accessibilityLabel("\(title)，\(count) 条\(destination == .recents ? "未查看的未接来电" : "未读短信")，\(text ?? "暂无记录")\(timestamp.map { "，" + $0.formatted(date: .abbreviated, time: .shortened) } ?? "")，打开记录")
+        .accessibilityLabel("\(title)，\(count) 条\(destination == .recents ? "未查看的未接来电" : "未读短信")，\(text ?? "暂无记录")\(timestamp.map { "，" + $0.formatted(date: .abbreviated, time: .shortened) } ?? ""), open the record")
     }
 
     private func large(_ d: SimHelpWidgetSnapshot.Device) -> some View {
@@ -176,7 +176,7 @@ struct SimHelpDeviceWidgetView: View {
             HStack(spacing: 12) {
                 if !textSize.isAccessibilitySize { brand(size: 36) }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("设备状态").font(.caption2).foregroundStyle(secondaryText)
+                    Text("Device status").font(.caption2).foregroundStyle(secondaryText)
                     Text(d.name).font(.headline).lineLimit(1)
                     status(d)
                 }
@@ -198,23 +198,23 @@ struct SimHelpDeviceWidgetView: View {
             let calls = Array(snapshot.recentCalls(for: d.id).prefix(capacity))
             let messages = Array(snapshot.recentMessages(for: d.id).prefix(capacity))
             HStack(alignment: .top, spacing: 12) {
-                recordDetail("最近通话", symbol: "phone.fill", to: .recents, agent: d.id, count: d.unseenMissedCalls ?? 0) {
+                recordDetail("recent calls", symbol: "phone.fill", to: .recents, agent: d.id, count: d.unseenMissedCalls ?? 0) {
                     if calls.isEmpty {
-                        Text("暂无通话记录").font(.caption).foregroundStyle(secondaryText)
+                        Text("No call records yet").font(.caption).foregroundStyle(secondaryText)
                     } else {
                         VStack(alignment: .leading, spacing: 3) {
                             ForEach(calls) { call in
                                 historyRecord(text: call.maskedNumber, date: call.date,
-                                    detail: call.missed ? "未接" : call.incoming ? "呼入" : "呼出",
+                                    detail: call.missed ? "Missed" : call.incoming ? "Incoming call" : "exhale",
                                     attention: call.unseen == true, missed: call.missed)
                             }
                         }
                     }
                 }
                 Divider()
-                recordDetail("最近短信", symbol: "message.fill", to: .messages, agent: d.id, count: d.unreadMessages ?? 0) {
+                recordDetail("recent text messages", symbol: "message.fill", to: .messages, agent: d.id, count: d.unreadMessages ?? 0) {
                     if messages.isEmpty {
-                        Text("暂无短信记录").font(.caption).foregroundStyle(secondaryText)
+                        Text("No text message record yet").font(.caption).foregroundStyle(secondaryText)
                     } else {
                         VStack(alignment: .leading, spacing: 3) {
                             // Snapshot-local indices avoid exporting legacy IDs containing SMS bodies.
@@ -263,7 +263,7 @@ struct SimHelpDeviceWidgetView: View {
             .contentShape(Rectangle())
         }
         .accessibilityElement(children: .combine)
-        .accessibilityHint("打开\(title)记录")
+        .accessibilityHint("Open the \\(title) record")
     }
 
     private func recordDate(_ value: Date) -> some View {
@@ -277,7 +277,7 @@ struct SimHelpDeviceWidgetView: View {
                 .foregroundStyle(.white).padding(.horizontal, 4)
                 .frame(minWidth: 18, minHeight: 18)
                 .background(Color.red, in: Capsule()).fixedSize()
-                .accessibilityLabel("\(count) 条\(missed ? "未查看的未接来电" : "未读短信")")
+                .accessibilityLabel("\\(count) items\\(missed?"未查看的未接来电" : "未读短信")")
         }
     }
 
@@ -319,14 +319,14 @@ struct SimHelpDeviceWidgetView: View {
             let layout = vertical ? AnyLayout(VStackLayout(alignment: .leading, spacing: 0))
                                   : AnyLayout(HStackLayout(alignment: .center, spacing: 12))
             layout {
-                switchControl(action: "device", title: "设备",
-                    value: snapshot.devices.first(where: { $0.id == controls.currentAgentID })?.name ?? "未选择",
+                switchControl(action: "device", title: "equipment",
+                    value: snapshot.devices.first(where: { $0.id == controls.currentAgentID })?.name ?? "Not selected",
                     expected: controls.currentAgentID, target: controls.nextAgentID ?? "",
-                    hint: controls.nextAgentName.map { "切换到 \($0)" } ?? "仅有一台配对设备",
+                    hint: controls.nextAgentName.map { "switch to \\($0)" } ?? "Only one paired device",
                     disabled: controls.blockedByCall || controls.nextAgentID == nil, compact: compact)
-                switchControl(action: "mode", title: "模式", value: controls.modeTitle,
+                switchControl(action: "mode", title: "model", value: controls.modeTitle,
                     expected: controls.mode, target: controls.nextMode,
-                    hint: "切换为 \(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
+                    hint: "Switch to \\(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
             }
         }
     }
@@ -340,11 +340,11 @@ struct SimHelpDeviceWidgetView: View {
             }
             .disabled(disabled).opacity(disabled ? 0.55 : 1)
             .accessibilityLabel("\(title)：\(value)")
-            .accessibilityHint(snapshot.controls?.blockedByCall == true ? "通话中不能切换" : hint + "，后台执行")
+            .accessibilityHint(snapshot.controls?.blockedByCall == true ? "Cannot switch during a call" : hint + ", background execution")
         } else {
             controlLabel(title: title, value: value, compact: compact)
                 .opacity(0.55)
-                .accessibilityLabel("\(title)：\(value)，后台切换需要 iOS 17 或更新版本")
+                .accessibilityLabel("\\(title): \\(value), background switching requires iOS 17 or later")
         }
     }
 
@@ -369,12 +369,12 @@ struct SimHelpDeviceWidgetView: View {
     @ViewBuilder private var lockScreen: some View {
         switch family {
         case .accessoryInline:
-            Label(device.map { "\($0.name) · \($0.status(at: date))" } ?? "SimHelp · 打开 App 配对", systemImage: "phone.fill")
+            Label(device.map { "\($0.name) · \($0.status(at: date))" } ?? "SimHelp · Open App Pairing", systemImage: "phone.fill")
         case .accessoryCircular:
             VStack(spacing: 2) {
                 Image(systemName: "phone.fill").font(.title3)
                 Text(device?.name ?? "SimHelp").font(.caption2.bold()).lineLimit(1)
-                Text(device.map { $0.isFresh(at: date) ? "最近更新" : "待刷新" } ?? "待配对").font(.caption2).lineLimit(1)
+                Text(device.map { $0.isFresh(at: date) ? "Latest updates" : "To be refreshed" } ?? "Pending").font(.caption2).lineLimit(1)
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         default:
             HStack(spacing: 8) {
@@ -382,7 +382,7 @@ struct SimHelpDeviceWidgetView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(device?.name ?? "SimHelp").font(.headline).lineLimit(1)
                     if let d = device { updated(d).font(.caption); Text(d.status(at: date)).font(.caption) }
-                    else { Text("打开 App 配对").font(.caption) }
+                    else { Text("Open app pairing").font(.caption) }
                 }
             }.frame(maxHeight: .infinity)
         }
@@ -415,11 +415,11 @@ struct SimHelpDeviceWidgetView: View {
         Group {
             if let observed = d.observedAt {
                 if Calendar.current.isDate(observed, inSameDayAs: date) {
-                    Text("更新于 \(observed.formatted(date: .omitted, time: .shortened))")
+                    Text("更新于 \\(observed.formatted(date: .omitted, time: .shortened))")
                 } else {
-                    Text("更新于 \(observed.formatted(.dateTime.month().day().hour().minute()))")
+                    Text("Updated on \\(observed.formatted(.dateTime.month().day().hour().minute()))")
                 }
-            } else { Text("等待首次同步") }
+            } else { Text("Waiting for first sync") }
         }.foregroundStyle(secondaryText).lineLimit(1)
     }
     private func battery(_ d: SimHelpWidgetSnapshot.Device) -> some View {
@@ -430,7 +430,7 @@ struct SimHelpDeviceWidgetView: View {
             Text(reading.map { "\($0.percent)%" } ?? "—")
         }
             .font(.subheadline.weight(.semibold))
-            .accessibilityLabel(reading.map { "安卓电量 \($0.percent)%，\($0.charging ? "正在充电" : "未充电")，采样于 \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "安卓电量待刷新")
+            .accessibilityLabel(reading.map { "Android power \\($0.percent)%, \\($0.charging?"正在充电" : "未充电")，采样于 \\($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "安卓电量待刷新")
     }
     private func transportSymbol(_ d: SimHelpWidgetSnapshot.Device) -> String {
         d.transport == "云端" ? "cloud" : d.transport == "VoBLE" ? "antenna.radiowaves.left.and.right" : "wifi"
@@ -451,15 +451,15 @@ struct SimHelpDeviceWidgetView: View {
     }
     private func actions(_ d: SimHelpWidgetSnapshot.Device, compact: Bool) -> some View {
         HStack(spacing: 8) {
-            action(compact ? "拨号" : "打开拨号", symbol: "phone.fill", to: .dial, agent: d.id)
-            action(compact ? "短信" : "查看短信", symbol: "message.fill", to: .messages, agent: d.id)
-            if compact && !textSize.isAccessibilitySize { action("联系人", symbol: "person.fill", to: .contacts, agent: d.id) }
+            action(compact ? "dial" : "打开拨号", symbol: "phone.fill", to: .dial, agent: d.id)
+            action(compact ? "Short message" : "View text messages", symbol: "message.fill", to: .messages, agent: d.id)
+            if compact && !textSize.isAccessibilitySize { action("Contact person", symbol: "person.fill", to: .contacts, agent: d.id) }
         }
     }
     private var recentHeader: some View {
         Link(destination: SimHelpWidgetDestination.recents.url()) {
             HStack {
-                Text("最近通话").font(.headline)
+                Text("recent calls").font(.headline)
                 Spacer()
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(secondaryText)
             }.foregroundStyle(.primary)
@@ -468,7 +468,7 @@ struct SimHelpDeviceWidgetView: View {
     @ViewBuilder private func history(agent: String?, limit: Int) -> some View {
         let calls = snapshot.calls.filter { agent == nil || $0.agentID == agent }
         if calls.isEmpty {
-            Text("暂无通话记录").font(.subheadline).foregroundStyle(secondaryText)
+            Text("No call records yet").font(.subheadline).foregroundStyle(secondaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 12) {

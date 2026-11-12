@@ -19,7 +19,7 @@ struct AppUpdateResultInbox {
 @MainActor
 final class AppUpdateController: ObservableObject {
     @Published private(set) var checking = false
-    @Published private(set) var status = "尚未检查应用更新"
+    @Published private(set) var status = "Haven't checked for app updates yet"
     @Published private(set) var pendingUpdate: AppUpdateCandidate?
     @Published private(set) var needsNotes: Bool
     let installed: String
@@ -63,14 +63,14 @@ final class AppUpdateController: ObservableObject {
             pendingUpdate = candidate.flatMap {
                 defaults.string(forKey: "airsim.app-update.notified") == $0.identity ? nil : $0
             }
-            status = candidate.map { "发现应用新版 \($0.version)（\($0.build)）" }
+            status = candidate.map { "Found a new version of the application \\($0.version) (\\($0.build))" }
                 ?? "未发现比当前更新的公开应用版本"
             return AppUpdateResult(message: status, candidate: candidate)
         } catch is CancellationError {
             return nil
         } catch {
             if Task.isCancelled { return nil }
-            status = "检查失败，请检查网络或稍后重试；这不表示当前已是最新版。"
+            status = "Check failed, please check the network or try again later; this does not mean you are up to date."
             return AppUpdateResult(message: status, candidate: nil)
         }
         */

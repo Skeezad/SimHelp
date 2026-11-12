@@ -65,12 +65,12 @@ struct SimHelpWidgetSnapshot: Codable, Equatable, Sendable {
         var contentPreview: String? = nil
         var unread: Bool? = nil
 
-        var displayText: String { contentPreview ?? "打开查看短信内容" }
+        var displayText: String { contentPreview ?? "Open to view text message content" }
     }
 
     static func messagePreview(_ content: String) -> String {
         let singleLine = content.split(whereSeparator: { $0.isWhitespace }).joined(separator: " ")
-        return singleLine.isEmpty ? "（空短信）" : String(singleLine.prefix(120))
+        return singleLine.isEmpty ? "(empty message)" : String(singleLine.prefix(120))
     }
 
     func latestCall(for agentID: String) -> RecentCall? {
@@ -113,8 +113,8 @@ struct SimHelpWidgetSnapshot: Codable, Equatable, Sendable {
                 && date.timeIntervalSince(observedAt) < SimHelpWidgetSnapshot.freshness
         }
         func status(at date: Date) -> String {
-            guard isFresh(at: date) else { return "状态待刷新" }
-            return recentlyReachable ? "最近在线" : "未连接"
+            guard isFresh(at: date) else { return "Status to be refreshed" }
+            return recentlyReachable ? "Recently online" : "Not connected"
         }
     }
     struct RecentCall: Codable, Equatable, Identifiable, Sendable {
@@ -129,7 +129,7 @@ struct SimHelpWidgetSnapshot: Codable, Equatable, Sendable {
     static var empty: Self { .init(generatedAt: .distantPast, devices: [], calls: []) }
     static func mask(_ number: String?) -> String {
         let digits = (number ?? "").filter(\.isNumber)
-        guard digits.count >= 7 else { return "号码已隐藏" }
+        guard digits.count >= 7 else { return "Number has been hidden" }
         return "\(digits.prefix(3)) •••• \(digits.suffix(4))"
     }
     /// Future entries turn old observations neutral even when the app sleeps.
@@ -154,7 +154,7 @@ struct SimHelpWidgetSnapshot: Codable, Equatable, Sendable {
             .init(agentID: "preview-galaxy", date: now.addingTimeInterval(-600), incoming: true,
                   contentPreview: "快递已送达，请及时查收。")
         ], controls: .init(mode: "vowlan", modeTitle: "VoWLAN", nextMode: "bluetooth",
-                          nextModeTitle: "蓝牙", currentAgentID: "preview-galaxy",
+                          nextModeTitle: "Bluetooth", currentAgentID: "preview-galaxy",
                           nextAgentID: "preview-redmi", nextAgentName: "Redmi", blockedByCall: false))
     }
 }
