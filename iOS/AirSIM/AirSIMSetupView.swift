@@ -14,9 +14,9 @@ struct SimHelpFirstConnectionView: View {
             VStack(alignment: .leading, spacing: 24) {
                 Image(systemName: "iphone.radiowaves.left.and.right")
                     .font(.system(size: 42, weight: .medium))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.primary)
                     .frame(width: 76, height: 76)
-                    .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 22))
+                    .background(.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 22))
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Connect Android phone")
@@ -1250,7 +1250,7 @@ struct SimHelpSettingsView: View {
                 startCloudSelfTest()
             } label: {
                 HStack {
-                    Label("运行Cloud模式自检", systemImage: "stethoscope")
+                    Label("Run Cloud Mode Self-Test", systemImage: "stethoscope")
                     Spacer()
                     if selfTestPhase == .running {
                         ProgressView()
@@ -1726,7 +1726,7 @@ private struct NotificationForwardingEditor: View {
                 if let validation = destination.validationMessage {
                     Section { Text(validation).font(.footnote).foregroundStyle(.red) }
                 }
-                Section("事件") {
+                Section("event") {
                     Toggle("Short message", isOn: $destination.sendSMS)
                     Toggle("Incoming call", isOn: $destination.sendIncomingCall)
                     Toggle("missed call", isOn: $destination.sendMissedCall)
@@ -1803,7 +1803,7 @@ final class FeedbackUploader {
         return "Feedback upload is disabled in this personal build."
         /*
         // Reject before collecting Android logs or contacting either endpoint.
-        guard Self.permitsUpload(trigger: trigger) else { return "自动反馈上传已关闭，请手动上传" }
+        guard Self.permitsUpload(trigger: trigger) else { return "Automatic feedback upload is turned off, please upload manually" }
         guard !RelayEgressGate.shared.isBlocked else { return "Pure local mode is on, feedback upload is off" }
 
         let snapshot: AgentFeedbackSnapshot?

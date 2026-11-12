@@ -2019,11 +2019,8 @@ private extension View {
 
     @ViewBuilder
     func dialKeySurface() -> some View {
-        if #available(iOS 26.0, *) {
-            glassEffect(.regular.interactive(), in: Circle())
-        } else {
-            background(Color(uiColor: .tertiarySystemFill), in: Circle())
-        }
+        background(Color(red: 0.13, green: 0.13, blue: 0.14), in: Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.06), lineWidth: 0.5))
     }
 }
 

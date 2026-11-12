@@ -38,7 +38,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .dial: return "phone"
+        case .dial: return "circle.grid.3x3.fill"
         case .recents: return "clock"
         case .messages: return "bubble.left.and.bubble.right"
         case .contacts: return "person.crop.rectangle"
@@ -48,6 +48,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 
     var tabTitle: String {
         switch self {
+        case .dial: return "Keypad"
         case .recents: return "Recents"
         case .contacts: return "Contact person"
         default: return rawValue
@@ -340,25 +341,8 @@ struct RootView: View {
 
 /// Light模式use system电话式纯白底; Dark模式才绘制深蓝黑底部环境光. 
 struct PhoneBackdrop: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        ZStack {
-            if colorScheme == .dark {
-                Color(red: 0.008, green: 0.016, blue: 0.035)
-                LinearGradient(
-                    colors: [
-                        Color.clear,
-                        Color(red: 0.018, green: 0.075, blue: 0.16).opacity(0.72),
-                        Color(red: 0.025, green: 0.20, blue: 0.48).opacity(0.62),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            } else {
-                Color.white
-            }
-        }
+        Color(uiColor: .systemBackground)
         .ignoresSafeArea()
     }
 }

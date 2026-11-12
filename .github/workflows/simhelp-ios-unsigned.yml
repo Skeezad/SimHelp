@@ -39,7 +39,6 @@ jobs:
           cp -R "$APP" build/ipa/Payload/SimHelp.app
           /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName SimHelp' build/ipa/Payload/SimHelp.app/Info.plist || true
           /usr/libexec/PlistBuddy -c 'Set :CFBundleName SimHelp' build/ipa/Payload/SimHelp.app/Info.plist || true
-          /usr/libexec/PlistBuddy -c 'Add :SimHelpAuthor string TheSkeezad' build/ipa/Payload/SimHelp.app/Info.plist || true
           # The Watch companion keeps the original placeholder bundle id and
           # causes Sideloadly to reject the whole archive after it rewrites the
           # iPhone bundle id. The phone app works independently, so omit the
