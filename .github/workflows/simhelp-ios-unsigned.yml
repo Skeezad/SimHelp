@@ -25,8 +25,7 @@ jobs:
             -derivedDataPath build/derived \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            build
+            CODE_SIGN_IDENTITY="" \\\r\n            SWIFT_VERSION=5.9 \\\r\n            build
       - name: Package IPA
         run: |
           set -euo pipefail
@@ -43,4 +42,5 @@ jobs:
           name: SimHelp-iPhone-unsigned
           path: build/SimHelp-iPhone-unsigned.ipa
           if-no-files-found: error
+
 
