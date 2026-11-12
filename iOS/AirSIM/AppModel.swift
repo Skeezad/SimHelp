@@ -72,7 +72,7 @@ enum CallAudioStatusPresentation {
         }
         switch cloudState {
         case .idle: return localAudioActive ? "Voice link is connected" : "Establishing voice link"
-        case let .connecting(attempt, maximum): return "正在重试云端语音 \(attempt)/\(maximum)"
+        case let .connecting(attempt, maximum): return "正在重试Cloud语音 \(attempt)/\(maximum)"
         case .connected: return "Cloud Voice is connected"
         case let .failed(message): return message
         }
@@ -285,7 +285,7 @@ enum LegacyAgentPoller {
 }
 
 enum AgentEventCursor {
-    /// 不可能由正常计数器产生，用于首次连接时要求 Agent 立即返回当前快照。
+    /// 不可能由正常计数器产生，用于首次连接时要求 Agent 立即返回Current快照。
     static let initial = UInt64.max
 
     static func advanced(from _: UInt64, to incoming: UInt64) -> UInt64 {
@@ -654,7 +654,7 @@ final class AppModel: ObservableObject {
         guard applyCallLifecycle(.init(
             callID: call.callID, callUUID: call.uuid, generation: call.generation,
             state: state, source: .agent, timestamp: Date(), traceID: nil,
-            failure: state == .failed ? "Agent 报告通话失败" : nil
+            failure: state == .failed ? "Agent 报告Calls失败" : nil
         )) else { return false }
         beginCallTransitionProtection()
         if audio.active || audio.sessionOwner != nil { audio.deactivate() }
@@ -1512,7 +1512,7 @@ final class AppModel: ObservableObject {
     }
 
     /// 拨号页不能只依赖 `isOnline`：该字段代表 VoWLAN 本地控制链路，Android 仅通过
-    /// Relay 保持心跳时会刻意为 false。云端模式开启且心跳新鲜时，同样允许
+    /// Relay 保持心跳时会刻意为 false。Cloud模式开启且心跳新鲜时，同样允许
     /// 用户发起拨号，实际执行仍会在 CallKit action 中再次鉴权和确认状态。
     var canStartOutgoingCommand: Bool {
         OutgoingCommandAvailability.isAvailable(
@@ -1928,7 +1928,7 @@ final class AppModel: ObservableObject {
             let localRouteReady: Bool
             switch transport {
             case .bluetooth:
-                // 保留正在进行中的三秒 VoBLE 重连窗口；超时后 coordinator 会结束通话。
+                // 保留正在进行中的三秒 VoBLE 重连窗口；超时后 coordinator 会结束Calls。
                 localRouteReady = bluetoothReady || call != nil
             case .vowlan:
                 localRouteReady = self.vowlan.availability.isOnlineForDisplay
@@ -1961,7 +1961,7 @@ final class AppModel: ObservableObject {
         lowPowerModeEnabled = storedLowPowerValue ?? true
         liveActivity.setEnabled(LiveActivityVisibilityPreference.isEnabled())
         backgroundStandby.setEnabled(storedValue ?? false)
-        // 先加载手机副本，再启动轮询，避免模块暂时离线时界面显示为空。
+        // 先加载手机副本，再启动轮询，避免模块暂时Offline时界面显示为空。
         restoreLocalHistory()
         Task { await contacts.loadIfAuthorized() }
         if IncomingCallPresentationRequest.isPending() { presentCurrentCallInApp() }
@@ -2095,7 +2095,7 @@ final class AppModel: ObservableObject {
     func setLowPowerModeEnabled(_ enabled: Bool) {
         UserDefaults.standard.set(enabled, forKey: lowPowerModeKey)
         lowPowerModeEnabled = enabled
-        // 立即重建轮询任务，让用户切换后无需等待旧睡眠周期结束。
+        // 立即重建轮询任务，让用户Switch后无需等待旧睡眠周期结束。
         if hasStarted { restartPolling() }
     }
 
@@ -2237,7 +2237,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Agent 在线时与其 1 秒 AT 轮询对齐；离线后退避，避免断开时持续唤醒手机和网络栈。
+    /// Agent Online时与其 1 秒 AT 轮询对齐；Offline后退避，避免断开时持续唤醒手机和网络栈。
     private var nextPollingDelay: TimeInterval {
         if !isOnline, boundBluetoothReady { return appIsActive ? 1 : (lowPowerModeEnabled ? 10 : 2) }
         if consecutivePollFailures > 0 {
@@ -2283,7 +2283,7 @@ final class AppModel: ObservableObject {
         )
         if selectedMode == .bluetooth || preferredRoute == .bluetooth {
             // isOnline 专指 HTTP Agent 链路，不能用 BLE 就绪伪装，否则会复用失效的
-            // VoWLAN 缓存并把下一次自动拨号错误地送回旧 IP。
+            // VoWLAN 缓存并把下一次自动拨号Error地送回旧 IP。
             updateBluetoothConnectionPresentation()
             return
         }
@@ -2383,8 +2383,8 @@ final class AppModel: ObservableObject {
             } else if status.active == nil, previousCall != nil {
                 audioWarmupCallID = nil
             }
-            // HTTP 已成功返回就说明 Android Agent 在线。last_poll_error 只是 Agent 内部 AT+CLCC
-            // 的最近轮询结果，通话建立期间可能短暂非空，不能据此把整条 VoWLAN 链路判为离线。
+            // HTTP 已成功返回就说明 Android Agent Online。last_poll_error 只是 Agent 内部 AT+CLCC
+            // 的Recents轮询结果，Calls建立期间可能短暂非空，不能据此把整条 VoWLAN 链路判为Offline。
             if !isOnline { isOnline = true }
             cloudAgentStatus = nil
             updateLocalConnectionSummary(cellularState: modemStatus?.cellularState)
@@ -2404,8 +2404,8 @@ final class AppModel: ObservableObject {
                 let lifecycleCall = lifecycleRecord(from: status.active ?? previousCall)
                 let systemCall = acceptedActiveLifecycle ? lifecycleCall : nil
                 let callerName = (systemCall ?? lifecycleCall).map { contacts.displayName(for: $0.number) }
-                // 必须先请求 CallKit，再决定是否发送本地通知。否则后台来电会同时出现
-                // 系统通话界面和一条带接听按钮的通知；CallKit 上报失败时下一轮再自动降级。
+                // 必须先请求 CallKit，再决定是否发送本地通知。否则后台Incoming call会同时出现
+                // 系统Calls界面和一条带接听按钮的通知；CallKit 上报失败时下一轮再自动降级。
                 if !WatchCallCoordinator.shared.ownsMedia(callID: systemCall?.id) {
                     callKit.synchronize(
                         // Preserve real Agent state except for identities explicitly
@@ -2420,7 +2420,7 @@ final class AppModel: ObservableObject {
                     previous: confirmedEndedCall ?? previousCall,
                     callerName: callerName ?? previousCall.map { contacts.displayName(for: $0.number) }
                 )
-                // CallKit 成功后由系统负责锁屏来电界面；仅在 CallKit 不可用或上报失败时发普通通知兜底。
+                // CallKit 成功后由系统负责锁屏Incoming call界面；仅在 CallKit 不可用或上报失败时发普通通知兜底。
                 if !callKit.suppressesInAppIncomingRingtone {
                     incomingNotifier.update(
                         call: lifecycleCall,
@@ -2442,10 +2442,10 @@ final class AppModel: ObservableObject {
                     await startCallAudioIfReady()
                 } else if status.active == nil, previousCall != nil,
                           !callLifecycleSnapshot.state.isTerminal {
-                    // 远端挂断不会经过 App 的挂断按钮；同样开启切换保护，避免媒体路由
-                    // 退出时的短暂网络/AT 抖动被误报为整个 Agent 离线。
+                    // 远端挂断不会经过 App 的挂断按钮；同样开启Switch保护，避免媒体路由
+                    // 退出时的短暂网络/AT 抖动被误报为整个 Agent Offline。
                     beginCallTransitionProtection()
-                    // 云端回退通话可能在本地模块状态消失后仍然有效；不能让本地轮询
+                    // Cloud回退Calls可能在本地模块状态消失后仍然有效；不能让本地轮询
                     // 清除共享 AVAudioSession 的扬声器覆盖或打断公网 PCM。
                     if currentCallTransport != .cloud,
                        !IPhoneCloudCallSession.shared.hasActiveCall {
@@ -2488,7 +2488,7 @@ final class AppModel: ObservableObject {
                    lockedLocal: currentLocalAPI,
                    transport: currentCallTransport
                ).audioHostConfig() {
-                // 诊断统计无需跟随每次通话轮询，降低额外 TCP 建连和 JSON 解码频率。
+                // 诊断统计无需跟随每次Calls轮询，降低额外 TCP 建连和 JSON 解码频率。
                 nextAudioDiagnosticRefresh = Date().addingTimeInterval(3)
                 audio.updateModuleDiagnostics(audioConfig)
             }
@@ -2513,8 +2513,8 @@ final class AppModel: ObservableObject {
             }()
             connectionMessage = "正在重新连接\(failedRouteName)：\(error.localizedDescription)"
 
-            // 一次长轮询中断不能代表 VoWLAN 已离线。通话动作后的 8 秒保护期内
-            // 保留最后一次在线状态；其后也必须连续失败三次并让独立 health 请求失败。
+            // 一次长轮询中断不能代表 VoWLAN 已Offline。Calls动作后的 8 秒保护期内
+            // 保留最后一次Online状态；其后也必须连续失败三次并让独立 health 请求失败。
             guard ModuleConnectivityPolicy.shouldConfirmOffline(
                 consecutiveFailures: consecutivePollFailures,
                 now: Date(),
@@ -2522,7 +2522,7 @@ final class AppModel: ObservableObject {
             ) else { return }
 
             // 用最后实际成功的本地路线复核健康状态。VoWLAN 的长轮询偶发断开时，
-            // 不能再转去探测非当前地址并据此把三星 Agent 判为离线。
+            // 不能再转去探测非Current地址并据此把三星 Agent 判为Offline。
             let mayPollLocal = AgentPollingRouteSelector.shouldPollLocal(mode: selectedMode,
                 activeTransport: callLifecycleSnapshot.state.representsCall ? currentCallTransport : nil)
             let healthAPI = mayPollLocal ? (lastSuccessfulLocalAPI ?? verifiedVoWLANAPI()) : nil
@@ -2549,8 +2549,8 @@ final class AppModel: ObservableObject {
 
             guard !Task.isCancelled, generation == pollingGeneration else { return }
             if IPhoneCloudCallSession.shared.hasActiveCall || IPhoneCloudCallSession.shared.isRecovering {
-                // 已建立的公网媒体会话本身就是独立的云端在线证据。接听时本地网络
-                // 路由短暂抖动不能把整台模块标成离线，也不能结束灵动岛状态。
+                // 已建立的公网媒体会话本身就是独立的CloudOnline证据。接听时本地网络
+                // 路由短暂抖动不能把整台模块标成Offline，也不能结束灵动岛状态。
                 consecutivePollFailures = 0
                 if isOnline { isOnline = false }
                 isReconnecting = true
@@ -2593,8 +2593,8 @@ final class AppModel: ObservableObject {
                 isReconnecting = true
                 if let version = cloudStatus?.agentVersion, !version.isEmpty { agentVersion = version }
                 connectionMessage = cloudConnectionMessage(for: cloudStatus!)
-                // VoWLAN 本地控制不可达不等于 Agent 离线。Relay 心跳新鲜时保留灵动岛待机，
-                // 来电仍可由 PushKit 唤醒并走公网 PCM。
+                // VoWLAN 本地控制不可达不等于 Agent Offline。Relay 心跳新鲜时保留灵动岛待机，
+                // Incoming call仍可由 PushKit 唤醒并走公网 PCM。
                 let lifecycleCall = lifecycleRecord(from: activeCall ?? remoteCall)
                 await liveActivity.update(
                     call: lifecycleCall,
@@ -2608,7 +2608,7 @@ final class AppModel: ObservableObject {
                 )
             } else {
                 isReconnecting = false
-                connectionMessage = "模块本地与云端均不可达：\(error.localizedDescription)"
+                connectionMessage = "模块本地与Cloud均不可达：\(error.localizedDescription)"
                 await liveActivity.markOffline(
                     agent: liveActivityAgentSnapshot,
                     appIsActive: appIsActive
@@ -2794,7 +2794,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// 蜂窝状态和版本不必跟随每秒通话轮询；独立刷新避免慢 AT 状态接口拖住来电检测。
+    /// 蜂窝状态和版本不必跟随每秒Calls轮询；独立Refresh避免慢 AT 状态接口拖住Incoming call检测。
     private func scheduleModuleMetadataRefresh(generation: Int, api: SimHelpAPI) {
         guard moduleMetadataTask == nil, Date().timeIntervalSinceReferenceDate >= nextModuleMetadataRefresh.timeIntervalSinceReferenceDate else { return }
         nextModuleMetadataRefresh = Date().addingTimeInterval(10)
@@ -2844,7 +2844,7 @@ final class AppModel: ObservableObject {
     }
 
     private func cloudConnectionMessage(for status: CloudAgentStatus) -> String {
-        let local = "本地网络中断，Android 云端在线"
+        let local = "本地网络中断，Android CloudOnline"
         if status.cellularState == "registered" {
             return local + ", incoming calls will be answered via the cloud"
         }
@@ -2886,7 +2886,7 @@ final class AppModel: ObservableObject {
                 debugDialLog("CallKit outbound transaction has been submitted")
             } catch CallKitBridgeError.unavailable {
                 // 受限签名或系统禁用 CallKit 时仍允许用户拨出，但不伪造系统 UUID。
-                // 仍复用标准路由选择，确保 VoWLAN 在线时控制与 PCM 都锁定到热点。
+                // 仍复用标准路由选择，确保 VoWLAN Online时控制与 PCM 都锁定到热点。
                 try await self.callKitStart(number: number)
                 debugDialLog("CallKit is not available. Direct dialing has been made according to the current transmission route.")
             }
@@ -3158,7 +3158,7 @@ final class AppModel: ObservableObject {
         await perform {
             if self.callKit.managesCurrentCall {
                 do {
-                    // App 内键盘与系统通话页共用 CallKit 事务，避免两边的 DTMF 顺序不一致。
+                    // App 内键盘与系统Calls页共用 CallKit 事务，避免两边的 DTMF 顺序不一致。
                     try await self.callKit.playDTMF(digit)
                 } catch CallKitBridgeError.staleSystemCall {
                     try await self.sendDTMFUsingAvailableTransport(digit)
@@ -3200,7 +3200,7 @@ final class AppModel: ObservableObject {
                     audio.setMuted(target)
                     errorMessage = nil
                 } else {
-                    errorMessage = "系统静音切换失败：\(error.localizedDescription)"
+                    errorMessage = "系统静音Switch失败：\(error.localizedDescription)"
                 }
             }
             return
@@ -3209,7 +3209,7 @@ final class AppModel: ObservableObject {
         isMuted = target
         audio.setMuted(target)
         // 部分 Android 固件不实现 AT+CMUT；本地 PCM 已经是移动端的权威静音状态，
-        // 后台同步失败不能阻断通话或弹出误导性的“麦克风已静音”错误。
+        // 后台同步失败不能阻断Calls或弹出误导性的“麦克风已静音”Error。
         if let localAPI = reachableLocalAPI {
             Task { try? await localAPI.setAudioMuted(target) }
         }
@@ -3217,7 +3217,7 @@ final class AppModel: ObservableObject {
     }
 
     func toggleSpeaker() {
-        // 扬声器切换只作用于当前系统音频会话；如果 CallKit 尚未完成激活，
+        // 扬声器Switch只作用于Current系统音频会话；如果 CallKit 尚未Done激活，
         // AudioSessionController 会保留请求并短暂重试，不弹出 OSStatus -50。
         audio.toggleSpeakerRoute()
         errorMessage = nil
@@ -3319,7 +3319,7 @@ final class AppModel: ObservableObject {
                 throw CloudCommandError.cloudModeDisabled
             }
             let sentPhase = result.sent ? "sent" : "not_sent"
-            let sentTitle = result.sent ? "短信已发送" : "SMS not sent"
+            let sentTitle = result.sent ? "SMS已发送" : "SMS not sent"
             let sentSegments = result.segments ?? 0
             let sentRoute = smsRoute
             let sentSlot = smsSlotLabel
@@ -3415,7 +3415,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// URC 已经让 Agent 读取了单条短信；事件路径只取交付队列，不再触发全量 CMGL。
+    /// URC 已经让 Agent 读取了单条SMS；事件路径只取交付队列，不再触发全量 CMGL。
     func loadMessagesFromAgent(
         silently: Bool = false,
         notifyIfBackground: Bool = false,
@@ -3466,7 +3466,7 @@ final class AppModel: ObservableObject {
     func deleteMessages(ids: Set<String>) {
         guard !ids.isEmpty else { return }
         guard historyStore.deleteMessages(ids: ids, from: messages) else {
-            errorMessage = "无法删除本机短信，请稍后重试"
+            errorMessage = "无法删除本机SMS，请稍后重试"
             return
         }
         messages = historyStore.visibleMessages(messages)
@@ -3488,7 +3488,7 @@ final class AppModel: ObservableObject {
         restoreLocalHistory()
     }
 
-    /// 将磁盘副本并入当前内存，只增加或更新记录，绝不以空读取清掉界面数据。
+    /// 将磁盘副本并入Current内存，只增加或更新记录，绝不以空读取清掉界面数据。
     private func restoreLocalHistory() {
         let storedCalls = historyStore.loadCallHistory()
         if !storedCalls.isEmpty {
@@ -3512,7 +3512,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// 远端列表可能因模块重启、自动清理或离线而变短，因此只做并集，不删除手机副本。
+    /// 远端列表可能因模块重启、自动清理或Offline而变短，因此只做并集，不删除手机副本。
     private func mergeCallHistory(_ remote: [CallRecord], agentID: String?, source: SimHelpAPI) async -> [CallRecord] {
         if let agentID {
             if persistDeviceHistory(remote, agentID: agentID) {
@@ -3567,7 +3567,7 @@ final class AppModel: ObservableObject {
         return normalizedMessages(historyStore.visibleMessages(merged + historyStore.loadMessages()))
     }
 
-    /// 模块不会在收件箱接口回传已发送短信，因此发送成功后立即写入手机本地历史。
+    /// 模块不会在收件箱接口回传已发送SMS，因此发送成功后立即写入手机本地历史。
     private func saveSentMessage(recipient: String, content: String, agentID: String?, simSlot: String?) {
         let updatedMessages = SMSHistoryPolicy.appendingSentMessage(
             recipient: recipient,
@@ -3580,7 +3580,7 @@ final class AppModel: ObservableObject {
         )
         messages = updatedMessages
         if !historyStore.saveMessages(updatedMessages) {
-            errorMessage = "短信已发送，但保存到本机失败，请稍后刷新确认"
+            errorMessage = "SMS已发送，但保存到本机失败，请稍后Refresh确认"
         }
     }
 
@@ -3778,7 +3778,7 @@ final class AppModel: ObservableObject {
                 return
             }
             let pcmRoute = currentPCMRoute ?? Self.pcmRoute(for: localAPI.route)
-            // 先完成麦克风授权和 AVAudioEngine 启动，再让 Agent 开始等待 PCM
+            // 先Done麦克风授权和 AVAudioEngine 启动，再让 Agent 开始等待 PCM
             // 客户端。否则首次授权停留超过 Agent 的等待窗口时，helper 会被提前杀死。
             let outcome = try await LocalCallAudioStartupCoordinator.start(
                 invalidationReason: invalidationReason,
@@ -3827,7 +3827,7 @@ final class AppModel: ObservableObject {
             // The coordinator already rolled back only this startup's resources.
             guard isCurrent() else { return }
             backgroundStandby.resumeAfterCall()
-            errorMessage = "无法登记通话音频：\(error.localizedDescription)"
+            errorMessage = "无法登记Calls音频：\(error.localizedDescription)"
             return
         }
     }
@@ -3864,7 +3864,7 @@ final class AppModel: ObservableObject {
             return (SimHelpAPI(route: .vowlan(endpoint: endpoint, credential: credential)),
                 .vowlan(endpoint: endpoint, credential: credential))
         }
-        // PushKit 可在后台先于 Bonjour 浏览器恢复。最近一次成功轮询若明确来自
+        // PushKit 可在后台先于 Bonjour 浏览器恢复。Recents一次成功轮询若明确来自
         // VoWLAN，就复用同一已鉴权端点；绝不能把通用 isOnline 误当成 VoWLAN 可达。
         guard isOnline, !isReconnecting, let cached = lastSuccessfulLocalAPI,
               case let .vowlan(endpoint, credential) = cached.route,
@@ -3915,7 +3915,7 @@ final class AppModel: ObservableObject {
         await AgentVerboseTraceRecorder.shared.recordEvent(
             source: "ios", category: "call_transport", phase: "ended",
             title: "hotspot_lost_no_midcall_handover",
-            detail: "VoWLAN 局域网路径丢失，结束当前通话；未迁移到云端",
+            detail: "VoWLAN 局域网路径丢失，结束CurrentCalls；未迁移到Cloud",
             fields: ["generation": String(ending.generation), "end_source": "vowlan_path_loss",
                      "call_uuid": ending.callUUID?.uuidString ?? "none"],
             isFailure: true
@@ -4175,7 +4175,7 @@ final class AppModel: ObservableObject {
             source: .agent,
             timestamp: call.updatedAt,
             traceID: "agent-poll-\(call.id)-\(generation)",
-            failure: state == .failed ? "Agent 报告通话失败" : nil
+            failure: state == .failed ? "Agent 报告Calls失败" : nil
         )
         if let agentID {
             let effects = receiveDeviceCallEvent(DeviceCallEvent(agentID: agentID, callID: call.id,
@@ -4239,8 +4239,8 @@ enum CallAudioRegistrationCoordinator {
                 try await service.setAudioHostEnabled(true)
                 return .registered
             } catch APIError.http(409, _) {
-                // 通话事件与媒体注册是两个请求。旧 Agent 在其间完成 CLCC 刷新时，
-                // 重新读取状态，避免把短暂竞争当成致命拨号错误。
+                // Calls事件与媒体注册是两个请求。旧 Agent 在其间Done CLCC Refresh时，
+                // 重新读取状态，避免把短暂竞争当成致命拨号Error。
                 let latest = try await service.callStatus()
                 guard latest.active?.state == "active" else {
                     return .callNoLongerActive
@@ -4253,7 +4253,7 @@ enum CallAudioRegistrationCoordinator {
                     return .registered
                 } catch APIError.http(409, _) {
                     // 0.3.39 的 DSCI 与 CLCC 会在接通瞬间短暂交错。此时保持
-                    // CallKit 通话并交给下一轮事件重试，不能把媒体尚未就绪显示成拨号失败。
+                    // CallKit Calls并交给下一轮事件重试，不能把媒体尚未就绪显示成拨号失败。
                     return .temporarilyUnavailable
                 }
             } catch {
@@ -4750,7 +4750,7 @@ extension AppModel: CallKitActionHandling {
                 currentCallTransport = .bluetooth
                 return
             }
-            // App 内来电页不一定经过 CallKit push 回调；纯云端模式的
+            // App 内Incoming call页不一定经过 CallKit push 回调；纯Cloud模式的
             // authoritative call 已经在 IPhoneCloudCallSession 中。回退到
             // currentIncomingPush 会让内页接听误走 VoWLAN/local。
             let pushedCall = callKit.currentIncomingPush
@@ -4911,7 +4911,7 @@ extension AppModel: CallKitActionHandling {
         }
         if currentCallTransport == .vowlan,
            case .unavailable = vowlan.availability {
-            // 三星端在热点接口消失时直接通过 Telecom 结束所属通话；这里让
+            // 三星端在热点接口消失时直接通过 Telecom 结束所属Calls；这里让
             // CallKit 事务立即成功，避免因已断开的控制 socket 把系统界面卡住。
             clearLockedTransport()
             backgroundStandby.resumeAfterCall()
@@ -5024,8 +5024,8 @@ extension AppModel: CallKitActionHandling {
         if vobleCalls.currentIdentity != nil {
             vobleCalls.setCallKitAudioActive(false)
         }
-        // CXProvider reset 只代表系统通话界面失效，绝不等于用户挂断真实模块通话。
-        // 清理本地音频后交给下一轮状态同步按 App 内通话模式自动恢复。
+        // CXProvider reset 只代表系统Calls界面失效，绝不等于用户挂断真实模块Calls。
+        // 清理本地音频后交给下一轮状态同步按 App 内Calls模式自动恢复。
         let wasVirtual = VirtualCallTTSController.shared.isPrepared
         if wasVirtual {
             VirtualCallTTSController.shared.stop()
@@ -5077,7 +5077,7 @@ extension AppModel: CallKitActionHandling {
         )) else { return }
         pushedCallIdentity = call
         remoteCall = Self.remoteCallRecord(from: call, state: "incoming")
-        // 后台 PushKit 来电由系统界面接管；只有 App 本来就在前台时才准备 App 内来电页。
+        // 后台 PushKit Incoming call由系统界面接管；只有 App 本来就在前台时才准备 App 内Incoming call页。
         callPresentationSurface = appIsActive ? .app : .system
     }
 
@@ -5090,8 +5090,8 @@ extension AppModel: CallKitActionHandling {
             return
         }
         outgoingAttemptID = UUID()
-        // 远端挂断、系统通话页挂断以及 Provider 主动结束都会走这里。
-        // Agent 已拥有唯一的通话结束媒体清理权；App 不再重复关闭 Audio Host。
+        // 远端挂断、系统Calls页挂断以及 Provider 主动结束都会走这里。
+        // Agent 已拥有唯一的Calls结束媒体清理权；App 不再重复关闭 Audio Host。
         beginCallTransitionProtection()
         if vobleCalls.currentIdentity != nil {
             vobleCalls.setCallKitAudioActive(false)
@@ -5150,7 +5150,7 @@ extension AppModel {
             else if agent.cloudOnline { observed = lastCloudStatusReceivedAt == .distantPast ? nil : lastCloudStatusReceivedAt }
             else { observed = nil }
             return .init(id: agent.id, name: agent.deviceName,
-                         transport: agent.vowlanOnline ? "VoWLAN" : agent.bluetoothOnline ? "VoBLE" : agent.cloudOnline ? "云端" : "",
+                         transport: agent.vowlanOnline ? "VoWLAN" : agent.bluetoothOnline ? "VoBLE" : agent.cloudOnline ? "Cloud" : "",
                          recentlyReachable: reachable, observedAt: observed,
                          battery: widgetBattery(for: agent.id, at: now),
                          unreadMessages: messages.filter { $0.sourceAgentID == agent.id && unreadMessageIDs.contains($0.id) }.count,

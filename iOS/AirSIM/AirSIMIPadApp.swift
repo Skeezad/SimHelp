@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SimHelp iPhone/iPad 入口：三星 VoWLAN 与独立云端 Relay。
+/// SimHelp iPhone/iPad 入口：三星 VoWLAN 与独立Cloud Relay。
 @main
 struct SimHelpIPadApp: App {
     // One lazy instance for both scene presentation and background widget intents.
@@ -58,7 +58,7 @@ struct SimHelpIPadApp: App {
                 model.didBecomeActive()
             case .inactive:
                 // 必须在真正进入后台前启动音频会话；等到 .background 才启动时，
-                // iOS 可能已经冻结进程，后续来电和短信事件便无法继续等待。
+                // iOS 可能已经冻结进程，后续Incoming call和SMS事件便无法继续等待。
                 model.willResignActive()
             case .background:
                 model.didEnterBackground()

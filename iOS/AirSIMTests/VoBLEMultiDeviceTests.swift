@@ -174,7 +174,7 @@ final class VoBLEMultiDeviceTests: XCTestCase {
             call: nil, callerName: nil, moduleOnline: false, cloudOnline: false,
             radio: nil, agent: nil, idleStartedAt: Date())
         XCTAssertEqual(state.phase, .offline)
-        XCTAssertEqual(state.displayName, "Agent 离线")
+        XCTAssertEqual(state.displayName, "Agent Offline")
     }
 
     func testAndroidSIMSlotMetadataDecodesNumbers() throws {

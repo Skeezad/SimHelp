@@ -122,8 +122,8 @@ enum LiveActivityStateBuilder {
         downloadBytesPerSecond: Double? = nil,
         uploadBytesPerSecond: Double? = nil
     ) -> SimHelpCallActivityAttributes.ContentState {
-        // VoWLAN 本地控制、Relay 心跳、VoBLE 任一路可达即视为 Agent 在线。
-        // 双通道下 Wi-Fi 断开但 BLE 仍连着时，不能把整个 Agent 误报成离线。
+        // VoWLAN 本地控制、Relay 心跳、VoBLE 任一路可达即视为 Agent Online。
+        // 双通道下 Wi-Fi 断开但 BLE 仍连着时，不能把整个 Agent 误报成Offline。
         // When a paired device is selected, its verified channels are authoritative.
         // A global/previous-device flag must not contradict the device rows.
         let localOnline = agent.map { $0.vowlanOnline || $0.bluetoothOnline } ?? moduleOnline
@@ -132,7 +132,7 @@ enum LiveActivityStateBuilder {
             return .init(
                 callID: "",
                 number: "",
-                displayName: "Agent 离线",
+                displayName: "Agent Offline",
                 phase: .offline,
                 startedAt: idleStartedAt,
                 agentDeviceName: agent?.deviceName,

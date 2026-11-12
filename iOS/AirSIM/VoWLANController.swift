@@ -302,8 +302,8 @@ enum ConnectionStatusHeadline {
         switch summary {
         case .localOnline: return L10n.t("online")
         case .localOnlineNoService: return "Online · Cellular No Service"
-        case .cloudOnly: return "云端在线 · 网络重连中"
-        case .offline: return L10n.t("离线")
+        case .cloudOnly: return "CloudOnline · 网络重连中"
+        case .offline: return L10n.t("Offline")
         }
     }
 }
@@ -346,14 +346,14 @@ struct ModuleConnectionPresentation: Equatable {
             )
         case .localOnlineNoService:
             return Self(
-                title: "模块在线 · 无服务", routeTitle: "Local network is connected",
+                title: "模块Online · 无服务", routeTitle: "Local network is connected",
                 description: message ?? "The local network is connected and the cellular network is automatically recovering",
                 level: .warning, systemImage: "antenna.radiowaves.left.and.right.slash"
             )
         case .cloudOnly:
             return Self(
                 title: "Cloud online", routeTitle: "Public network Relay",
-                description: message ?? "本地网络中断，模块仍可通过公网接收来电和短信",
+                description: message ?? "本地网络中断，模块仍可通过公网接收Incoming call和SMS",
                 level: .cloud, systemImage: "icloud.fill"
             )
         case .offline:
@@ -1033,7 +1033,7 @@ final class VoWLANController: ObservableObject {
                   self.availability.endpoint == endpoint,
                   !self.availability.isOnlineForDisplay else { return }
             if self.verificationWatchdogAttempts >= 3 {
-                self.availability = .unavailable("VoWLAN 验证超时，请确认 iPhone 与安卓处于同一 Wi-Fi")
+                self.availability = .unavailable("VoWLAN 验证超时，请确认 iPhone 与Android处于同一 Wi-Fi")
                 self.verificationWatchdogTask = nil
                 return
             }
@@ -1209,7 +1209,7 @@ final class VoWLANController: ObservableObject {
                 availability = .discovered(advertised, at: Date())
                 await AgentVerboseTraceRecorder.shared.recordEvent(
                     source: "ios", category: "vowlan", phase: "fallback",
-                    title: "VoWLAN 切换到 Android 通告的 Tailscale 地址",
+                    title: "VoWLAN Switch到 Android 通告的 Tailscale 地址",
                     fields: ["host": advertised.host, "control_port": String(advertised.controlPort)]
                 )
                 guard !Task.isCancelled, epoch == identityEpoch, discoveredEndpoint == advertised,

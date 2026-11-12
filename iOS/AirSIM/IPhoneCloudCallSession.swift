@@ -12,9 +12,9 @@ enum IPhoneCloudCallError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .mediaUnavailable: return "来电没有可用的云端媒体凭证"
+        case .mediaUnavailable: return "Incoming call没有可用的Cloud媒体凭证"
         case .microphonePermissionDenied: return "Microphone permission is required for cloud calls"
-        case .microphoneUnavailable: return "当前没有可用的麦克风输入"
+        case .microphoneUnavailable: return "Current没有可用的麦克风输入"
         case .invalidAudioFormat: return "Unable to create cloud call audio format"
         case .connectionClosed: return "The module cloud voice connection has been disconnected"
         }
@@ -381,7 +381,7 @@ struct CloudPCMAdaptiveJitterBuffer {
 
 enum CloudCallRetryPolicy {
     /// CallKit 激活音频会话与 AVAudioEngine 可用之间会有短暂竞争；覆盖约 12 秒，
-    /// 同时限制重试次数，避免真实权限错误形成后台空转。
+    /// 同时限制重试次数，避免真实权限Error形成后台空转。
     static let audioDelays: [TimeInterval] = [0, 0.35, 0.8, 1.5, 3, 6]
     static let reconnectDelays: [TimeInterval] = [0.4, 1, 2, 4]
 
@@ -709,7 +709,7 @@ enum CloudCallControlClient {
         }
         guard acceptedStatusCodes.contains(http.statusCode) else {
             let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
-            throw CloudCallControlClientError.rejected(detail ?? "Relay 拒绝了通话控制（HTTP \(http.statusCode)）")
+            throw CloudCallControlClientError.rejected(detail ?? "Relay 拒绝了Calls控制（HTTP \(http.statusCode)）")
         }
         do {
             return try JSONDecoder().decode(T.self, from: data)
@@ -720,7 +720,7 @@ enum CloudCallControlClient {
 }
 
 /// iPhone 的公网 PCM 回退会话。PushKit 媒体密钥只保存在内存中；
-/// CallKit 激活 AVAudioSession 后才启动麦克风和播放，控制 WebSocket 可提前接听模块来电。
+/// CallKit 激活 AVAudioSession 后才启动麦克风和播放，控制 WebSocket 可提前接听模块Incoming call。
 @MainActor
 final class IPhoneCloudCallSession {
     static let shared = IPhoneCloudCallSession()
@@ -780,7 +780,7 @@ final class IPhoneCloudCallSession {
                     source: relayStatuses.contains(status) ? "RELAY" : "AGENT",
                     category: relayStatuses.contains(status) ? "relay" : "cloud-call-control",
                     phase: status,
-                    title: control.action.map { "通话控制 · \($0)" } ?? "Cloud call status",
+                    title: control.action.map { "Calls控制 · \($0)" } ?? "Cloud call status",
                     detail: control.message ?? "",
                     fields: control.traceFields,
                     isFailure: status == "action_error"
@@ -885,7 +885,7 @@ final class IPhoneCloudCallSession {
                 try await media.connect(to: url)
             } catch {
                 // 系统接听动作不能因为第一次 WebSocket 建连抖动而直接失败。
-                // 保留同一通话并在后台有界重连，成功后再补发 answer 控制帧。
+                // 保留同一Calls并在后台有界重连，成功后再补发 answer 控制帧。
                 guard call?.uuid == incoming.uuid, answered else { return }
                 requestMediaRebuild(.connectionLost)
                 scheduleAnswerConfirmation(for: incoming)
@@ -969,7 +969,7 @@ final class IPhoneCloudCallSession {
                 )
                 guard final.terminationConfirmed else {
                     throw CloudCallControlClientError.rejected(
-                        final.error ?? "Agent 未确认蜂窝通话已经结束"
+                        final.error ?? "Agent 未确认蜂窝Calls已经结束"
                     )
                 }
                 await tracePersistentControl(
@@ -1054,7 +1054,7 @@ final class IPhoneCloudCallSession {
             source: "APP",
             category: "cloud-call-control",
             phase: "credentials_unavailable",
-            title: "通话控制 · \(action)",
+            title: "Calls控制 · \(action)",
             detail: "Missing Relay device credentials",
             fields: [
                 "action": action,
@@ -1076,7 +1076,7 @@ final class IPhoneCloudCallSession {
             source: "APP",
             category: "cloud-call-control",
             phase: phase,
-            title: "通话控制 · \(envelope.action)",
+            title: "Calls控制 · \(envelope.action)",
             detail: detail,
             fields: [
                 "action": envelope.action,
@@ -1108,7 +1108,7 @@ final class IPhoneCloudCallSession {
         guard canAttemptAudio else { return }
         if media.isAudioRunning {
             audioState = .connected
-            traceAudio(phase: "already_running", title: "iPhone 云端音频已在运行")
+            traceAudio(phase: "already_running", title: "iPhone Cloud音频已在运行")
             return
         }
         guard audioRetryTask == nil else { return }
@@ -1136,7 +1136,7 @@ final class IPhoneCloudCallSession {
                         : .connecting(attempt: index + 1, maximumAttempts: delays.count)
                     traceAudio(
                         phase: "started",
-                        title: "iPhone 云端音频已启动",
+                        title: "iPhone Cloud音频已启动",
                         attempt: index + 1
                     )
                     return
@@ -1333,7 +1333,7 @@ final class IPhoneCloudCallSession {
                     requestMediaRebuild(issue)
                     return
                 case let .failed(issue):
-                    audioState = .failed("云端媒体质量异常：\(issue.rawValue)")
+                    audioState = .failed("Cloud媒体质量异常：\(issue.rawValue)")
                     if let call {
                         traceMediaHealth(issue: issue, phase: "failed", call: call, isFailure: true)
                     }
@@ -1489,7 +1489,7 @@ private final class IPhoneCloudCallMediaBridge: @unchecked Sendable {
         try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP])
         try session.setPreferredSampleRate(48_000)
         try session.setPreferredIOBufferDuration(0.02)
-        // 每通电话从听筒开始；用户随后可在通话页切换扬声器。
+        // 每通电话从听筒开始；用户随后可在Calls页Switch扬声器。
         try session.overrideOutputAudioPort(.none)
     }
 
@@ -1629,7 +1629,7 @@ private final class IPhoneCloudCallMediaBridge: @unchecked Sendable {
                 source: "APP",
                 category: "cloud-call-control",
                 phase: phase,
-                title: "通话控制 · \(envelope.action)",
+                title: "Calls控制 · \(envelope.action)",
                 detail: detail,
                 fields: [
                     "action": envelope.action,

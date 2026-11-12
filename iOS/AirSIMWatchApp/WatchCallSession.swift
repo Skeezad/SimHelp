@@ -147,7 +147,7 @@ final class WatchCallSession: NSObject, ObservableObject {
         dialRequestID = nil
         isDialing = false
         guard reply["ok"] as? Bool == true else {
-            errorMessage = reply["error"] as? String ?? "无法发起手表通话"
+            errorMessage = reply["error"] as? String ?? "无法发起手表Calls"
             return
         }
         guard reply["request_id"] as? String == requestID.uuidString else {
@@ -678,7 +678,7 @@ extension WatchCallSession: WCSessionDelegate {
         if activationState == .activated {
 			let token = pendingWatchToken ?? pushRegistry.pushToken(for: .voIP)
 #if DEBUG
-			print("[SimHelp Watch WC] 激活完成；token=\(token == nil ? "无" : "有") error=\(error?.localizedDescription ?? "无")")
+			print("[SimHelp Watch WC] 激活Done；token=\(token == nil ? "无" : "有") error=\(error?.localizedDescription ?? "无")")
 #endif
 			if let token { sendWatchToken(token) }
             if !session.receivedApplicationContext.isEmpty { receiveMirror(session.receivedApplicationContext) }

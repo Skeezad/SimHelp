@@ -11,7 +11,7 @@ struct SimHelpLiveActivityBundle: WidgetBundle {
     }
 }
 
-/// 待机态保持极简，展开与锁屏态再呈现网络详情和通话动作。
+/// 待机态保持极简，展开与锁屏态再呈现网络详情和Calls动作。
 struct SimHelpLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SimHelpCallActivityAttributes.self) { context in
@@ -115,7 +115,7 @@ struct SimHelpLiveActivityWidget: Widget {
         case .active, .incoming, .held:
             EmptyView()
         case .offline:
-            Text("离线")
+            Text("Offline")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
         }
@@ -396,7 +396,7 @@ struct SimHelpLiveActivityWidget: Widget {
                 agentRowContent(agent, compact: compact)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(agent.name)，\(agent.isCurrent ? "当前设备" : "切换到此设备")")
+            .accessibilityLabel("\(agent.name)，\(agent.isCurrent ? "Current设备" : "Switch到此设备")")
         } else {
             agentRowContent(agent, compact: compact)
         }
@@ -466,7 +466,7 @@ struct SimHelpLiveActivityWidget: Widget {
     ) -> some View {
         let transport = agent.transport
         let color = transportColor(transport)
-        let title = transport?.title ?? "离线"
+        let title = transport?.title ?? "Offline"
         let symbol = transport?.systemImage ?? "wifi.slash"
         return HStack(spacing: compact ? 3 : 4) {
             Image(systemName: symbol)
@@ -521,7 +521,7 @@ struct SimHelpLiveActivityWidget: Widget {
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(.cyan)
         } else if state.phase == .offline {
-            Text("离线")
+            Text("Offline")
                 .font(.headline)
                 .foregroundStyle(.white.opacity(0.55))
         }
@@ -588,7 +588,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+            .accessibilityLabel("Switch Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
         } else {
             pairedAgentCountView(state)
         }
@@ -646,7 +646,7 @@ struct SimHelpLiveActivityWidget: Widget {
                             .background(Color.white.opacity(0.10), in: Capsule())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+                        .accessibilityLabel("Switch Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
                     }
                 }
                 Text(agentDetailLine(state))
@@ -709,7 +709,7 @@ struct SimHelpLiveActivityWidget: Widget {
             }
         }
         .frame(height: 14)
-        .accessibilityLabel(dbm.map { "信号 \($0) dBm" } ?? "信号未知")
+        .accessibilityLabel(dbm.map { "Signal \($0) dBm" } ?? "SignalUnknown")
     }
 
     private func nonEmpty(_ value: String?) -> String? {
@@ -864,7 +864,7 @@ struct SimHelpLiveActivityWidget: Widget {
             return "\(state.phase.title) · \(transport.title)"
         case .standby:
             if let status = connectionStatusLine(state) { return status }
-            if let transport = state.transport { return "\(transport.title) 在线" }
+            if let transport = state.transport { return "\(transport.title) Online" }
             return state.phase.title
         case .cloudStandby:
             return connectionStatusLine(state) ?? state.phase.title

@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-/// 负责保存手机本地的通话记录和短信，不依赖模块是否在线。
+/// 负责保存手机本地的Calls记录和SMS，不依赖模块是否Online。
 final class LocalHistoryStore {
     // Background push persistence and the foreground model use separate store instances.
     private static let messageLock = NSRecursiveLock()
@@ -53,7 +53,7 @@ final class LocalHistoryStore {
                 attributes: nil
             )
         } catch {
-            // 本地缓存不能阻塞通话和短信；后续写入失败时仍会继续记录日志。
+            // 本地缓存不能阻塞Calls和SMS；后续写入失败时仍会继续记录日志。
             Self.log("创建本地历史目录失败：\(error.localizedDescription)")
         }
     }
@@ -209,7 +209,7 @@ final class LocalHistoryStore {
             try encoder.encode(state).write(to: messagesURL, options: [.atomic])
             return true
         } catch {
-            Self.log("写入短信历史失败")
+            Self.log("写入SMS历史失败")
             return false
         }
     }

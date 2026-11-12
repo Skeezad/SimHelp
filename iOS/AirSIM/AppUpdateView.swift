@@ -13,14 +13,14 @@ enum AppReleaseNotes {
     // Bundled: showing installed-version notes never needs GitHub, Relay or pairing.
     // Keep this summary in sync with the candidate's source and docs when publishing.
     static let items = [
-        "支持连接运行兼容 SimHelp 设备端的 U30Air，在 iPhone 上使用通话与短信功能。",
-        "桌面与锁屏小组件展示设备状态；支持的桌面尺寸提供设备与连接模式切换、最近通话和短信内容摘要。",
-        "小组件支持后台切换，显示设备上报的电量；刷新由系统调度，无有效采样时显示未知。",
-        "试验性 TLS 公网域名配对与直连：通过自建 HTTPS／TLS 入口完成首次配对，或为已配对设备添加公网入口。",
-        "最近通话与短信的底部标签、小组件标题显示未接／未读数量，对应记录也有醒目标记。",
-        "呼出结束时按通话身份停止等待音与计时；网络波动不会自动重复拨号。"
+        "Supports connecting U30Air running compatible SimHelp devices to use call and text messaging functions on iPhone.",
+        "Desktop and lock screen widgets display device status; supported desktop sizes provide device and connection mode switching, summaries of recent calls and text messages.",
+        "小组件支持后台Switch，显示设备上报的电量；Refresh由系统调度，无有效采样时显示Unknown。",
+        "Experimental TLS public network domain name pairing and direct connection: Complete the first pairing through a self-built HTTPS/TLS portal, or add a public network portal for paired devices.",
+        "The bottom labels and widget titles of recent calls and text messages display the number of missed calls/unreads, and the corresponding records are also marked with eye-catching marks.",
+        "When the outgoing call is completed, the waiting tone and timing will be stopped according to the calling identity; network fluctuations will not automatically repeat the dialing."
     ]
-    static let limitations = "U30Air 需运行兼容设备端。运营商早期媒体仅在临时候选中完成单次试听，尚未正式开放。TLS 公网功能为试验性，需要可入站的自建网关、有效证书及独立音频转发；不自动穿透 NAT，也不新增后台推送。小组件刷新由系统调度，模式切换不代表已连接。GitHub 发布不代表 TestFlight 已可更新。"
+    static let limitations = "U30Air 需运行兼容设备端。运营商早期媒体仅在临时候选中Done单次试听，尚未正式开放。TLS 公网功能为试验性，需要可入站的自建网关、有效证书及独立音频转发；不自动穿透 NAT，也不新增后台推送。小组件Refresh由系统调度，模式Switch不代表已连接。GitHub 发布不代表 TestFlight 已可更新。"
 }
 
 enum AppUpdateChannel {
@@ -53,15 +53,15 @@ struct AppUpdateSheet: View {
                     Section { Text(result.message) }
                     if let candidate = result.candidate {
                         Section("公开版本 \(candidate.version)（\(candidate.build)）") {
-                            Text(candidate.notes.isEmpty ? "请查看发布页中的更新说明。" : candidate.notes)
+                            Text(candidate.notes.isEmpty ? "Please check the release page for update instructions." : candidate.notes)
                                 .textSelection(.enabled)
-                            Link("查看 GitHub 发布说明", destination: candidate.page)
+                            Link("View the GitHub release notes", destination: candidate.page)
                         }
-                        Section("如何更新") {
+                        Section("How to update") {
                             Text(AppUpdateChannel.isTestFlight
-                                ? "请打开 TestFlight 查看此 App 是否已有可用构建。GitHub 发布不代表 Apple 已处理完成或测试者可更新。"
-                                : "GitHub IPA 需要侧载工具重新签名后安装，不能直接安装。使用 TestFlight 的用户请在 TestFlight 中检查。")
-                            Text("不会自动下载安装，也不会更改配对、通话或 AVF Agent。")
+                                ? "Please open TestFlight to see if there is an existing build available for this app. GitHub publishing does not mean that Apple has processed it or that it can be updated by testers."
+                                : "GitHub IPA requires the sideloading tool to be re-signed and installed, and cannot be installed directly. Those using TestFlight please check in TestFlight.")
+                            Text("There will be no automatic download and installation, and no changes to pairing, calling or AVF Agent.")
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -98,8 +98,8 @@ private enum NewFeatureCatalog {
         NewFeaturePage(
             id: 0,
             kicker: "U30Air 支持",
-            title: "连接 U30Air，\n电话短信随身用",
-            body: "连接运行兼容 SimHelp 设备端的 U30Air，在 iPhone 上拨打、接听电话和收发短信。请先更新设备端并完成配对。",
+            title: "Connect U30Air,\\nUse your phone and text messages with you",
+            body: "Connect a U30Air running a SimHelp-compatible device to make, receive calls, and send and receive text messages on your iPhone. Please update the device first and complete pairing.",
             symbol: "phone.connection.fill",
             accent: .cyan,
             demo: .u30Air
@@ -108,25 +108,25 @@ private enum NewFeatureCatalog {
             id: 1,
             kicker: "桌面与锁屏小组件",
             title: "不用打开 App，\n常用信息一眼可见",
-            body: "查看设备状态、电量、最近通话与短信内容；支持的桌面尺寸可直接切换设备和连接模式。刷新由系统调度，电量以设备有效上报为准。",
+            body: "Check the device status, battery level, recent calls and text messages; the supported desktop sizes can directly switch devices and connection modes. Refresh is scheduled by the system, and the power consumption is subject to effective reporting by the device.",
             symbol: "rectangle.grid.2x2.fill",
             accent: .green,
             demo: .widgetSummary
         ),
         NewFeaturePage(
             id: 2,
-            kicker: "TLS 公网 · 试验性",
-            title: "用自己的域名，\n在外也能配对直连",
-            body: "通过自建 HTTPS／TLS 网关完成首次配对，或为已有设备添加公网入口。需可入站网络、有效证书和独立音频转发；配置页内附使用教程。",
+            kicker: "TLS Public Network · Experimental",
+            title: "Use your own domain name,\\nYou can also pair and connect directly when you are outside.",
+            body: "Complete the first pairing through a self-built HTTPS/TLS gateway, or add a public network entrance to an existing device. Requires inbound network, valid certificate and independent audio forwarding; usage tutorial included in configuration page.",
             symbol: "lock.shield.fill",
             accent: .blue,
             demo: .publicTLS
         ),
         NewFeaturePage(
             id: 3,
-            kicker: "未读短信 · 未接来电",
-            title: "没读的，没接的，\n都有醒目标记",
-            body: "底部标签与小组件显示未读／未接数字，对应短信和通话记录也有标记。打开记录，就能找到尚未查看的消息与来电。",
+            kicker: "Unread text messages · Missed calls",
+            title: "Those that were not read and those that were not answered are clearly marked\\n",
+            body: "The bottom labels and widgets display unread/missed numbers, and corresponding text messages and call records are also marked. Open the record and you can find messages and calls that you have not yet viewed.",
             symbol: "app.badge.fill",
             accent: .orange,
             demo: .unreadBadges
@@ -176,13 +176,13 @@ struct NewFeatureOnboardingView: View {
                         .foregroundStyle(.white.opacity(0.55))
                 }
                 Spacer()
-                Button("确定") { onConfirm() }
+                Button("Sure") { onConfirm() }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 18)
                     .padding(.vertical, 9)
                     .background(.white, in: Capsule())
-                    .accessibilityLabel("确定并关闭新功能介绍")
+                    .accessibilityLabel("Confirm and close new feature introduction")
             }
             .padding(.horizontal, 24)
             .padding(.top, 10)
@@ -198,7 +198,7 @@ struct NewFeatureOnboardingView: View {
                             .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: page)
                     }
                 }
-                Text("左右滑动 · 查看全部新功能")
+                Text("Swipe left or right · See all new features")
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.white.opacity(0.55))
                     .padding(.bottom, 6)
@@ -350,9 +350,9 @@ private enum FeatureDemoHTML {
     <rect x="269" y="31" width="35" height="7" rx="4" fill="#526178"/>
     <text x="286" y="66" text-anchor="middle" fill="white" font-size="16" font-weight="700">SimHelp</text>
     <g class="reveal"><rect x="247" y="83" width="79" height="37" rx="12" fill="#164458"/>
-    <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">通话</text></g>
+    <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">Calls</text></g>
     <g class="reveal delayed"><rect x="247" y="129" width="79" height="37" rx="12" fill="#233D57"/>
-    <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">短信</text></g>
+    <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">SMS</text></g>
     <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">连接示意 · 需兼容设备端</text>
     """
 
@@ -362,7 +362,7 @@ private enum FeatureDemoHTML {
     <path d="M43 46q-4 12 17 22l6-7-8-5-4 4-6-7 3-4z" fill="#008BEE"/>
     <text x="85" y="53" fill="#152238" font-size="17" font-weight="700">Galaxy</text>
     <circle cx="89" cy="69" r="3" fill="#279D56"/>
-    <text x="99" y="73" fill="#5B697B" font-size="11">最近在线</text>
+    <text x="99" y="73" fill="#5B697B" font-size="11">RecentsOnline</text>
     <rect x="272" y="43" width="23" height="12" rx="3" fill="#2AC466"/>
     <rect x="296" y="47" width="2" height="4" rx="1" fill="#2AC466"/>
     <text x="270" y="73" fill="#152238" font-size="12">82%</text>
@@ -372,11 +372,11 @@ private enum FeatureDemoHTML {
     <text x="195" y="112" fill="#64748B" font-size="10">连接模式</text>
     <text class="mode-a" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">VoWLAN ↻</text>
     <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">自动 ↻</text>
-    <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">最近通话</text>
+    <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">RecentsCalls</text>
     <text x="33" y="180" fill="#64748B" font-size="11">138 •••• 6028</text>
-    <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">最近短信</text>
+    <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">RecentsSMS</text>
     <text x="195" y="180" fill="#64748B" font-size="11">我已经到家了。</text>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · 刷新由系统调度</text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · Refresh由系统调度</text>
     """
 
     private static let publicTLS = """
@@ -390,7 +390,7 @@ private enum FeatureDemoHTML {
     <text x="180" y="123" text-anchor="middle" fill="#A6D7FF" font-size="15" font-weight="700">TLS</text>
     <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">自建网关</text>
     <rect x="264" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
-    <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">安卓</text>
+    <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">Android</text>
     <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">首次配对 · 控制 · 音频</text>
     <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">试验性 · 需自行部署可入站网关</text>
     """
@@ -399,16 +399,16 @@ private enum FeatureDemoHTML {
     <rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
     <rect x="33" y="33" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse" cx="47" cy="59" r="4" fill="#FF625A"/>
-    <text x="61" y="54" fill="white" font-size="14" font-weight="600">未接来电</text>
+    <text x="61" y="54" fill="white" font-size="14" font-weight="600">未接Incoming call</text>
     <text x="61" y="74" fill="#B8C6DA" font-size="11">138 •••• 6028</text>
     <rect x="33" y="94" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse delayed" cx="47" cy="120" r="4" fill="#FF625A"/>
-    <text x="61" y="115" fill="white" font-size="14" font-weight="600">未读短信</text>
+    <text x="61" y="115" fill="white" font-size="14" font-weight="600">未读SMS</text>
     <text x="61" y="135" fill="#B8C6DA" font-size="11">我已经到家了。</text>
-    <text x="98" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">最近</text>
+    <text x="98" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">Recents</text>
     <g class="pulse"><rect x="115" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="125" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">2</text></g>
-    <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">短信</text>
+    <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">SMS</text>
     <g class="pulse delayed"><rect x="261" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="271" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text></g>
     <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · 数字角标与记录标记</text>

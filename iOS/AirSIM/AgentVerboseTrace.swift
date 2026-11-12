@@ -160,7 +160,7 @@ actor AgentVerboseTraceRecorder {
         entries.append(AgentVerboseTraceEntry(
             id: UUID(), traceID: "--------", timestamp: Date(),
             stage: phase == "failed" ? .failure : .event,
-            method: "AUDIO", path: "通话音频启动", detail: "",
+            method: "AUDIO", path: "Calls音频启动", detail: "",
             elapsedMilliseconds: elapsedMilliseconds.map { max(0, $0) },
             source: "APP", category: "call-audio", fields: fields
         ))

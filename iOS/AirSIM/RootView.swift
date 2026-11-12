@@ -31,7 +31,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
     case dial = "dial"
     case recents = "recent calls"
     case messages = "Short message"
-    case contacts = "通讯录"
+    case contacts = "Contacts"
     case settings = "set up"
 
     var id: String { rawValue }
@@ -58,7 +58,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 
     var tabTitle: String {
         switch self {
-        case .recents: return "最近"
+        case .recents: return "Recents"
         case .contacts: return "Contact person"
         default: return rawValue
         }
@@ -179,7 +179,7 @@ struct RootView: View {
                 Button {
                     _ = model.openOtherDeviceCallNotification(reminder.userInfo)
                 } label: {
-                    Label("\(reminder.deviceName) 来电 · 其他设备 \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
+                    Label("\(reminder.deviceName) Incoming call · 其他设备 \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
                         .font(.subheadline.weight(.semibold)).padding(12)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -249,7 +249,7 @@ struct RootView: View {
             let info = OtherAndroidCallPresentationRequest.consume() ?? notification.userInfo ?? [:]
             _ = model.openOtherDeviceCallNotification(info)
         }
-        .alert(L10n.t("错误"), isPresented: errorBinding) {
+        .alert(L10n.t("Error"), isPresented: errorBinding) {
             Button("OK") { model.errorMessage = nil }
         } message: {
             Text(model.errorMessage ?? "")
@@ -625,7 +625,7 @@ private struct AdaptiveMessagesView: View {
                     .id(sender)
             } else {
                 ContentUnavailableView("Select a conversation", systemImage: "message",
-                    description: Text("从左侧选择短信，或新建一条短信。"))
+                    description: Text("从左侧选择SMS，或新建一条SMS。"))
             }
         }
         .navigationSplitViewStyle(.balanced)

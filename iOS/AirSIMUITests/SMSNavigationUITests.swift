@@ -29,7 +29,7 @@ final class SMSNavigationUITests: XCTestCase {
             app.buttons["Contact person"].tap()
             XCTAssertTrue(app.searchFields.firstMatch.waitForExistence(timeout: 5))
             XCTAssertTrue(app.searchFields.firstMatch.isHittable)
-            app.buttons["最近"].tap()
+            app.buttons["Recents"].tap()
             XCTAssertTrue(app.navigationBars["recent calls"].waitForExistence(timeout: 5))
             app.buttons["set up"].tap()
             app.buttons["Short message"].tap()
@@ -326,7 +326,7 @@ final class SettingsJourneyUITests: XCTestCase {
         }
         text.typeText("settings draft retained")
         XCTAssertEqual(text.value as? String, "settings draft retained")
-        let done = app.toolbars.buttons["完成"]
+        let done = app.toolbars.buttons["Done"]
         if done.exists { done.tap() }
         open("feedbackPreview", in: app)
         XCTAssertTrue(app.navigationBars["Upload content range"].waitForExistence(timeout: 5))
@@ -339,7 +339,7 @@ final class SettingsJourneyUITests: XCTestCase {
     @MainActor func testBluetoothModeAllowsManualCloudSelfTestWithoutRunningIt() {
         let app = launchSettings(); defer { app.terminate() }
         open("help", in: app); open("diagnostics", in: app); open("cloudCheck", in: app)
-        let run = app.buttons["运行云端模式自检"]
+        let run = app.buttons["运行Cloud模式自检"]
         XCTAssertTrue(run.waitForExistence(timeout: 3))
         XCTAssertTrue(run.isEnabled)
         // No live Relay request, call, SMS or feedback upload in this test.

@@ -43,7 +43,7 @@ enum OtherAndroidCallPresentationRequest {
     }
 }
 
-/// 锁屏来电通知使用的稳定标识；动作不要求设备解锁，也不会强制打开 App 界面。
+/// 锁屏Incoming call通知使用的稳定标识；动作不要求设备解锁，也不会强制打开 App 界面。
 enum IncomingCallNotification {
     static let categoryIdentifier = "AIRSIM_INCOMING_CALL"
     static let mirrorCategoryIdentifier = "AIRSIM_INCOMING_CALL_MIRROR"
@@ -97,7 +97,7 @@ enum IncomingCallPresentationRequest {
     }
 }
 
-/// 通知点开后 SwiftUI 首屏可能尚未订阅事件；只保存发件人，不持久化短信正文。
+/// 通知点开后 SwiftUI 首屏可能尚未订阅事件；只保存发件人，不持久化SMS正文。
 enum IncomingSMSPresentationRequest {
     static let key = "airsim.pending-sms-sender"
 
@@ -112,7 +112,7 @@ enum IncomingSMSPresentationRequest {
     }
 }
 
-/// 接收锁屏通知动作，并在系统授予的后台执行时间内直接控制模块通话。
+/// 接收锁屏通知动作，并在系统授予的后台执行时间内直接控制模块Calls。
 @MainActor
 final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preconcurrency UNUserNotificationCenterDelegate {
     private let coldLaunchCallHandler = ColdLaunchCallKitHandler()
@@ -237,7 +237,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
             completionHandler(.noData)
         } catch {
 #if DEBUG
-            print("[SimHelp APNs] 短信推送解析失败：\(error.localizedDescription)")
+            print("[SimHelp APNs] SMS推送解析失败：\(error.localizedDescription)")
 #endif
             completionHandler(.failed)
         }
@@ -326,7 +326,7 @@ final class SimHelpNotificationDelegate: NSObject, UIApplicationDelegate, @preco
                     throw CallKitBridgeError.noReachableTransport
                 }
                 let status = try await api.callStatus()
-                // 必须匹配仍在振铃的同一通电话，防止用户点击过期通知误操作新通话。
+                // 必须匹配仍在振铃的同一通电话，防止用户点击过期通知误操作新Calls。
                 guard status.active?.id == callID,
                       status.active?.direction == "incoming",
                       let state = status.active?.state,
@@ -528,7 +528,7 @@ enum BackgroundStandbyPreference {
     }
 }
 
-/// 个人侧载模式下维持静音播放，让 iOS 在熄屏后继续执行模块来电轮询。
+/// 个人侧载模式下维持静音播放，让 iOS 在熄屏后继续执行模块Incoming call轮询。
 @MainActor
 final class BackgroundStandbyController {
     private var engine: AVAudioEngine?
@@ -642,7 +642,7 @@ final class BackgroundStandbyController {
         }
     }
 
-    /// 通话 PCM 必须独占 voiceChat 会话，不能与后台静音播放同时争用输出节点。
+    /// Calls PCM 必须独占 voiceChat 会话，不能与后台静音播放同时争用输出节点。
     func suspendForCall() {
         guard BackgroundStandbySuspensionPolicy.shouldStopAudio(
             isAlreadySuspended: suspendedForCall
@@ -694,7 +694,7 @@ final class BackgroundStandbyController {
     }
 }
 
-/// App 在后台检测到模块来电后发送本地通知；不依赖 APNs 或远程服务器。
+/// App 在后台检测到模块Incoming call后发送本地通知；不依赖 APNs 或远程服务器。
 @MainActor
 final class IncomingCallNotifier {
     private(set) var currentCallID: String?
@@ -739,7 +739,7 @@ final class IncomingCallNotifier {
         let number = call.number?.isEmpty == false ? call.number! : "unknown number"
         let displayName = callerName?.isEmpty == false ? callerName! : number
         content.title = "SimHelp call"
-        // 同时保留姓名和号码，用户可以在锁屏直接确认来电者。
+        // 同时保留姓名和号码，用户可以在锁屏直接确认Incoming call者。
         content.body = displayName == number ? number : "\(displayName) · \(number)"
         content.sound = .default
         content.interruptionLevel = .timeSensitive
@@ -865,7 +865,7 @@ final class SMSNotificationCoordinator {
     }
 }
 
-/// 新短信已经由 Agent 的 +CMTI URC 单条读取；App 在后台时补发系统通知。
+/// 新SMS已经由 Agent 的 +CMTI URC 单条读取；App 在后台时补发系统通知。
 @MainActor
 final class IncomingSMSNotifier {
     private var notifiedMessageIDs: [String] = []

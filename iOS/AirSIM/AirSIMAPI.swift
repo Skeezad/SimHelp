@@ -103,13 +103,13 @@ struct SimHelpAPI: Sendable {
         return VoWLANEndpoint.permitsDirectIPv4(host)
     }
 
-    // MARK: 通话与短信
+    // MARK: Calls与SMS
 
     func health() async throws -> AgentHealth { try await get("api/health") }
     func resolvePushedCall(_ call: IncomingVoIPCall) async throws -> CallStatus {
         do { return try await postDecoded("api/calls/resolve", ["call_id": call.callID,
             "call_uuid": call.uuid.uuidString.lowercased(), "generation": String(call.generation)]) }
-        catch APIError.http(404, _) { throw APIError.unsupportedFeature("请更新安卓 SimHelp：当前网关缺少云端与局域网通话身份映射接口") }
+        catch APIError.http(404, _) { throw APIError.unsupportedFeature("请更新Android SimHelp：Current网关缺少Cloud与局域网Calls身份映射接口") }
         catch APIError.http(409, _) { throw DeviceCallRoutingError.stale }
     }
     func callStatus() async throws -> CallStatus { try await get("api/calls/status") }
@@ -430,7 +430,7 @@ struct SimHelpAPI: Sendable {
                     "active_terminal": String(call.active?.isTerminal == true),
                     "terminal_count": String((call.history ?? []).filter { $0.isTerminal }.count)]
                 Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "call-terminal",
-                    phase: "decoded_terminal", title: "通话终态已解码", fields: fields) }
+                    phase: "decoded_terminal", title: "Calls终态已解码", fields: fields) }
             }
             return value
         } catch {

@@ -1,7 +1,7 @@
 import Foundation
 import WatchConnectivity
 
-/// 镜像 iPhone 通话状态，并为 Watch 发起的公网呼叫代理设备认证与拨号命令。
+/// 镜像 iPhone Calls状态，并为 Watch 发起的公网呼叫代理设备认证与拨号命令。
 /// Watch 的 CallKit 和 PCM 仍在手表执行；媒体密钥仅经实时 WC 回复交接，不持久化。
 final class WatchCallCoordinator: NSObject, WCSessionDelegate {
     static let shared = WatchCallCoordinator()
@@ -151,7 +151,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         error: Error?
     ) {
 #if DEBUG
-		print("[SimHelp iPhone WC] 激活完成；state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
+		print("[SimHelp iPhone WC] 激活Done；state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
 #endif
 		guard activationState == .activated else { return }
 		let context = session.receivedApplicationContext
@@ -255,7 +255,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
               CallKitController.shared.currentSystemCallUUID == nil,
               let model, !model.callLifecycleSnapshot.state.representsCall,
               model.deviceCallContext.reserveAdmission(requestID) else {
-            replyHandler(["ok": false, "error": "已有通话或拨号任务正在进行"])
+            replyHandler(["ok": false, "error": "已有Calls或拨号任务正在进行"])
             return
         }
         if cancelledWatchDialIDs.remove(requestID) != nil {
@@ -349,7 +349,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                   var components = URLComponents(url: authenticatedURL, resolvingAgainstBaseURL: false),
                   let secret = components.queryItems?.first(where: { $0.name == "token" })?.value else {
                 await endAbandonedWatchCall(outgoing)
-                replyHandler(["ok": false, "error": "云端未提供 Watch 可用的 PCM 音频"])
+                replyHandler(["ok": false, "error": "Cloud未提供 Watch 可用的 PCM 音频"])
                 return
             }
             components.queryItems = nil
@@ -572,7 +572,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                 }
             }
         } catch {
-            // 已拨号但交接失败必须可诊断，不能悄悄遗留蜂窝通话。
+            // 已拨号但交接失败必须可诊断，不能悄悄遗留蜂窝Calls。
             NSLog("[SimHelp Watch Dial] Failed to cancel outgoing call: %@", error.localizedDescription)
         }
     }

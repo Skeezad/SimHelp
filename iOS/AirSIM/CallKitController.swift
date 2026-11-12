@@ -34,8 +34,8 @@ enum CallAnswerOrigin: Equatable, Sendable {
     case app
 }
 
-/// CallKit 的系统事务必须先于慢速 Agent/Relay I/O 完成，系统才会及时激活
-/// AVAudioSession。后端错误单独返回，由调用方结束已建立的系统通话。
+/// CallKit 的系统事务必须先于慢速 Agent/Relay I/O Done，系统才会及时激活
+/// AVAudioSession。后端Error单独返回，由调用方结束已建立的系统Calls。
 enum CallKitActionCoordinator {
     static func perform(
         prepare: () throws -> Void,
@@ -99,7 +99,7 @@ struct IncomingCallDeduplicator {
     }
 }
 
-/// 维护模块通话与系统通话 UUID 的一一映射，并承接锁屏与系统通话界面的操作。
+/// 维护模块Calls与系统Calls UUID 的一一映射，并承接锁屏与系统Calls界面的操作。
 @MainActor
 final class CallKitController: NSObject {
     static let shared = CallKitController()
@@ -226,8 +226,8 @@ final class CallKitController: NSObject {
         synchronize(call: call, previous: nil, callerName: nil)
     }
 
-    /// PushKit 冷启动必须立即把同一通真实来电交给系统。后续本地状态同步会复用
-    /// call_id/UUID，不会再生成第二个系统来电。
+    /// PushKit 冷启动必须立即把同一通真实Incoming call交给系统。后续本地状态同步会复用
+    /// call_id/UUID，不会再生成第二个系统Incoming call。
     func reportIncomingPush(
         _ call: IncomingVoIPCall,
         systemReport: RequiredSystemReporter? = nil,
@@ -379,7 +379,7 @@ final class CallKitController: NSObject {
         try await requestSystemAction(CXSetMutedCallAction(call: uuid, muted: muted))
     }
 
-    /// App 内键盘也走 CallKit 事务，保证系统通话页和 App 页不会各自维护一套 DTMF 状态。
+    /// App 内键盘也走 CallKit 事务，保证系统Calls页和 App 页不会各自维护一套 DTMF 状态。
     func playDTMF(_ digits: String) async throws {
         guard let uuid = currentUUID, systemCallReported else {
             throw CallKitBridgeError.noSystemCall
@@ -393,14 +393,14 @@ final class CallKitController: NSObject {
 
     /// 每次模块轮询后把呼入与呼出生命周期同步给系统。
     func synchronize(call: CallRecord?, previous: CallRecord?, callerName: String?) {
-        // CallKit 权限被系统拒绝后只保留 App 内状态机，不能继续伪造系统通话 UUID。
+        // CallKit 权限被系统拒绝后只保留 App 内状态机，不能继续伪造系统Calls UUID。
         guard isAvailable else {
             if call == nil { resetCurrentCall() }
             return
         }
         guard let call else {
             // 模块已把同一 ID 写入带 ended_at 的 history，这是明确的结束事件，
-            // 必须立即关闭系统通话，不再等待空 CLCC 防抖。
+            // 必须立即关闭系统Calls，不再等待空 CLCC 防抖。
             if previous?.endedAt != nil {
                 guard let previous,
                       CallKitSynchronizationPolicy.mayFinishEndedHistory(
@@ -409,7 +409,7 @@ final class CallKitController: NSObject {
                 finishCurrentCall(previous: previous)
                 return
             }
-            // AT+CLCC 偶发空响应不等于电话已挂断；保留 UUID，避免系统扬声器/静音事务变成未知 UUID。
+            // AT+CLCC 偶发空响应不等于电话已挂断；保留 UUID，避免系统扬声器/静音事务变成Unknown UUID。
             if currentDirection == "outgoing", outgoingStartInFlight { return }
             if currentUUID != nil, systemCallReported || currentDirection == "outgoing" {
                 missingCallPolls += 1
@@ -448,7 +448,7 @@ final class CallKitController: NSObject {
         }
         if currentUUID == nil,
            !incomingDeduplicator.shouldAccept(callID: call.id, uuid: nil) {
-            debugLog("忽略已结束通话的晚到模块状态")
+            debugLog("忽略已结束Calls的晚到模块状态")
             return
         }
         if currentUUID == nil { currentUUID = UUID() }
@@ -466,7 +466,7 @@ final class CallKitController: NSObject {
                                         genericHandle: Bool = false) {
         guard !incomingReportRequested, !systemCallReported, let uuid = currentUUID else { return }
         incomingReportRequested = true
-        debugLog("请求系统来电界面；来源=\(source)")
+        debugLog("请求系统Incoming call界面；来源=\(source)")
         let report: RequiredSystemReporter = incomingSystemReporter ?? { [provider] uuid, update, done in
             provider.reportNewIncomingCall(with: uuid, update: update, completion: done)
         }
@@ -478,7 +478,7 @@ final class CallKitController: NSObject {
                     PushDiagnostics.record("CallKit system fails to report incoming calls", error: error)
                     let diagnosticError = error as NSError
                     self.debugLog(
-                        "系统来电上报失败；domain=\(diagnosticError.domain) code=\(diagnosticError.code) "
+                        "系统Incoming call上报失败；domain=\(diagnosticError.domain) code=\(diagnosticError.code) "
                             + "message=\(diagnosticError.localizedDescription)"
                     )
                     if self.disableCallKitIfUnentitled(error) {
@@ -488,7 +488,7 @@ final class CallKitController: NSObject {
                     }
                     self.systemCallReported = false
                     self.incomingReportFailed = true
-                    self.handler?.callKitDidFail("系统来电界面启动失败：\(error.localizedDescription)")
+                    self.handler?.callKitDidFail("系统Incoming call界面启动失败：\(error.localizedDescription)")
                     self.finishIncomingReport(error)
                 } else {
                     PushDiagnostics.record("CallKit system successfully reports incoming calls")
@@ -570,8 +570,8 @@ final class CallKitController: NSObject {
         }
     }
 
-    /// CallKit 可能在系统界面重建期间短暂丢失 UUID；转换成业务层可恢复错误，
-    /// 不让错误 4 直接传播成“通话已结束”。
+    /// CallKit 可能在系统界面重建期间短暂丢失 UUID；转换成业务层可恢复Error，
+    /// 不让Error 4 直接传播成“Calls已结束”。
     private func requestSystemAction(_ action: CXAction) async throws {
         do {
             try await request(action)
@@ -585,7 +585,7 @@ final class CallKitController: NSObject {
         }
     }
 
-    /// 个人签名或受限设备可能返回 requesttransaction/unentitled；此时自动使用 App 内通话。
+    /// 个人签名或受限设备可能返回 requesttransaction/unentitled；此时自动使用 App 内Calls。
     private func disableCallKitIfUnentitled(_ error: Error) -> Bool {
         let error = error as NSError
         guard error.domain == CXErrorDomainRequestTransaction,
@@ -598,7 +598,7 @@ final class CallKitController: NSObject {
         return true
     }
 
-    /// 真机联调只记录状态与系统错误码，避免把电话号码写入设备日志。
+    /// 真机联调只记录状态与系统Error码，避免把电话号码写入设备日志。
     private func debugLog(_ message: String) {
 #if DEBUG
         print("[SimHelp CallKit] \(message)")
@@ -708,7 +708,7 @@ final class CallKitController: NSObject {
                 fulfill: {
                     self.provider.reportOutgoingCall(with: action.callUUID, startedConnectingAt: Date())
                     self.systemCallReported = true
-                    // 先让 CallKit 建立系统通话和音频会话；云端拨号轮询最长 25 秒，
+                    // 先让 CallKit 建立系统Calls和音频会话；Cloud拨号轮询最长 25 秒，
                     // 不能占住 CXStartCallAction，否则系统 UI 和 didActivate 都会滞后。
                     action.fulfill()
                 },
@@ -888,7 +888,7 @@ enum CallKitBridgeError: LocalizedError {
         case .handlerUnavailable: return "Call controller is not ready yet"
         case .unavailable: return "System CallKit is currently unavailable"
         case .callInProgress: return "There is currently an ongoing system call"
-        case .noReachableTransport: return "三星本地链路和云端语音当前都不可达"
+        case .noReachableTransport: return "三星本地链路和Cloud语音Current都不可达"
         case .cloudMediaDisabled: return "Samsung local link is unreachable and cloud voice relay is closed"
         }
     }

@@ -11,7 +11,7 @@ enum AppInformation {
         let name = (info["CFBundleShortVersionString"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         let build = (info["CFBundleVersion"] as? String).flatMap { $0.isEmpty ? nil : $0 }
         guard let build else { return name ?? "Unknown version" }
-        return "\(name ?? "未知版本") (\(build))"
+        return "\(name ?? "Unknown版本") (\(build))"
     }
 }
 
@@ -94,13 +94,13 @@ enum L10n {
     }
 
     private static let english: [String: String] = [
-        "dial": "Dial", "最近": "Recents", "recent calls": "Recents", "Short message": "Messages", "Contact person": "Contacts", "通讯录": "Contacts", "set up": "Settings",
+        "dial": "Dial", "Recents": "Recents", "recent calls": "Recents", "Short message": "Messages", "Contact person": "Contacts", "Contacts": "Contacts", "set up": "Settings",
         "Enter number": "Enter number", "Answer": "Accept", "Reject": "Decline", "hang up": "End", "mute": "Mute",
         "Unmute": "Unmute", "speaker": "Speaker", "recording": "Record", "Stop recording": "Stop Recording", "In call": "On Call",
         "Waiting to answer": "Waiting", "No call records yet": "No Recents", "新信息": "New Message", "recipient": "To",
-        "SMS content": "Message", "send": "Send", "Sent": "Sent", "Cancel": "Cancel", "刷新": "Refresh", "暂无短信": "No Messages",
+        "SMS content": "Message", "send": "Send", "Sent": "Sent", "Cancel": "Cancel", "Refresh": "Refresh", "暂无SMS": "No Messages",
         "Automatically clean module text messages after reading": "Auto-clean module SMS after reading", "Clear all text messages": "Clear all SMS",
-        "搜索姓名或号码": "Search name or number", "授权访问通讯录": "Allow Contacts Access", "Address book is empty": "No contacts",
+        "搜索姓名或号码": "Search name or number", "授权访问Contacts": "Allow Contacts Access", "Address book is empty": "No contacts",
         "Search names, numbers or text messages": "Search name, number or message", "No matching text message found": "No matching messages",
         "状态": "Status", "Universal": "General", "network": "Network", "position": "Location", "eSIM / 卡片": "eSIM / Card",
         "AT debugging": "AT Debug", "Network diagnostics": "Network Diagnostics", "运营商": "Operator", "SIM card": "SIM Card",
@@ -110,16 +110,16 @@ enum L10n {
         "Waiting for positioning": "Waiting for fix", "coordinate": "Coordinates", "satellite": "Satellites", "卡片类型": "Card Type",
         "Download new profile": "Download New Profile", "Address book detection": "Phonebook Check", "AT 指令": "AT Command",
         "Send AT": "Send AT", "Appearance": "Appearance", "display mode": "Display Mode", "language": "Language", "Follow the system": "Follow System",
-        "light color": "Light", "深色": "Dark", "模块代理": "Module Agent", "online": "Online", "离线": "Offline",
+        "light color": "Light", "深色": "Dark", "模块代理": "Module Agent", "online": "Online", "Offline": "Offline",
         "Not viewed": "Unseen", "Mark as read": "Mark as Read", "Mark all as read": "Mark All as Read",
-        "%d 条未读短信": "%d unread messages",
+        "%d 条未读SMS": "%d unread messages",
         "Missed": "Missed", "Incoming call": "Incoming", "exhale": "Outgoing", "Processing": "Working", "keep": "Save",
-        "delete": "Delete", "switch": "Switch", "Rename": "Rename", "错误": "Error",
+        "delete": "Delete", "switch": "Switch", "Rename": "Rename", "Error": "Error",
         "Clear": "Clear", "Clear number": "Clear number",
         "copy": "Copy", "Select text": "Select", "More…": "More…",
         "Select SMS": "Select Message", "Deselect": "Cancel Selection",
         "Delete selected text messages": "Delete Selected Messages", "Share selected text messages": "Share Selected Messages",
-        "%d items selected": "%d Selected", "删除所选 %d 条短信？": "Delete %d Messages?",
+        "%d items selected": "%d Selected", "删除所选 %d 条SMS？": "Delete %d Messages?",
         "Copy latest text message": "Copy Latest Message", "Copy entire conversation": "Copy Conversation",
         "Copy SMS": "Copy Messages",
         "SMS operation": "Message Actions", "Select session": "Select Conversations",

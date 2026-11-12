@@ -65,7 +65,7 @@ struct CallLifecycleSnapshot: Equatable, Sendable {
     )
 }
 
-/// 单通话状态的唯一归并器。所有来源只能提交事件，不能直接改写最终状态。
+/// 单Calls状态的唯一归并器。所有来源只能提交事件，不能直接改写最终状态。
 struct CallLifecycleStore: Sendable {
     private(set) var snapshot: CallLifecycleSnapshot = .idle
     private struct RetiredCall: Hashable, Sendable {

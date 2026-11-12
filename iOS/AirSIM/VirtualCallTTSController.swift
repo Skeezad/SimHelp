@@ -7,12 +7,12 @@ enum VirtualCallTTSError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidPayload: return "虚拟来电没有可播报的内容"
+        case .invalidPayload: return "虚拟Incoming call没有可播报的内容"
         }
     }
 }
 
-/// Dashboard 虚拟来电的本地媒体源。CallKit 仍负责系统来电生命周期与音频路由，
+/// Dashboard 虚拟Incoming call的本地媒体源。CallKit 仍负责系统Incoming call生命周期与音频路由，
 /// 但接听/挂断不会向模块发送 AT，也不会建立公网 PCM 会话。
 @MainActor
 final class VirtualCallTTSController: NSObject, AVSpeechSynthesizerDelegate {
@@ -73,7 +73,7 @@ final class VirtualCallTTSController: NSObject, AVSpeechSynthesizerDelegate {
     ) {
         Task { @MainActor in
             guard VirtualCallTTSController.shared.isPrepared else { return }
-            // 播报完成等同远端结束；CallKit 收起后由 didDeactivate 清理媒体状态。
+            // 播报Done等同远端结束；CallKit 收起后由 didDeactivate 清理媒体状态。
             CallKitController.shared.reportCurrentCallEnded(reason: .remoteEnded)
         }
     }

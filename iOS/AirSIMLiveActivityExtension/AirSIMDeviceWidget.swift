@@ -25,7 +25,7 @@ struct SimHelpDeviceWidget: Widget {
         StaticConfiguration(kind: SimHelpWidgetSnapshot.kind, provider: SimHelpDeviceWidgetProvider()) { entry in
             SimHelpDeviceWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("安卓设备与最近通话")
+        .configurationDisplayName("Android设备与RecentsCalls")
         .description("Check the recently synchronized connection status and quickly open dialing, text messages and contacts.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
                             .accessoryCircular, .accessoryRectangular, .accessoryInline])

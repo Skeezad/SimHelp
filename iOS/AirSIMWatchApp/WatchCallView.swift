@@ -55,7 +55,7 @@ struct WatchCallView: View {
         .alert("connection status", isPresented: $showConnectionStatus) {
             Button("good", role: .cancel) {}
         } message: {
-            Text("\(session.pushStatus)\n\(session.microphoneStatus)\n拨号需要配对 iPhone 可达，且 VoWLAN 或云端可用。通话音频在手表收发；连接蓝牙设备时，输出由 watchOS 选择。")
+            Text("\(session.pushStatus)\n\(session.microphoneStatus)\n拨号需要配对 iPhone 可达，且 VoWLAN 或Cloud可用。Calls音频在手表收发；连接蓝牙设备时，输出由 watchOS 选择。")
         }
         .alert("Dial failed", isPresented: Binding(
             get: { session.errorMessage != nil },

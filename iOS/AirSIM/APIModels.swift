@@ -1,9 +1,9 @@
 import Foundation
 import CryptoKit
 
-// MARK: - 通话与短信
+// MARK: - Calls与SMS
 
-/// 模块侧返回的单次通话记录。
+/// 模块侧返回的单次Calls记录。
 struct CallRecord: Codable, Equatable, Sendable, Identifiable {
     let id: String
     let index: Int
@@ -41,7 +41,7 @@ struct CallRecord: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
-/// 通话轮询结果；额外音频诊断字段由专门接口读取。
+/// Calls轮询结果；额外音频诊断字段由专门接口读取。
 struct CallStatus: Codable, Sendable {
     let active: CallRecord?
     let history: [CallRecord]?
@@ -60,7 +60,7 @@ struct CallStatus: Codable, Sendable {
     }
 }
 
-/// Agent 的统一事件快照；通话和短信共用一个长轮询，避免后台保持两套本地请求。
+/// Agent 的统一事件快照；Calls和SMS共用一个长轮询，避免后台保持两套本地请求。
 struct AgentEventStatus: Codable, Sendable {
     let revision: UInt64
     let smsRevision: UInt64
@@ -95,7 +95,7 @@ struct AgentHealth: Codable, Sendable {
     }
 }
 
-/// Relay 最近一次收到的 Agent 心跳。该对象只包含可展示状态，不包含设备密钥。
+/// Relay Recents一次收到的 Agent 心跳。该对象只包含可展示状态，不包含设备密钥。
 struct CloudAndroidAgent: Codable, Equatable, Sendable, Identifiable {
     var battery: AndroidBatteryReading? = nil
     var commandRoutingVersion: Int? = nil
@@ -328,7 +328,7 @@ struct SMSMessage: Codable, Equatable, Sendable, Identifiable {
     let timestamp: Date
     /// 模块交付队列的稳定标识；也用于推送与本地同步之间的去重。
     var deliveryID: String?
-    /// 旧模块没有方向字段，缺省按收到的短信展示；发送成功后由 App 标记为 outgoing。
+    /// 旧模块没有方向字段，缺省按收到的SMS展示；发送成功后由 App 标记为 outgoing。
     var direction: SMSDirection? = nil
     /// Known authenticated producer. Legacy records remain explicitly unscoped.
     var sourceAgentID: String? = nil
@@ -339,7 +339,7 @@ struct SMSMessage: Codable, Equatable, Sendable, Identifiable {
 
     var simDeliveryLabel: String {
         let line = simSlot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return "\(isOutgoing ? "通过" : "接收于") \(line.isEmpty ? "SIM 未知" : line)"
+        return "\(isOutgoing ? "通过" : "接收于") \(line.isEmpty ? "SIM Unknown" : line)"
     }
 
     /// 新版 Agent 用 delivery_id 对齐 APNs 与本地同步；旧版仍回退到内容指纹。

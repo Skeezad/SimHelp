@@ -92,7 +92,7 @@ final class SamsungPairingBrowser: ObservableObject {
             Task { @MainActor in
                 guard let self, self.scanID == scanID else { return }
                 switch state {
-                case .ready: self.stateText = "正在等待安卓配对广播…"
+                case .ready: self.stateText = "正在等待Android配对广播…"
                 case .waiting: self.stateText = "Please make sure iPhone and Android are on the same Wi-Fi or Android hotspot"
                 case .failed(let error):
                     self.stop()
@@ -110,7 +110,7 @@ final class SamsungPairingBrowser: ObservableObject {
                 guard let self, self.scanID == scanID else { return }
                 self.services = parsed
                 self.stateText = parsed.isEmpty
-                    ? "正在等待安卓配对广播…"
+                    ? "正在等待Android配对广播…"
                     : "已发现 \(parsed.count) 台待配对设备"
             }
         }
@@ -324,7 +324,7 @@ enum SamsungPairingClient {
         let clockOffset = info.serverTime.map { $0 / 1_000 - Date().timeIntervalSince1970 } ?? 0
         // Do not persist an unverified server response or silently trust an old port.
         PairedAndroidDeviceStore.allowPairing(agentID)
-        return ManualResult(message: "加密配对成功，正在验证直连通话网关…", route: route,
+        return ManualResult(message: "加密配对成功，正在验证直连Calls网关…", route: route,
                             clockOffset: clockOffset)
     }
 
@@ -507,7 +507,7 @@ enum SamsungPairingClientError: LocalizedError, Equatable {
         case .invalidAddress: return "请按所选方式填写私网 IPv4 或 HTTPS 域名，以及 1–65535 的端口；域名不含协议、路径或 IP 地址。"
         case .manualUnsupported: return "No SimHelp pairing information was returned for this address. Please update the Android App and fill in the current one-time pairing port, not the ADB, Relay or call port."
         case .directGatewayUnavailable: return "Pairing has been written, but the direct call gateway is not ready or authentication failed. Please check the Android default phone role and PCM bridge, then open a new pairing window and try again."
-        case .timedOut: return "连接超时。请检查 IP、当前配对端口、局域网隔离或 Tailscale 两端连接及访问规则。"
+        case .timedOut: return "连接超时。请检查 IP、Current配对端口、局域网隔离或 Tailscale 两端连接及访问规则。"
         }
     }
 }

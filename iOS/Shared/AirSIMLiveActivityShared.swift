@@ -14,7 +14,7 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
                 switch self {
                 case .vowlan: return "VoWLAN"
                 case .bluetooth: return "VoBLE"
-                case .cloud: return "云端"
+                case .cloud: return "Cloud"
                 }
             }
 
@@ -33,14 +33,14 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
         let phase: Phase
         let startedAt: Date
         let transport: Transport?
-        /// 模块 SIM 的蜂窝状态；只在待机状态显示，离线与通话状态不携带旧快照。
+        /// 模块 SIM 的蜂窝状态；只在待机状态显示，Offline与Calls状态不携带旧快照。
         let signalDBM: Int?
         let operatorName: String?
         let networkMode: String?
         let radioBand: String?
         let downloadBytesPerSecond: Double?
         let uploadBytesPerSecond: Double?
-        /// 当前用于拨号和媒体路由的 Android Agent。字段保持可选，以兼容旧版 Relay
+        /// Current用于拨号和媒体路由的 Android Agent。字段保持可选，以兼容旧版 Relay
         /// 推送的 ContentState，并避免升级时让已存在的 Live Activity 解码失败。
         let agentDeviceName: String?
         let agentPhoneNumber: String?
@@ -51,7 +51,7 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
         let cloudOnline: Bool?
         /// 排序后的完整待机列表；页码由主人 App 维护。可选以兼容旧版 ContentState。
         let agents: [AgentSummary]?
-        /// 0-based 当前页；每页最多 5 台。旧版没有该字段时按第 1 页处理。
+        /// 0-based Current页；每页最多 5 台。旧版没有该字段时按第 1 页处理。
         let agentPage: Int?
 
         struct AgentSummary: Codable, Hashable, Identifiable {
@@ -130,10 +130,10 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
                 switch self {
                 case .standby: return "Agent standby"
                 case .cloudStandby: return "Cloud online"
-                case .incoming: return "Agent 来电"
+                case .incoming: return "Agent Incoming call"
                 case .active: return "In call"
-                case .held: return "通话保持"
-                case .offline: return "Agent 离线"
+                case .held: return "Calls保持"
+                case .offline: return "Agent Offline"
                 }
             }
         }
@@ -143,8 +143,8 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
 }
 
 extension SimHelpCallActivityAttributes.ContentState {
-    /// ActivityKit 的 stale 只表示主 App 暂时没有提交新内容，不能证明 Agent 离线。
-    /// 模块离线由主 App 的真实 HTTP 探测失败显式写入 `.offline`。
+    /// ActivityKit 的 stale 只表示主 App 暂时没有提交新内容，不能证明 Agent Offline。
+    /// 模块Offline由主 App 的真实 HTTP 探测失败显式写入 `.offline`。
     func liveActivityDisplayState(isStale: Bool) -> Self {
         // CallKit exclusively owns in-call UI. Even an activity created by an older
         // build must never render a call phase, timer or hangup button.
@@ -295,7 +295,7 @@ enum LiveActivityActionBridge {
 
 @available(iOS 17.0, *)
 struct AnswerSimHelpCallIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "接听模块来电"
+    static var title: LocalizedStringResource = "接听模块Incoming call"
     static var openAppWhenRun = false
 
     @Parameter(title: "Call ID") var callID: String
@@ -313,7 +313,7 @@ struct AnswerSimHelpCallIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct RejectSimHelpCallIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "拒绝模块来电"
+    static var title: LocalizedStringResource = "拒绝模块Incoming call"
     static var openAppWhenRun = false
 
     @Parameter(title: "Call ID") var callID: String
@@ -329,7 +329,7 @@ struct RejectSimHelpCallIntent: LiveActivityIntent {
     }
 }
 
-/// 待机态翻到下一页 Android Agent；通话中不翻页，避免媒体/控制会话
+/// 待机态翻到下一页 Android Agent；Calls中不翻页，避免媒体/控制会话
 /// 跨设备漂移。单台设备仍可通过行内点击选择。
 @available(iOS 17.0, *)
 struct SwitchSimHelpAgentIntent: LiveActivityIntent {
@@ -408,7 +408,7 @@ struct SimHelpWidgetSwitchIntent: LiveActivityIntent {
     @available(iOS 26.0, *)
     static var supportedModes: IntentModes { .background }
     @Parameter(title: "operate") var action: String
-    @Parameter(title: "当前值") var expected: String
+    @Parameter(title: "Current值") var expected: String
     @Parameter(title: "target value") var target: String
 
     init() { action = ""; expected = ""; target = "" }

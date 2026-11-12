@@ -10,7 +10,7 @@ final class SMSConversationInteractionTests: XCTestCase {
 
     private func messages(_ count: Int) -> [SMSMessage] {
         (0..<count).map {
-            SMSMessage(sender: "ui-fixture", content: "Message \($0): 合成短信 😀\nA selectable second line with https://example.com/test.",
+            SMSMessage(sender: "ui-fixture", content: "Message \($0): 合成SMS 😀\nA selectable second line with https://example.com/test.",
                        code: nil, timestamp: Date(timeIntervalSince1970: 1_790_000_000 + Double($0 * 60)),
                        deliveryID: "ui-message-\($0)", direction: $0.isMultiple(of: 3) ? .outgoing : .incoming)
         }

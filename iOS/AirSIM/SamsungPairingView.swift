@@ -37,8 +37,8 @@ struct SamsungPairingView: View {
                 .disabled(pairingServiceID != nil || RelayEgressGate.shared.isBlocked)
                 .accessibilityIdentifier("localPairingOnly")
                 Text(localPairingOnly
-                     ? "本次配对只写入 VoWLAN 密钥，不写入 Relay/APNs。不会改变当前通话媒体模式。"
-                     : "本次配对额外写入 Relay/APNs；仅用于通知，不会改变当前通话媒体模式。")
+                     ? "本次配对只写入 VoWLAN 密钥，不写入 Relay/APNs。不会改变CurrentCalls媒体模式。"
+                     : "本次配对额外写入 Relay/APNs；仅用于通知，不会改变CurrentCalls媒体模式。")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
               }
@@ -52,7 +52,7 @@ struct SamsungPairingView: View {
                     Label("Let Android and this machine connect to the same Wi-Fi", systemImage: "wifi")
                     Label("You can also connect the machine to Android mobile hotspots", systemImage: "personalhotspot")
                 }
-                Label("在安卓 App 点击“开始一次性配对”", systemImage: "key")
+                Label("在Android App 点击“开始一次性配对”", systemImage: "key")
             }
 
             Section("Pairing method") {
@@ -95,7 +95,7 @@ struct SamsungPairingView: View {
                     if pairingServiceID != nil { ProgressView("正在连接与认证…") }
                 } header: { Text(usesTLS ? "公网域名配对（试验性 · HTTPS）" : "Manual address pairing") } footer: {
                     if usesTLS {
-                        Text("填写域名，不含 https:// 或路径。三个端口都是 NAS 对外提供的 TLS 端口；配对端口转发到安卓本次配对窗口，控制与音频各自转发。证书必须可信且匹配域名，不支持明文公网连接或跳过证书校验。无需开启 SimHelp 云端模式。")
+                        Text("填写域名，不含 https:// 或路径。三个端口都是 NAS 对外提供的 TLS 端口；配对端口转发到Android本次配对窗口，控制与音频各自转发。证书必须可信且匹配域名，不支持明文公网连接或跳过证书校验。无需开启 SimHelp Cloud模式。")
                     } else {
                       Text("First open the one-time pairing window on Android and fill in the pairing port on this page, not the ADB or call port. When using Tailscale, fill in Android's Tailscale IPv4. Both ends must be connected and allow mutual access; there is no need to enable SimHelp cloud mode."
                         + "If the LAN uses a special network segment (such as 30.0.0.0/8), first add the network segment in Settings → Connections and Devices → LAN and VPN. After pairing select VoWLAN or automatic connection mode.")
@@ -167,7 +167,7 @@ struct SamsungPairingView: View {
     }
 
     private var codeField: some View {
-        TextField("安卓显示的 6 位验证码", text: $code)
+        TextField("Android显示的 6 位验证码", text: $code)
             .keyboardType(.numberPad)
             .textContentType(.oneTimeCode)
             .onChange(of: code) { value in
@@ -194,7 +194,7 @@ struct SamsungPairingView: View {
                         try await model.configureRemoteDirect(agentID: result.route.agentID, route: result.route)
                     } catch is CancellationError { throw CancellationError() }
                     catch {
-                        return "安卓加密配对成功，但公网控制入口尚未通过设备身份验证，域名路由未保存。请检查控制端口转发，然后在‘自建域名直连’重试：\(error.localizedDescription)"
+                        return "Android加密配对成功，但公网控制入口尚未通过设备身份验证，域名路由未保存。请检查控制端口转发，然后在‘自建域名直连’重试：\(error.localizedDescription)"
                     }
                     if !localPairingOnly { model.setCloudSignalingEnabled(true) }
                     return "The public domain name has been paired successfully, and the identities of the control portal and the device have been verified. Available when VoWLAN or Auto mode is selected and this device is selected; the audio port needs to be verified during an actual call."
@@ -205,13 +205,13 @@ struct SamsungPairingView: View {
                 // reachable after the pairing window closes.
                 for attempt in 0..<3 {
                     if model.vowlan.availability.isOnlineForDisplay {
-                        return "配对成功，直连网关已通过认证。选择 VoWLAN 或自动连接模式后可用于通话与短信。"
+                        return "配对成功，直连网关已通过认证。选择 VoWLAN 或自动连接模式后可用于Calls与SMS。"
                     }
                     guard attempt < 2 else { break }
                     try? await Task.sleep(for: .milliseconds(400))
                     await model.vowlan.probeNow()
                 }
-                return "配对成功，地址已保存，但直连网关暂不可达。请检查网络、Tailscale 访问规则与安卓 PCM 桥；不会回退写入 Relay。"
+                return "配对成功，地址已保存，但直连网关暂不可达。请检查网络、Tailscale 访问规则与Android PCM 桥；不会回退写入 Relay。"
             }
         } catch is CancellationError {
             message = "Connection canceled"
@@ -364,8 +364,8 @@ struct RemoteDirectGuideView: View {
                     if firstPairing {
                         portRow("临时配对 · HTTPS", external: "9443", target: "Android’s random port for this pairing window")
                     }
-                    portRow("Call Control · HTTPS", external: "443", target: "安卓实际控制端口，通常为 7592")
-                    portRow("音频 · TCP TLS", external: "17593", target: "安卓实际 PCM 端口，通常为 7593")
+                    portRow("Call Control · HTTPS", external: "443", target: "Android实际控制端口，通常为 7592")
+                    portRow("音频 · TCP TLS", external: "17593", target: "Android实际 PCM 端口，通常为 7593")
                     if firstPairing {
                         Text("Click \"Start One-time Pairing\" on Android, and then change the backend port for temporary pairing forwarding to the port displayed in the window. The new window may change the port, please update simultaneously.")
                             .font(.subheadline)
@@ -398,18 +398,18 @@ struct RemoteDirectGuideView: View {
                         ? "Return to the pairing page, select \"Public Domain Name\", fill in the domain name, HTTPS pairing port, HTTPS control port, TLS audio port and Android six-digit verification code, and then click \"Connect and Encrypted Pairing\"."
                         : "Return to \"Self-created domain name direct connection\", select the paired Android and turn on the enable switch, fill in the domain name, HTTPS control port and TLS audio port, and click \"Verify and Save\".")
                     Label("Fill in the domain name phone.example.com", systemImage: "text.cursor")
-                    Text("不带 https://、路径或端口。只有证书和该安卓设备的身份验证通过，域名路由才会保存。")
+                    Text("不带 https://、路径或端口。只有证书和该Android设备的身份验证通过，域名路由才会保存。")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
                 Section("4 · Verify calls and text messages") {
                     Text("Select Android device to use VoWLAN, Auto or VoWLAN+VoBLE mode. Let iPhone use an external network to test text messages, incoming calls, outgoing calls, and two-way sound. Just because the control entry is verified, it does not mean that the audio is available.")
                     if firstPairing {
-                        Label("配对完成后关闭临时配对入口", systemImage: "lock")
+                        Label("配对Done后关闭临时配对入口", systemImage: "lock")
                         Text("仅保留控制与音频 TLS 入口；以后重新配对时再临时开启。")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
-                    Text("域名直连不会自动开启 Relay。需要完全禁止 Relay 时开启纯本地模式；直连成功也不代表 iOS 锁屏后能持续收到来电，此功能不新增后台推送。")
+                    Text("域名直连不会自动开启 Relay。需要完全禁止 Relay 时开启纯本地模式；直连成功也不代表 iOS 锁屏后能持续收到Incoming call，此功能不新增后台推送。")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 

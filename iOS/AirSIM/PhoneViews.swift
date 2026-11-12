@@ -128,7 +128,7 @@ struct DialPadTransportPresentation: Equatable {
         }
         if selected == .cloud {
             return DialPadTransportPresentation(
-                title: "云端",
+                title: "Cloud",
                 detail: "Dial and call audio will pass through cloud Relay",
                 systemImage: "cloud.fill",
                 transport: .cloud
@@ -607,7 +607,7 @@ private struct DialPadCurrentAgentCard: View {
             HStack(spacing: 8) {
                 AgentTransportPill(title: "VoWLAN", online: agent.vowlanOnline, enabled: true)
                 AgentTransportPill(title: "VoBLE", online: agent.bluetoothOnline, enabled: true)
-                AgentTransportPill(title: "云端", online: agent.cloudOnline, enabled: cloudModeEnabled, lastConfirmed: true)
+                AgentTransportPill(title: "Cloud", online: agent.cloudOnline, enabled: cloudModeEnabled, lastConfirmed: true)
                 Spacer(minLength: 0)
                 Text(agent.agentKindTitle)
                     .font(.caption2)
@@ -646,7 +646,7 @@ private struct DialPadCurrentAgentCard: View {
                     HStack(spacing: 6) {
                         Image(systemName: "simcard.2")
                             .font(.caption)
-                        Text(selectedSlot?.displayName ?? "选择通话卡")
+                        Text(selectedSlot?.displayName ?? "选择Calls卡")
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                         Image(systemName: "chevron.up.chevron.down")
@@ -685,8 +685,8 @@ private struct AgentTransportPill: View {
 
     private var statusText: String {
         if !enabled { return "关闭" }
-        if !online { return "离线" }
-        return lastConfirmed ? "上次在线" : "online"
+        if !online { return "Offline" }
+        return lastConfirmed ? "上次Online" : "online"
     }
 
     private var color: Color { !enabled ? .secondary : (online ? .green : .secondary) }
@@ -735,7 +735,7 @@ private struct PairedAndroidAgentsView: View {
                     HStack(spacing: 8) {
                         AgentTransportPill(title: "VoWLAN", online: agent.vowlanOnline, enabled: true)
                         AgentTransportPill(title: "VoBLE", online: agent.bluetoothOnline, enabled: true)
-                        AgentTransportPill(title: "云端", online: agent.cloudOnline, enabled: cloudModeEnabled, lastConfirmed: true)
+                        AgentTransportPill(title: "Cloud", online: agent.cloudOnline, enabled: cloudModeEnabled, lastConfirmed: true)
                         Spacer()
                         Text(agent.agentKindTitle)
                             .font(.caption)
@@ -761,7 +761,7 @@ private struct PairedAndroidAgentsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(L10n.t("完成")) { dismiss() }
+                    Button(L10n.t("Done")) { dismiss() }
                 }
             }
         }
@@ -776,7 +776,7 @@ private final class DialKeyFeedback {
     }
 }
 
-// MARK: - 最近通话
+// MARK: - RecentsCalls
 
 struct RecentsView: View {
     @EnvironmentObject private var model: AppModel
@@ -1043,7 +1043,7 @@ struct RecentsView: View {
     }
 }
 
-// MARK: - 短信
+// MARK: - SMS
 
 struct SMSConversationListState {
     var searchText = ""
@@ -1083,7 +1083,7 @@ struct SMSConversationListToolbar: ToolbarContent {
                     .disabled(state.selectedConversations.isEmpty)
                 }
                 Button { Task { await model.refreshMessages() } } label: {
-                    Label(L10n.t("刷新"), systemImage: "arrow.clockwise")
+                    Label(L10n.t("Refresh"), systemImage: "arrow.clockwise")
                 }
                 Button(role: .destructive) {
                     state.pendingDeletion = Set(model.messages.map(\.id))
@@ -1128,7 +1128,7 @@ struct MessagesView: View {
             List(selection: state.editMode.isEditing ? $state.selectedConversations : nil) {
                 if conversations.isEmpty {
                     EmptyStateView(title: state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? L10n.t("暂无短信") : L10n.t("No matching text message found"), systemImage: "message")
+                        ? L10n.t("暂无SMS") : L10n.t("No matching text message found"), systemImage: "message")
                         .listRowBackground(Color.clear)
                 } else {
                     ForEach(conversations, id: \.sender) { conversation in
@@ -1256,7 +1256,7 @@ struct MessagesView: View {
                                 .frame(minWidth: 20, minHeight: 20)
                                 .background(Color(uiColor: .systemBlue), in: Capsule())
                                 .fixedSize()
-                                .accessibilityLabel(String(format: L10n.t("%d 条未读短信"), unreadCount))
+                                .accessibilityLabel(String(format: L10n.t("%d 条未读SMS"), unreadCount))
                                 .accessibilityIdentifier("smsConversation.unread.\(sender)")
                         }
                     }
@@ -1307,7 +1307,7 @@ private struct SMSAccountPicker: View {
                     .font(.caption)
                 }
                 .disabled(slots.count < 2)
-                .accessibilityLabel("发送线路，\(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "安卓默认短信卡")")
+                .accessibilityLabel("发送线路，\(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android默认SMS卡")")
                 .accessibilityIdentifier("sms.simSelector")
             } else {
                 Label("Android default SMS card", systemImage: "simcard").font(.caption).foregroundStyle(.secondary)
@@ -1478,7 +1478,7 @@ struct MessageThreadView: View {
             }
         }
         .confirmationDialog(
-            String(format: L10n.t("删除所选 %d 条短信？"), pendingDeletion.count),
+            String(format: L10n.t("删除所选 %d 条SMS？"), pendingDeletion.count),
             isPresented: $showingDeleteConfirmation,
             titleVisibility: .visible
         ) {
@@ -1695,7 +1695,7 @@ private struct MessageComposer: View {
                     .font(.title2)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(L10n.t("从通讯录选择"))
+            .accessibilityLabel(L10n.t("从Contacts选择"))
 
             Text(L10n.t("recipient:"))
                 .foregroundStyle(.secondary)
@@ -1784,7 +1784,7 @@ private struct MessageComposer: View {
                 .accessibilityLabel(L10n.t("send"))
             }
 
-            Text(L10n.t("短信将通过 4G 模块发送"))
+            Text(L10n.t("SMS将通过 4G 模块发送"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -1823,9 +1823,9 @@ private struct MessageContactPicker: View {
             Group {
                 if !model.contacts.isAuthorized {
                     EmptyStateView(
-                        title: L10n.t("授权访问通讯录"),
+                        title: L10n.t("授权访问Contacts"),
                         systemImage: "person.crop.circle.badge.questionmark",
-                        actionTitle: L10n.t("授权访问通讯录")
+                        actionTitle: L10n.t("授权访问Contacts")
                     ) {
                         Task { await model.contacts.requestAccessAndLoad() }
                     }
@@ -1892,7 +1892,7 @@ private struct MessageContactPicker: View {
     }
 }
 
-// MARK: - 通讯录
+// MARK: - Contacts
 
 struct ContactsView: View {
     @EnvironmentObject private var model: AppModel
@@ -1915,11 +1915,11 @@ struct ContactsView: View {
                     EmptyStateView(
                         title: model.contacts.authorizationState == .denied
                             ? "Address book permission has been turned off"
-                            : L10n.t("授权访问通讯录"),
+                            : L10n.t("授权访问Contacts"),
                         systemImage: "person.crop.circle.badge.questionmark",
                         actionTitle: model.contacts.authorizationState == .denied
                             ? "Go to system settings"
-                            : L10n.t("授权访问通讯录")
+                            : L10n.t("授权访问Contacts")
                     ) {
                         if model.contacts.authorizationState == .denied {
                             openURL(URL(string: UIApplication.openSettingsURLString)!)
@@ -1972,7 +1972,7 @@ struct ContactsView: View {
                 }
             }
             .background(PhoneBackdrop())
-            .navigationTitle("\(L10n.t("通讯录")) · \(model.contacts.contacts.count)")
+            .navigationTitle("\(L10n.t("Contacts")) · \(model.contacts.contacts.count)")
             .searchable(
                 text: $search,
                 placement: .navigationBarDrawer(displayMode: .always),
@@ -2001,7 +2001,7 @@ struct ContactsView: View {
 }
 
 private extension View {
-    /// iOS 26 起短信输入框使用原生 Liquid Glass；旧系统回退为系统填充色。
+    /// iOS 26 起SMS输入框使用原生 Liquid Glass；旧系统回退为系统填充色。
     @ViewBuilder
     func smsComposerGlass() -> some View {
         if #available(iOS 26.0, *) {
@@ -2215,14 +2215,14 @@ private struct EmptyStateView: View {
     private var emptyStateDescription: String {
         switch systemImage {
         case "message": return "Received text messages will appear here."
-        case "phone.arrow.up.right": return "完成通话后，记录会显示在这里。"
+        case "phone.arrow.up.right": return "DoneCalls后，记录会显示在这里。"
         case "person.2": return "Contacts are synced from the system address book."
         default: return "It can be used after completing the connection or authorization."
         }
     }
 }
 
-// MARK: - 通话覆盖层
+// MARK: - Calls覆盖层
 
 enum CallSurfacePhase: Equatable {
     case incoming
@@ -2488,7 +2488,7 @@ struct ActiveCallView: View {
         let status = moduleIsReachable ? "Module online" : "Module connecting"
         let signal = model.modemStatus?.signalDBM ?? model.cloudAgentStatus?.signalDBM
         guard let signal else { return status }
-        return "\(status) · 信号 \(signal) dBm"
+        return "\(status) · Signal \(signal) dBm"
     }
 
     private var audioStatusColor: Color {

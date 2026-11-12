@@ -95,7 +95,7 @@ enum VoWLANNetworkRoutePolicy {
     }
 }
 
-/// 模块 HTTP 响应；传输层只保留上层解码和错误处理真正需要的字段。
+/// 模块 HTTP 响应；传输层只保留上层解码和Error处理真正需要的字段。
 struct WiredHTTPResponse: Sendable {
     let statusCode: Int
     let body: Data
@@ -394,7 +394,7 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
                 content: header,
                 contentContext: .defaultStream,
                 // HTTP/1.1 已通过 Content-Length 声明请求体边界。这里不能把
-                // NWConnection stream 标记完成，否则 GET 会提前半关闭 TCP，
+                // NWConnection stream 标记Done，否则 GET 会提前半关闭 TCP，
                 // Go 长轮询的 request.Context 会被取消并返回 200 空正文。
                 isComplete: false,
                 completion: .contentProcessed { [weak self] error in

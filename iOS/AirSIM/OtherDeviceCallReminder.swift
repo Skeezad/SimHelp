@@ -47,7 +47,7 @@ final class OtherDeviceCallReminderController: ObservableObject {
             guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else { return }
             guard lookup(reminder.key)?.stillRinging == true else { return }
             let content = UNMutableNotificationContent()
-            content.title = "其他安卓来电 · \(reminder.deviceName)"
+            content.title = "其他AndroidIncoming call · \(reminder.deviceName)"
             content.body = reminder.number ?? "Number not provided"
             content.userInfo = reminder.userInfo
             content.sound = nil // Never mix a second ringtone into the current call.
@@ -118,18 +118,18 @@ struct OtherDeviceCallSheet: View {
                     Text(reminder.deviceName).font(.headline)
                     Text(reminder.number ?? "Number not provided")
                     Text(model.cloudCallOwnsPrimaryPresentation
-                         ? "当前云端通话继续；请先结束当前通话再接听"
+                         ? "CurrentCloudCalls继续；请先结束CurrentCalls再接听"
                          : (model.deviceCalls.active == nil
                             ? "Listening will use this device's local link"
-                            : "当前通话继续；请先结束当前通话再接听"))
+                            : "CurrentCalls继续；请先结束CurrentCalls再接听"))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Button("接听此设备", action: answer)
                     .disabled(model.deviceCalls.active != nil || model.cloudCallOwnsPrimaryPresentation)
                 if let failure { Text(failure).foregroundStyle(.red) }
             }
-            .navigationTitle("其他设备来电")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
+            .navigationTitle("其他设备Incoming call")
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }
     private func answer() {

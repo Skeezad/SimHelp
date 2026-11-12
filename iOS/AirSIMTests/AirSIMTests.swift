@@ -311,7 +311,7 @@ final class CallKitNumberPresentationTests: XCTestCase {
     }
 
     func testInvalidInternationalTextRemainsLiteral() {
-        for number in ["+", "++8613800138000", "+0123456789", "+8613800138000 ext 12", "+1234567890123456", "匿名来电"] {
+        for number in ["+", "++8613800138000", "+0123456789", "+8613800138000 ext 12", "+1234567890123456", "匿名Incoming call"] {
             let handle = CallKitNumberPresentation.handle(number: number)
             XCTAssertEqual(handle.type, .generic)
             XCTAssertEqual(handle.value, number)
@@ -1340,7 +1340,7 @@ final class SamsungPairingDiscoveryTests: XCTestCase {
         browser.stop()
         browser.start()
         let ready = expectation(description: "current scan ready")
-        let readyObservation = browser.$stateText.filter { $0 == "正在等待安卓配对广播…" }
+        let readyObservation = browser.$stateText.filter { $0 == "正在等待Android配对广播…" }
             .prefix(1).sink { _ in ready.fulfill() }
         current.stateUpdateHandler?(.ready)
         await fulfillment(of: [ready], timeout: 1)
@@ -1351,7 +1351,7 @@ final class SamsungPairingDiscoveryTests: XCTestCase {
         lateState?(.cancelled)
         await fulfillment(of: [staleUpdate], timeout: 0.1)
         lateObservation.cancel()
-        XCTAssertEqual(browser.stateText, "正在等待安卓配对广播…")
+        XCTAssertEqual(browser.stateText, "正在等待Android配对广播…")
         XCTAssertEqual(current.starts, 1)
         XCTAssertEqual(old.cancels, 1)
     }
@@ -4169,7 +4169,7 @@ final class SimHelpTests: XCTestCase {
         } catch APIError.http(let status, _) {
             XCTAssertEqual(status, 502)
         } catch {
-            XCTFail("预期保留 Agent HTTP 错误，实际为 \(error)")
+            XCTFail("预期保留 Agent HTTP Error，实际为 \(error)")
         }
 
         XCTAssertEqual(cloudAttempts, 0)

@@ -14,7 +14,7 @@ enum SimHelpConnectionMode: String, CaseIterable, Codable, Identifiable, Sendabl
         switch self {
         case .vowlan: return "VoWLAN"
         case .bluetooth: return "Bluetooth"
-        case .cloud: return "云端"
+        case .cloud: return "Cloud"
         case .automatic: return "automatic"
         case .localDual: return "VoWLAN+VoBLE"
         }
@@ -26,7 +26,7 @@ enum SimHelpConnectionMode: String, CaseIterable, Codable, Identifiable, Sendabl
         case .bluetooth: return "Calls use Bluetooth control and audio; manual self-test Relay can be performed when purely local is turned off"
         case .cloud: return "Only use Relay, PushKit and CallKit"
         case .automatic: return "Automatic selection by availability of VoWLAN, Bluetooth, Cloud"
-        case .localDual: return "通话优先 Wi-Fi、其次蓝牙，途中不切换音频链路；纯本地关闭时可手动自检 Relay"
+        case .localDual: return "Calls优先 Wi-Fi、其次蓝牙，途中不Switch音频链路；纯本地关闭时可手动自检 Relay"
         }
     }
 }
@@ -36,7 +36,7 @@ enum CloudRelayStatusCopy {
         if pureLocal { return "Pure local mode blocked" }
         guard let cloudOnline else { return "尚未检查，可手动自检" }
         let status = cloudOnline ? "Agent online" : "Agent has no valid heartbeat"
-        return usesCloudCalls ? status : "最近自检：\(status)"
+        return usesCloudCalls ? status : "Recents自检：\(status)"
     }
 }
 
@@ -197,8 +197,8 @@ struct ConnectionModeRuntimePolicy: Equatable, Sendable {
     var usesCallKit: Bool { true }
 }
 
-/// 统一拨号路由选择。显式模式绝不借用其他链路；自动模式只在通话建立前
-/// 按 VoWLAN、VoBLE、云端顺序选择，建立后仍由 LockedCallTransport 固定。
+/// 统一拨号路由选择。显式模式绝不借用其他链路；自动模式只在Calls建立前
+/// 按 VoWLAN、VoBLE、Cloud顺序选择，建立后仍由 LockedCallTransport 固定。
 enum DialRouteSelector {
     static func preferred(
         mode: SimHelpConnectionMode,

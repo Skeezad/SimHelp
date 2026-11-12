@@ -39,8 +39,8 @@ struct AgentVerboseTextDocument: FileDocument {
 
 enum AgentVerboseTraceFilter: String, CaseIterable, Identifiable {
     case all = "all"
-    case failures = "错误"
-    case calls = "通话"
+    case failures = "Error"
+    case calls = "Calls"
     case relay = "Relay/Cloud"
     case vowlan = "VoWLAN"
     case voble = "VoBLE"
@@ -301,7 +301,7 @@ struct AgentVerboseTraceView: View {
                         Label {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("Verbose mode")
-                                Text(model.enabled ? "记录通话、VoWLAN、VoBLE 与云端链路事件" : "Turn off detailed collection and keep basic audio startup records")
+                                Text(model.enabled ? "记录Calls、VoWLAN、VoBLE 与Cloud链路事件" : "Turn off detailed collection and keep basic audio startup records")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }

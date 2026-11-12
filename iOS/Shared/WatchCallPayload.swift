@@ -131,9 +131,9 @@ enum WatchVoIPPayloadError: LocalizedError {
         case .unsupportedEvent: return "Not a valid watch call push notification"
         case .missingCallID: return "The call notification on the watch is missing call_id"
         case .invalidCallUUID: return "The watch push notification lacks a valid call_uuid"
-        case .missingSecret: return "手表来电推送缺少媒体密钥"
+        case .missingSecret: return "手表Incoming call推送缺少媒体密钥"
         case .invalidMediaURL: return "Incoming call notification on watch lacks secure media address"
-        case .expired: return "手表来电推送已经过期"
+        case .expired: return "手表Incoming call推送已经过期"
         case .invalidLocalMedia: return "The local voice parameters of the watch are invalid"
         }
     }

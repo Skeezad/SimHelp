@@ -116,7 +116,7 @@ final class ContactStore: ObservableObject {
          cache: ContactCacheStore? = nil) {
         self.cache = cache ?? ContactCacheStore(fileManager: fileManager)
         self.fetcher = fetcher
-        // 联系人属于手机数据。模块离线或系统联系人数据库暂不可读时，先展示本机副本。
+        // 联系人属于手机数据。模块Offline或系统联系人数据库暂不可读时，先展示本机副本。
         contacts = self.cache.load()
         let state = fetcher.authorizationState()
         authorizationState = state
@@ -159,7 +159,7 @@ final class ContactStore: ObservableObject {
 
     private func refresh(userInitiated: Bool = false, force: Bool = false) async {
         do {
-            // 手机重启后可能先在数据保护尚未解锁时读取到空数组；每次前台刷新都重试磁盘缓存。
+            // 手机重启后可能先在数据保护尚未解锁时读取到空数组；每次前台Refresh都重试磁盘缓存。
             let cachedContacts = cache.load()
             if !cachedContacts.isEmpty {
                 contacts = cachedContacts
@@ -181,7 +181,7 @@ final class ContactStore: ObservableObject {
                 authorizationState = state
                 guard granted else {
                     isAuthorized = false
-                    errorMessage = "未获得通讯录访问权限"
+                    errorMessage = "未获得Contacts访问权限"
                     return
                 }
             case .load:
@@ -198,7 +198,7 @@ final class ContactStore: ObservableObject {
 
             isAuthorized = true
             isLimitedAccess = authorizationState == .limited
-            // 非用户主动刷新时优先使用已恢复的缓存；联系人变更通知和联系人页
+            // 非用户主动Refresh时优先使用已恢复的缓存；联系人变更通知和联系人页
             // 进入时会 force，确保新增联系人不会被旧缓存挡住。
             guard force || userInitiated || contacts.isEmpty || cache.needsNameRefresh else {
                 errorMessage = nil
@@ -236,7 +236,7 @@ final class ContactStore: ObservableObject {
     }
 }
 
-/// 通讯录缓存仅保存在 App 沙盒，不会上传到模块或 Push Relay。
+/// Contacts缓存仅保存在 App 沙盒，不会上传到模块或 Push Relay。
 final class ContactCacheStore {
     private struct Snapshot: Codable {
         let nameFormatVersion: Int
@@ -276,7 +276,7 @@ final class ContactCacheStore {
             needsNameRefresh = true
             return try JSONDecoder().decode([ContactStore.Contact].self, from: data)
         } catch {
-            Self.log("读取通讯录缓存失败：\(error.localizedDescription)")
+            Self.log("读取Contacts缓存失败：\(error.localizedDescription)")
             return []
         }
     }
@@ -290,7 +290,7 @@ final class ContactCacheStore {
             needsNameRefresh = false
             return true
         } catch {
-            Self.log("保存通讯录缓存失败：\(error.localizedDescription)")
+            Self.log("保存Contacts缓存失败：\(error.localizedDescription)")
             return false
         }
     }
