@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+if [ "${1:-}" = "-m" ]; then
+    printf 'aarch64\n'
+    exit 0
+fi
+
+exec /usr/bin/uname "$@"

@@ -1,0 +1,47 @@
+name: Build SimHelp iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ipa:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+      - name: Build unsigned iOS app
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project iOS/AirSIM.xcodeproj \
+            -scheme AirSIM \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build/derived \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package IPA
+        run: |
+          set -euo pipefail
+          APP="build/derived/Build/Products/Release-iphoneos/AirSIM.app"
+          test -d "$APP"
+          mkdir -p build/ipa/Payload
+          cp -R "$APP" build/ipa/Payload/SimHelp.app
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleDisplayName SimHelp' build/ipa/Payload/SimHelp.app/Info.plist || true
+          /usr/libexec/PlistBuddy -c 'Set :CFBundleName SimHelp' build/ipa/Payload/SimHelp.app/Info.plist || true
+          /usr/libexec/PlistBuddy -c 'Add :SimHelpAuthor string TheSkeezad' build/ipa/Payload/SimHelp.app/Info.plist || true
+          ditto -c -k --sequesterRsrc --keepParent build/ipa/Payload build/SimHelp-iPhone-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SimHelp-iPhone-unsigned
+          path: build/SimHelp-iPhone-unsigned.ipa
+          if-no-files-found: error

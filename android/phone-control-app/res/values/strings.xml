@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sms_accessibility_description">仅在 AirSIM 发送短信时识别小米的发送确认弹窗并点击“发送”。不会读取或保存短信内容。</string>
+</resources>
