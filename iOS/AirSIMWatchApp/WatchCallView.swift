@@ -87,7 +87,7 @@ struct WatchCallView: View {
                 .truncationMode(.head)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityLabel(dialNumber.isEmpty ? "No phone number entered yet" : "Phone number,\\(dialNumber)")
+                .accessibilityLabel(dialNumber.isEmpty ? "No phone number entered yet" : "电话号码，\(dialNumber)")
 
             Button { showConnectionStatus = true } label: {
                 Image(systemName: "info.circle")
@@ -114,7 +114,7 @@ struct WatchCallView: View {
         }
         .buttonStyle(.plain)
         .disabled(session.isDialing)
-        .accessibilityLabel("Number \\(digit)")
+        .accessibilityLabel("数字 \(digit)")
     }
 
     private func deleteButton(width: CGFloat, height: CGFloat) -> some View {

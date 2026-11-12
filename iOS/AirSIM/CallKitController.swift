@@ -466,7 +466,7 @@ final class CallKitController: NSObject {
                                         genericHandle: Bool = false) {
         guard !incomingReportRequested, !systemCallReported, let uuid = currentUUID else { return }
         incomingReportRequested = true
-        debugLog("Request system call interface; source=\\(source)")
+        debugLog("请求系统来电界面；来源=\(source)")
         let report: RequiredSystemReporter = incomingSystemReporter ?? { [provider] uuid, update, done in
             provider.reportNewIncomingCall(with: uuid, update: update, completion: done)
         }
@@ -478,7 +478,7 @@ final class CallKitController: NSObject {
                     PushDiagnostics.record("CallKit system fails to report incoming calls", error: error)
                     let diagnosticError = error as NSError
                     self.debugLog(
-                        "The system fails to report incoming calls; domain=\\(diagnosticError.domain) code=\\(diagnosticError.code)"
+                        "系统来电上报失败；domain=\(diagnosticError.domain) code=\(diagnosticError.code) "
                             + "message=\(diagnosticError.localizedDescription)"
                     )
                     if self.disableCallKitIfUnentitled(error) {
@@ -488,7 +488,7 @@ final class CallKitController: NSObject {
                     }
                     self.systemCallReported = false
                     self.incomingReportFailed = true
-                    self.handler?.callKitDidFail("System call interface failed to start: \\(error.localizedDescription)")
+                    self.handler?.callKitDidFail("系统来电界面启动失败：\(error.localizedDescription)")
                     self.finishIncomingReport(error)
                 } else {
                     PushDiagnostics.record("CallKit system successfully reports incoming calls")
@@ -647,7 +647,7 @@ final class CallKitController: NSObject {
             do {
                 try handler.callKitPrepareAudioSession()
             } catch {
-                debugLog("Audio preconfiguration failed before answering, continue to system answer: \\(error.localizedDescription)")
+                debugLog("接听前音频预配置失败，继续系统接听：\(error.localizedDescription)")
             }
             acceptedAnswerUUID = action.callUUID
             action.fulfill()

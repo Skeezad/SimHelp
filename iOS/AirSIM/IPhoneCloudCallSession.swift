@@ -780,7 +780,7 @@ final class IPhoneCloudCallSession {
                     source: relayStatuses.contains(status) ? "RELAY" : "AGENT",
                     category: relayStatuses.contains(status) ? "relay" : "cloud-call-control",
                     phase: status,
-                    title: control.action.map { "Call Control · \\($0)" } ?? "Cloud call status",
+                    title: control.action.map { "通话控制 · \($0)" } ?? "Cloud call status",
                     detail: control.message ?? "",
                     fields: control.traceFields,
                     isFailure: status == "action_error"
@@ -977,9 +977,9 @@ final class IPhoneCloudCallSession {
                     phase: final.confirmationPhase,
                     detail: [
                         final.result?.modemConfirmed == true
-                            ? "CLCC checked \\(final.result?.clccAttempts ?? 0) times"
+                            ? "CLCC 检查 \(final.result?.clccAttempts ?? 0) 次"
                             : "Android Telecom has confirmed that the call has ended",
-                        final.rescueCommandID.map { "Rescue command \\($0)" },
+                        final.rescueCommandID.map { "救援命令 \($0)" },
                     ].compactMap { $0 }.joined(separator: " · ")
                 )
                 emitLifecycle(from: envelope, state: .ended, source: .relay)
@@ -1054,7 +1054,7 @@ final class IPhoneCloudCallSession {
             source: "APP",
             category: "cloud-call-control",
             phase: "credentials_unavailable",
-            title: "Call control · \\(action)",
+            title: "通话控制 · \(action)",
             detail: "Missing Relay device credentials",
             fields: [
                 "action": action,
@@ -1333,7 +1333,7 @@ final class IPhoneCloudCallSession {
                     requestMediaRebuild(issue)
                     return
                 case let .failed(issue):
-                    audioState = .failed("Abnormal cloud media quality: \\(issue.rawValue)")
+                    audioState = .failed("云端媒体质量异常：\(issue.rawValue)")
                     if let call {
                         traceMediaHealth(issue: issue, phase: "failed", call: call, isFailure: true)
                     }

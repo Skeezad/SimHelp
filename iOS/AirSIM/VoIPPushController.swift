@@ -599,7 +599,7 @@ enum CloudAgentStatusError: LocalizedError {
         case .invalidRelayURL: return "Relay 必须使用 HTTPS"
         case .invalidResponse: return "Relay status response is invalid"
         case .requestLimitExceeded: return "Relay daily request quota has been exhausted (Cloudflare 1027), please wait for the quota to be reset or upgrade the Workers package"
-        case let .relayHTTP(statusCode): return "Relay request failed (HTTP \\(statusCode))"
+        case let .relayHTTP(statusCode): return "Relay 请求失败（HTTP \(statusCode)）"
         }
     }
 }
@@ -1322,7 +1322,7 @@ final class VoIPPushController: NSObject {
             "设备=\(readiness.deviceIDHint ?? "已生成")",
             "APNs=\(readiness.environment)",
             "PushKit=\(readiness.voIPTokenReady ? "就绪" : "缺失")",
-            "通知Token=\\(readiness.alertTokenReady ?"就绪" : "缺失")",
+            "通知Token=\(readiness.alertTokenReady ? "就绪" : "缺失")",
         ].joined(separator: "\n")
         if let host = URL(string: registration.relayURL)?.host {
             configDetail += "\nRelay=\(host)"
@@ -1337,7 +1337,7 @@ final class VoIPPushController: NSObject {
             report.update(.relayIdentity, state: .passed, detail: "airsim-push-relay · v\(version)")
             onUpdate(report)
         } catch {
-            report.fail(.relayIdentity, detail: "Relay is unreachable or service identity does not match: \\(error.localizedDescription)")
+            report.fail(.relayIdentity, detail: "Relay 不可达或服务身份不匹配：\(error.localizedDescription)")
             onUpdate(report)
             return report
         }
@@ -1400,14 +1400,14 @@ final class VoIPPushController: NSObject {
                 "  - \($0.deviceName ?? $0.agentID) · \($0.cloudOnline ? "在线" : "超过90秒")"
             }.joined(separator: "\n")
             report.fail(.agentHeartbeat,
-                detail: "No valid heartbeat within 90 seconds\\nRelay record:\\n\\(known)\\nactive=\\(status.activeAgentID ??"none")")
+                detail: "90秒内无有效心跳\nRelay记录：\n\(known)\nactive=\(status.activeAgentID ?? "none")")
             onUpdate(report)
             return report
         }
         let version = status.agentVersion?.isEmpty == false ? status.agentVersion! : "Unknown version"
-        let cellular = status.cellularState?.isEmpty == false ? "· Cellular \\(status.cellularState!)" : ""
+        let cellular = status.cellularState?.isEmpty == false ? " · 蜂窝 \(status.cellularState!)" : ""
         report.update(.agentHeartbeat, state: .passed,
-            detail: "Agent \\(version) 在线\\(cellular) · active=\\(status.activeAgentID ??"none")")
+            detail: "Agent \(version) 在线\(cellular) · active=\(status.activeAgentID ?? "none")")
         onUpdate(report)
 
         report.update(.commandRouting, state: .running, detail: "Check the Agent's command_routing_version")
@@ -1426,7 +1426,7 @@ final class VoIPPushController: NSObject {
             return report
         }
         report.update(.commandRouting, state: .passed,
-            detail: "Agent \\(active.deviceName ?? active.agentID) 支持 command_routing=v\\(routing)")
+            detail: "Agent \(active.deviceName ?? active.agentID) 支持 command_routing=v\(routing)")
         report.completedAt = Date()
         onUpdate(report)
         return report
@@ -1732,7 +1732,7 @@ final class VoIPPushController: NSObject {
 #if DEBUG
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
             let detail = String(data: data.prefix(1_024), encoding: .utf8) ?? "<非文本响应>"
-            print("[SimHelp PushKit] Relay registration refused; HTTP=\\(http.statusCode) body=\\(detail)")
+            print("[SimHelp PushKit] Relay 注册被拒绝；HTTP=\(http.statusCode) body=\(detail)")
         }
 #endif
         guard let http = response as? HTTPURLResponse else {
@@ -1881,7 +1881,7 @@ extension VoIPPushController: PKPushRegistryDelegate {
         let token = VoIPPushToken.hex(pushCredentials.token)
         Task { @MainActor [weak self] in
 #if DEBUG
-            print("[SimHelp PushKit] VoIP token updated; number of bytes=\\(pushCredentials.token.count)")
+            print("[SimHelp PushKit] VoIP token 已更新；字节数=\(pushCredentials.token.count)")
 #endif
             self?.store(token: token)
         }

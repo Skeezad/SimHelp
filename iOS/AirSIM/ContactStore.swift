@@ -276,7 +276,7 @@ final class ContactCacheStore {
             needsNameRefresh = true
             return try JSONDecoder().decode([ContactStore.Contact].self, from: data)
         } catch {
-            Self.log("Failed to read address book cache: \\(error.localizedDescription)")
+            Self.log("读取通讯录缓存失败：\(error.localizedDescription)")
             return []
         }
     }
@@ -290,7 +290,7 @@ final class ContactCacheStore {
             needsNameRefresh = false
             return true
         } catch {
-            Self.log("Failed to save address book cache: \\(error.localizedDescription)")
+            Self.log("保存通讯录缓存失败：\(error.localizedDescription)")
             return false
         }
     }

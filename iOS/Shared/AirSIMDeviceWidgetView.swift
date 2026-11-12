@@ -263,7 +263,7 @@ struct SimHelpDeviceWidgetView: View {
             .contentShape(Rectangle())
         }
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Open the \\(title) record")
+        .accessibilityHint("打开\(title)记录")
     }
 
     private func recordDate(_ value: Date) -> some View {
@@ -277,7 +277,7 @@ struct SimHelpDeviceWidgetView: View {
                 .foregroundStyle(.white).padding(.horizontal, 4)
                 .frame(minWidth: 18, minHeight: 18)
                 .background(Color.red, in: Capsule()).fixedSize()
-                .accessibilityLabel("\\(count) items\\(missed?"未查看的未接来电" : "未读短信")")
+                .accessibilityLabel("\(count) 条\(missed ? "未查看的未接来电" : "未读短信")")
         }
     }
 
@@ -322,11 +322,11 @@ struct SimHelpDeviceWidgetView: View {
                 switchControl(action: "device", title: "equipment",
                     value: snapshot.devices.first(where: { $0.id == controls.currentAgentID })?.name ?? "Not selected",
                     expected: controls.currentAgentID, target: controls.nextAgentID ?? "",
-                    hint: controls.nextAgentName.map { "switch to \\($0)" } ?? "Only one paired device",
+                    hint: controls.nextAgentName.map { "切换到 \($0)" } ?? "Only one paired device",
                     disabled: controls.blockedByCall || controls.nextAgentID == nil, compact: compact)
                 switchControl(action: "mode", title: "model", value: controls.modeTitle,
                     expected: controls.mode, target: controls.nextMode,
-                    hint: "Switch to \\(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
+                    hint: "切换为 \(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
             }
         }
     }
@@ -344,7 +344,7 @@ struct SimHelpDeviceWidgetView: View {
         } else {
             controlLabel(title: title, value: value, compact: compact)
                 .opacity(0.55)
-                .accessibilityLabel("\\(title): \\(value), background switching requires iOS 17 or later")
+                .accessibilityLabel("\(title)：\(value)，后台切换需要 iOS 17 或更新版本")
         }
     }
 
@@ -415,9 +415,9 @@ struct SimHelpDeviceWidgetView: View {
         Group {
             if let observed = d.observedAt {
                 if Calendar.current.isDate(observed, inSameDayAs: date) {
-                    Text("更新于 \\(observed.formatted(date: .omitted, time: .shortened))")
+                    Text("更新于 \(observed.formatted(date: .omitted, time: .shortened))")
                 } else {
-                    Text("Updated on \\(observed.formatted(.dateTime.month().day().hour().minute()))")
+                    Text("更新于 \(observed.formatted(.dateTime.month().day().hour().minute()))")
                 }
             } else { Text("Waiting for first sync") }
         }.foregroundStyle(secondaryText).lineLimit(1)
@@ -430,7 +430,7 @@ struct SimHelpDeviceWidgetView: View {
             Text(reading.map { "\($0.percent)%" } ?? "—")
         }
             .font(.subheadline.weight(.semibold))
-            .accessibilityLabel(reading.map { "Android power \\($0.percent)%, \\($0.charging?"正在充电" : "未充电")，采样于 \\($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "安卓电量待刷新")
+            .accessibilityLabel(reading.map { "安卓电量 \($0.percent)%，\($0.charging ? "正在充电" : "未充电")，采样于 \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "安卓电量待刷新")
     }
     private func transportSymbol(_ d: SimHelpWidgetSnapshot.Device) -> String {
         d.transport == "云端" ? "cloud" : d.transport == "VoBLE" ? "antenna.radiowaves.left.and.right" : "wifi"

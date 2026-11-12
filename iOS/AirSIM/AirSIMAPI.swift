@@ -536,7 +536,7 @@ struct SimHelpAPI: Sendable {
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            throw APIError.unreadablePayload("Unrecognized data returned by module proxy: \\(error.localizedDescription)")
+            throw APIError.unreadablePayload("模块代理返回的数据无法识别：\(error.localizedDescription)")
         }
     }
 
@@ -558,7 +558,7 @@ enum APIError: LocalizedError {
         switch self {
         case let .unsupportedFeature(message): return message
         case .invalidResponse: return "Module proxy returned an invalid response"
-        case let .http(status, message): return message?.isEmpty == false ? message : "Request failed (HTTP \\(status))"
+        case let .http(status, message): return message?.isEmpty == false ? message : "请求失败（HTTP \(status)）"
         case let .unreadablePayload(message): return message
         }
     }

@@ -1146,7 +1146,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
                 // silently accept an incomplete/old GATT database.
                 peripheral.discoverServices([Self.serviceUUID])
             } else {
-                apply(.authenticationFailed("SimHelp Bluetooth feature is incomplete: missing\\(missing.joined(separator:"、")); Please confirm the Android App version and reconnect"))
+                apply(.authenticationFailed("SimHelp 蓝牙特征不完整：缺少\(missing.joined(separator: "、")); Please confirm the Android App version and reconnect"))
             }
             return
         }

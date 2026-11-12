@@ -72,7 +72,7 @@ enum CallAudioStatusPresentation {
         }
         switch cloudState {
         case .idle: return localAudioActive ? "Voice link is connected" : "Establishing voice link"
-        case let .connecting(attempt, maximum): return "Retrying Cloud Voice \\(attempt)/\\(maximum)"
+        case let .connecting(attempt, maximum): return "正在重试云端语音 \(attempt)/\(maximum)"
         case .connected: return "Cloud Voice is connected"
         case let .failed(message): return message
         }
@@ -2511,7 +2511,7 @@ final class AppModel: ObservableObject {
                 if case .vowlan = route { return "VoWLAN" }
                 return "模块本地链路"
             }()
-            connectionMessage = "Reconnecting\\(failedRouteName):\\(error.localizedDescription)"
+            connectionMessage = "正在重新连接\(failedRouteName)：\(error.localizedDescription)"
 
             // 一次长轮询中断不能代表 VoWLAN 已离线。通话动作后的 8 秒保护期内
             // 保留最后一次在线状态；其后也必须连续失败三次并让独立 health 请求失败。
@@ -2836,7 +2836,7 @@ final class AppModel: ObservableObject {
         case .localOnlineNoService:
             let detail = modemStatus?.cellularRecovery ?? modemStatus?.registrationText
             connectionMessage = detail?.isEmpty == false
-                ? "The local network is connected · \\(detail!)"
+                ? "本地网络已连接 · \(detail!)"
                 : "Local network connected, cellular network recovering"
         case .cloudOnly, .offline:
             break
@@ -3200,7 +3200,7 @@ final class AppModel: ObservableObject {
                     audio.setMuted(target)
                     errorMessage = nil
                 } else {
-                    errorMessage = "System mute switching failed: \\(error.localizedDescription)"
+                    errorMessage = "系统静音切换失败：\(error.localizedDescription)"
                 }
             }
             return
@@ -3233,7 +3233,7 @@ final class AppModel: ObservableObject {
             isRecording = response.recording
             errorMessage = nil
         } catch {
-            debugDialLog("Operation failed: \\(error.localizedDescription)")
+            debugDialLog("操作失败：\(error.localizedDescription)")
             errorMessage = error.localizedDescription
         }
     }
@@ -3827,7 +3827,7 @@ final class AppModel: ObservableObject {
             // The coordinator already rolled back only this startup's resources.
             guard isCurrent() else { return }
             backgroundStandby.resumeAfterCall()
-            errorMessage = "Unable to register call audio: \\(error.localizedDescription)"
+            errorMessage = "无法登记通话音频：\(error.localizedDescription)"
             return
         }
     }

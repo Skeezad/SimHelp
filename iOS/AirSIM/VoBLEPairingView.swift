@@ -39,7 +39,7 @@ struct VoBLEPairingView: View {
                         .font(.system(size: 38, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .frame(maxWidth: .infinity)
-                        .accessibilityLabel("Bluetooth pairing security code \\(sas)")
+                        .accessibilityLabel("蓝牙配对安全码 \(sas)")
                     Text("确认此六位数字与 Android SimHelp 显示的一致。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)

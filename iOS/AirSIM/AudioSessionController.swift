@@ -368,7 +368,7 @@ final class AudioSessionController: ObservableObject {
             transportReady = false
             routeDescription = route.isOverlayHost ? "Connecting VPN Direct Voice…"
                 : (route.requiresWiFi ? "Connecting VoWLAN Voice…" : "Connecting module network voice...")
-            diagnosticDescription = "\\(DeviceContext.displayName) PCM handshake not yet"
+            diagnosticDescription = "\(DeviceContext.displayName) PCM 尚未握手"
             moduleDiagnosticDescription = ""
             errorMessage = nil
             if !receiveOnly { retryRequestedSpeakerRoute() }
@@ -379,7 +379,7 @@ final class AudioSessionController: ObservableObject {
             Task { await AgentVerboseTraceRecorder.shared.recordFailure(category: "vowlan", phase: phase, error: error) }
             recordStartup("failed")
             deactivate()
-            errorMessage = "Unable to enable call audio: \\(error.localizedDescription)"
+            errorMessage = "无法启用通话音频：\(error.localizedDescription)"
             return false
         }
     }
@@ -531,20 +531,20 @@ final class AudioSessionController: ObservableObject {
     func updateModuleDiagnostics(_ config: MaVoAudioHostConfig) {
         var details: [String] = []
         if let routeError = config.routeError, !routeError.isEmpty {
-            details.append("Module voice bridge error: \\(routeError)")
+            details.append("模块语音桥错误：\(routeError)")
         } else if config.routeRunning != true {
             details.append("Module PCM not started")
         } else if config.routeSessionReady == false || config.routeReady == false {
             details.append("Module voice routing is not ready yet")
         }
         if let statistics = config.statistics, config.statisticsAvailable == true {
-            details.append("D5 ↑\\(statistics.uplinkBytes)B 峰值\\(statistics.uplinkPeak) · D6 ↓\\(statistics.downlinkBytes)B 峰值\\(statistics.downlinkPeak)")
+            details.append("D5 ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · D6 ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)")
         } else if config.routeRunning == true {
             details.append("Module PCM has been started, waiting for the first statistical period")
         }
         // 只显示最后一条日志，保留真正的启动失败原因，同时避免通话页被日志刷屏。
         if let lastLog = config.logTail?.last, !lastLog.isEmpty {
-            details.append("Log:\\(lastLog)")
+            details.append("日志：\(lastLog)")
         }
         moduleDiagnosticDescription = details.joined(separator: "；")
     }
@@ -607,7 +607,7 @@ final class AudioSessionController: ObservableObject {
         } catch {
             toneOutput.stop(deactivateSession: !sessionActivationManagedByCallKit)
             currentCallTone = nil
-            errorMessage = "Unable to play call tone: \\(error.localizedDescription)"
+            errorMessage = "无法播放通话提示音：\(error.localizedDescription)"
         }
     }
 
@@ -650,7 +650,7 @@ final class AudioSessionController: ObservableObject {
             let playbackDrops = playbackQueue.droppedFrames > 0
                 ? " · 播放丢弃\(playbackQueue.droppedFrames)帧"
                 : ""
-            diagnosticDescription = "\\(DeviceContext.displayName) \\(handshakeState) ↑\\(statistics.uplinkBytes)B 峰值\\(statistics.uplinkPeak) · ↓\\(statistics.downlinkBytes)B 峰值\\(statistics.downlinkPeak)\\(playbackDrops)"
+            diagnosticDescription = "\(DeviceContext.displayName) \(handshakeState) ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)\(playbackDrops)"
             refreshRouteDescription()
         case let .status(message):
             // 连接状态单独显示，避免把“尚未握手”误读成模块已经拒绝握手。
@@ -659,7 +659,7 @@ final class AudioSessionController: ObservableObject {
             recordStartup("failed")
             transportReady = false
             routeDescription = "Internet voice not connected"
-            diagnosticDescription = "\\(DeviceContext.displayName) PCM connection failed: \\(message)"
+            diagnosticDescription = "\(DeviceContext.displayName) PCM 连接失败：\(message)"
             errorMessage = message
         case .closed:
             transportReady = false
@@ -679,8 +679,8 @@ final class AudioSessionController: ObservableObject {
             requestedSpeaker: requestedSpeakerOverride,
             currentRouteIsSpeaker: routedToSpeaker
         )
-        routeDescription = receiveOnly ? "Only accepts → \\(output.isEmpty ?"无输出" : output)"
-            : "\(input.isEmpty ? "无输入": input) ↔ Network PCM ↔ \\(output.isEmpty ?"无输出": output) (available inputs: \\(inputs))"
+        routeDescription = receiveOnly ? "仅接收 → \(output.isEmpty ? "无输出" : output)"
+            : "\(input.isEmpty ? "无输入" : input) ↔ 网络 PCM ↔ \(output.isEmpty ? "无输出" : output)（可用输入：\(inputs)）"
         IPhoneCloudCallSession.shared.recordAudioRoute(output.isEmpty ? "unknown" : output)
     }
 
@@ -1025,7 +1025,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 self.queue.async {
                     guard !self.stopped, self.generation == attempt else { return }
                     if let error {
-                        self.retryOrFail("Microphone uplink transmission failed: \\(error.localizedDescription)", attempt: attempt)
+                        self.retryOrFail("麦克风上行发送失败：\(error.localizedDescription)", attempt: attempt)
                         return
                     }
                     self.uplinkBytes += UInt64(pcm.count)
@@ -1058,7 +1058,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 guard !self.stopped, self.generation == attempt else { return }
                 let interfaces = path.availableInterfaces.map { String(describing: $0.type) }.joined(separator: ",")
                 let route = path.status == .satisfied ? "Available" : "不可用"
-                self.onEvent(.status("PCM network path\\(route):\\(interfaces.isEmpty?"未知接口" : interfaces)"))
+                self.onEvent(.status("PCM 网络路径\(route)：\(interfaces.isEmpty ? "未知接口" : interfaces)"))
             }
         }
         connection.stateUpdateHandler = { [weak self, weak connection] state in

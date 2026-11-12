@@ -49,7 +49,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             session.activate()
             self.session = session
 #if DEBUG
-			print("[SimHelp iPhone WC] Activation requested; paired=\\(session.isPaired) watchAppInstalled=\\(session.isWatchAppInstalled)")
+			print("[SimHelp iPhone WC] 已请求激活；paired=\(session.isPaired) watchAppInstalled=\(session.isWatchAppInstalled)")
 #endif
         }
     }
@@ -151,7 +151,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         error: Error?
     ) {
 #if DEBUG
-		print("[SimHelp iPhone WC] Activation completed; state=\\(activationState.rawValue) context=\\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
+		print("[SimHelp iPhone WC] 激活完成；state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
 #endif
 		guard activationState == .activated else { return }
 		let context = session.receivedApplicationContext
@@ -634,7 +634,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
               !token.isEmpty, !bundleID.isEmpty else { return false }
         VoIPPushController.shared.storeWatchVoIPRegistration(token: token, bundleID: bundleID)
 #if DEBUG
-		print("[SimHelp iPhone WC] Received Watch VoIP token; number of characters =\\(token.count)")
+		print("[SimHelp iPhone WC] 已接收 Watch VoIP token；字符数=\(token.count)")
 #endif
         return true
     }

@@ -194,7 +194,7 @@ struct SamsungPairingView: View {
                         try await model.configureRemoteDirect(agentID: result.route.agentID, route: result.route)
                     } catch is CancellationError { throw CancellationError() }
                     catch {
-                        return "Android encrypted pairing is successful, but the public network control entrance has not passed device authentication and the domain name route is not saved. Please check the control port forwarding and try again in ‘Self-created domain name direct connection’: \\(error.localizedDescription)"
+                        return "安卓加密配对成功，但公网控制入口尚未通过设备身份验证，域名路由未保存。请检查控制端口转发，然后在‘自建域名直连’重试：\(error.localizedDescription)"
                     }
                     if !localPairingOnly { model.setCloudSignalingEnabled(true) }
                     return "The public domain name has been paired successfully, and the identities of the control portal and the device have been verified. Available when VoWLAN or Auto mode is selected and this device is selected; the audio port needs to be verified during an actual call."
@@ -453,7 +453,7 @@ struct RemoteDirectGuideView: View {
     private func portRow(_ title: String, external: String, target: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.headline)
-            Text("External port \\(external) → \\(target)")
+            Text("对外端口 \(external) → \(target)")
                 .font(.subheadline).foregroundStyle(.secondary)
                 .textSelection(.enabled)
         }

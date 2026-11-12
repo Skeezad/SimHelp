@@ -142,7 +142,7 @@ private struct PairedAndroidDeviceRows: View {
                         Image(systemName: "trash").padding(10)
                     }
                     .buttonStyle(.borderless)
-                    .accessibilityLabel("Delete \\(device.deviceName) pairing record")
+                    .accessibilityLabel("删除 \(device.deviceName) 配对记录")
                 }
             }
             Text("The current information will be re-read when reconnecting, and the number will not be saved in offline records.")
@@ -654,7 +654,7 @@ struct SimHelpSettingsView: View {
         .confirmationDialog("Forgot this device?",
             isPresented: Binding(get: { deletingDevice != nil }, set: { if !$0 { deletingDevice = nil } }),
             titleVisibility: .visible, presenting: deletingDevice) { device in
-            Button("Forgot \\(device.deviceName)", role: .destructive) {
+            Button("忘记 \(device.deviceName)", role: .destructive) {
                 deviceDeletionInProgress = true
                 Task {
                     defer { deviceDeletionInProgress = false }
@@ -972,7 +972,7 @@ struct SimHelpSettingsView: View {
                 ForEach(Array(record.endpoints.enumerated()), id: \.offset) { _, endpoint in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(endpoint.host).textSelection(.enabled)
-                        Text("control \\(endpoint.controlPort) · audio \\(endpoint.pcmPort) · \\(endpoint.tls == true ?"TLS" : "私网直连")")
+                        Text("控制 \(endpoint.controlPort) · 音频 \(endpoint.pcmPort) · \(endpoint.tls == true ? "TLS" : "私网直连")")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -1218,7 +1218,7 @@ struct SimHelpSettingsView: View {
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel(LiveActivityAgentOrder.isPinned(agent.id)
-                        ? "取消置顶 \(agent.deviceName)" : "Pin to top \\(agent.deviceName)")
+                        ? "取消置顶 \(agent.deviceName)" : "置顶 \(agent.deviceName)")
                     Button {
                         model.moveLiveActivityAgent(agent.id, by: -1)
                     } label: {
@@ -1234,7 +1234,7 @@ struct SimHelpSettingsView: View {
                     }
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel("Move down \\(agent.deviceName)")
+                    .accessibilityLabel("下移 \(agent.deviceName)")
                 }
             }
         } header: {
@@ -1406,7 +1406,7 @@ struct SimHelpSettingsView: View {
                 cloudSignalingEnabled = cloud
                 model.setCloudSignalingEnabled(cloud)
                 model.setConnectionMode(SimHelpConnectionMode(rawValue: raw) ?? .automatic)
-            } catch { pureLocalError = "Local exit not yet completed: \\(error.localizedDescription)" }
+            } catch { pureLocalError = "本地退出尚未完成：\(error.localizedDescription)" }
         }
     }
 
@@ -1466,7 +1466,7 @@ struct SimHelpSettingsView: View {
             .map(String.init)
             .filter { NetworkRoutePreferences.parse($0) == nil }
         guard invalid.isEmpty else {
-            networkPrefixError = "The network segment format is invalid: \\(invalid.joined(separator:"、"))"
+            networkPrefixError = "网段格式无效：\(invalid.joined(separator: "、"))"
             return
         }
         NetworkRoutePreferences.save(networkPrefixesText)
@@ -1483,7 +1483,7 @@ struct SimHelpSettingsView: View {
         case .connecting, .connected: return "Connecting"
         case .authenticating: return "Authenticating"
         case .ready: return "Certified"
-        case .failed(let message): return "Failure: \\(message)"
+        case .failed(let message): return "失败：\(message)"
         }
     }
 
@@ -1858,11 +1858,11 @@ final class FeedbackUploader {
         do {
             let (responseData, response) = try await RelayEgressGate.shared.send(request)
             guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-                return "Upload failed (HTTP \\( (response as? HTTPURLResponse)?.statusCode ?? 0))"
+                return "上传失败（HTTP \( (response as? HTTPURLResponse)?.statusCode ?? 0)）"
             }
             if let object = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
                let url = object["url"] as? String, !url.isEmpty {
-                return "Uploaded: \\(url)"
+                return "已上传：\(url)"
             }
             return "已上传到 Notion"
         } catch {

@@ -237,8 +237,8 @@ struct SimHelpLiveActivityWidget: Widget {
                 .accessibilityLabel("Switch to next page Android Agent")
             }
             Text(pages > 1
-                ? "Page \\(page + 1)/\\(pages) · Total \\(count) units"
-                : "Total \\(count) units")
+                ? "第 \(page + 1)/\(pages) 页 · 共 \(count) 台"
+                : "共 \(count) 台")
                 .font(.system(size: 9.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.52))
                 .lineLimit(1)
@@ -588,7 +588,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Switch Android Agent, total \\(state.pairedAgentCount ?? 0) units")
+            .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
         } else {
             pairedAgentCountView(state)
         }
@@ -599,7 +599,7 @@ struct SimHelpLiveActivityWidget: Widget {
     ) -> some View {
         Group {
             if let count = state.pairedAgentCount, count > 1 {
-                Text("\\(count) Taiwan")
+                Text("\(count) 台")
             } else {
                 Image(systemName: state.phase == .cloudStandby ? "icloud.fill" : "smartphone")
             }
@@ -626,7 +626,7 @@ struct SimHelpLiveActivityWidget: Widget {
                         .minimumScaleFactor(0.8)
                         .layoutPriority(1)
                     if let count = state.pairedAgentCount, count > 1 {
-                        Text("Total \\(count) units")
+                        Text("共 \(count) 台")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.white.opacity(0.52))
                             .fixedSize(horizontal: true, vertical: false)
@@ -646,7 +646,7 @@ struct SimHelpLiveActivityWidget: Widget {
                             .background(Color.white.opacity(0.10), in: Capsule())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Switch Android Agent, total \\(state.pairedAgentCount ?? 0) units")
+                        .accessibilityLabel("切换 Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
                     }
                 }
                 Text(agentDetailLine(state))
@@ -709,7 +709,7 @@ struct SimHelpLiveActivityWidget: Widget {
             }
         }
         .frame(height: 14)
-        .accessibilityLabel(dbm.map { "Signal \\($0) dBm" } ?? "信号未知")
+        .accessibilityLabel(dbm.map { "信号 \($0) dBm" } ?? "信号未知")
     }
 
     private func nonEmpty(_ value: String?) -> String? {
@@ -864,7 +864,7 @@ struct SimHelpLiveActivityWidget: Widget {
             return "\(state.phase.title) · \(transport.title)"
         case .standby:
             if let status = connectionStatusLine(state) { return status }
-            if let transport = state.transport { return "\\(transport.title) Online" }
+            if let transport = state.transport { return "\(transport.title) 在线" }
             return state.phase.title
         case .cloudStandby:
             return connectionStatusLine(state) ?? state.phase.title

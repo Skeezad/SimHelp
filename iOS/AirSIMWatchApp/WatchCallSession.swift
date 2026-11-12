@@ -126,7 +126,7 @@ final class WatchCallSession: NSObject, ObservableObject {
                 guard let self, self.dialRequestID == requestID else { return }
                 self.dialRequestID = nil
                 self.isDialing = false
-                self.errorMessage = "iPhone did not respond to dial request: \\(error.localizedDescription)"
+                self.errorMessage = "iPhone 未响应拨号请求：\(error.localizedDescription)"
                 self.abortCompanionDial(requestID)
             }
         })
@@ -169,7 +169,7 @@ final class WatchCallSession: NSObject, ObservableObject {
                     guard let self else { return }
                     self.isSendingAction = false
                     if let error {
-                        self.errorMessage = "CallKit failed to initiate the call: \\(error.localizedDescription)"
+                        self.errorMessage = "CallKit 无法发起呼叫：\(error.localizedDescription)"
                         self.abortCompanionDial(requestID)
                         self.publishLocalPhase(.ended)
                         self.voIPCall = nil
@@ -344,7 +344,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 		pendingWatchToken = token
 		pushStatus = "Watch VoIP registered, syncing iPhone…"
 #if DEBUG
-		print("[SimHelp Watch PushKit] token has been generated; number of bytes=\\(token.count), WC=\\(connectivity?.activationState.rawValue ?? -1)")
+		print("[SimHelp Watch PushKit] token 已生成；字节数=\(token.count)，WC=\(connectivity?.activationState.rawValue ?? -1)")
 #endif
         notifyCompanion(event: "watch_voip_registration", extra: [
             "watch_voip_token": token.map { String(format: "%02x", $0) }.joined(),
@@ -355,7 +355,7 @@ final class WatchCallSession: NSObject, ObservableObject {
     private func notifyCompanion(event: String, extra: [String: Any]) {
 		guard let connectivity, connectivity.activationState == .activated else {
 #if DEBUG
-			print("[SimHelp Watch WC] Waiting for activation; event=\\(event)")
+			print("[SimHelp Watch WC] 等待激活；event=\(event)")
 #endif
 			return
 		}
@@ -365,7 +365,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 			try connectivity.updateApplicationContext(payload)
 		} catch {
 #if DEBUG
-			print("[SimHelp Watch WC] updateApplicationContext 失败：\\(error.localizedDescription)")
+			print("[SimHelp Watch WC] updateApplicationContext 失败：\(error.localizedDescription)")
 #endif
 		}
 		connectivity.transferUserInfo(payload)
@@ -376,7 +376,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 			pushStatus = "Watch VoIP synced"
 		}
 #if DEBUG
-		print("[SimHelp Watch WC] 已发送；event=\\(event)，reachable=\\(connectivity.isReachable)，queued=\\(connectivity.outstandingUserInfoTransfers.count)")
+		print("[SimHelp Watch WC] 已发送；event=\(event)，reachable=\(connectivity.isReachable)，queued=\(connectivity.outstandingUserInfoTransfers.count)")
 #endif
     }
 
@@ -495,7 +495,7 @@ extension WatchCallSession: CXProviderDelegate {
                 DispatchQueue.main.async {
                     guard let self else { action.fail(); return }
                     if let error {
-                        self.errorMessage = "Watch voice connection failed: \\(error.localizedDescription)"
+                        self.errorMessage = "手表语音连接失败：\(error.localizedDescription)"
                         action.fail()
                         self.provider.reportCall(with: voIPCall.uuid, endedAt: Date(), reason: .failed)
                         if let requestID = self.activeDialRequestID { self.abortCompanionDial(requestID) }
@@ -582,7 +582,7 @@ extension WatchCallSession: CXProviderDelegate {
                             connect(voIPCall.media)
                         } else {
                             self.answering = false
-                            self.errorMessage = "Unable to obtain local audio route: \\(error.localizedDescription)"
+                            self.errorMessage = "无法取得本地音频路由：\(error.localizedDescription)"
                             action.fail()
                         }
                     }
@@ -678,7 +678,7 @@ extension WatchCallSession: WCSessionDelegate {
         if activationState == .activated {
 			let token = pendingWatchToken ?? pushRegistry.pushToken(for: .voIP)
 #if DEBUG
-			print("[SimHelp Watch WC] Activation completed; token=\\(token == nil ?"无" : "有") error=\(error?.localizedDescription ?? "无")")
+			print("[SimHelp Watch WC] 激活完成；token=\(token == nil ? "无" : "有") error=\(error?.localizedDescription ?? "无")")
 #endif
 			if let token { sendWatchToken(token) }
             if !session.receivedApplicationContext.isEmpty { receiveMirror(session.receivedApplicationContext) }

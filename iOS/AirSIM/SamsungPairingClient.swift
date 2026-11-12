@@ -96,7 +96,7 @@ final class SamsungPairingBrowser: ObservableObject {
                 case .waiting: self.stateText = "Please make sure iPhone and Android are on the same Wi-Fi or Android hotspot"
                 case .failed(let error):
                     self.stop()
-                    self.stateText = "LAN scan failed: \\(error.localizedDescription). Please check the local network permissions and scan again."
+                    self.stateText = "局域网扫描失败：\(error.localizedDescription)。请检查本地网络权限后重新扫描。"
                 case .cancelled: self.stop()
                 default: break
                 }
@@ -111,7 +111,7 @@ final class SamsungPairingBrowser: ObservableObject {
                 self.services = parsed
                 self.stateText = parsed.isEmpty
                     ? "正在等待安卓配对广播…"
-                    : "Found \\(parsed.count) devices to be paired"
+                    : "已发现 \(parsed.count) 台待配对设备"
             }
         }
         browser = active

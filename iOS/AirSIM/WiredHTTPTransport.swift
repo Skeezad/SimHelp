@@ -635,10 +635,10 @@ private enum WiredHTTPError: LocalizedError {
         switch self {
         case .invalidRequest: return "VoWLAN request format is invalid"
         case .wiredPathUnavailable: return "No available VoWLAN network path found"
-        case let .connectionFailed(message): return "VoWLAN connection failed: \\(message)"
+        case let .connectionFailed(message): return "VoWLAN 连接失败：\(message)"
         case .connectionClosed: return "VoWLAN connection is closed"
-        case let .sendFailed(message): return "VoWLAN request failed: \\(message)"
-        case let .receiveFailed(message): return "VoWLAN response reception failed: \\(message)"
+        case let .sendFailed(message): return "VoWLAN 请求发送失败：\(message)"
+        case let .receiveFailed(message): return "VoWLAN 响应接收失败：\(message)"
         case .timedOut: return "VoWLAN request timeout"
         case .responseTooLarge: return "VoWLAN response exceeds safe size limit"
         case .invalidResponse: return "Agent returned an invalid HTTP response"

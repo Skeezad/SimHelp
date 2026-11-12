@@ -339,7 +339,7 @@ struct DialPadView: View {
                                         )
                                         .foregroundStyle(.secondary)
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("Paired Android Agent · \\(pairedAgents.count)")
+                                            Text("已配对 Android Agent · \(pairedAgents.count)")
                                                 .font(.subheadline.weight(.semibold))
                                             Text(pairedAgents.count > 1 ? "Please select a dialing device" : "Select the device and check the dial-up link")
                                                 .font(.caption)
@@ -597,7 +597,7 @@ private struct DialPadCurrentAgentCard: View {
                 Spacer(minLength: 4)
 
                 if agentCount > 1 {
-                    Button("All \\(agentCount)", action: showAll)
+                    Button("全部 \(agentCount)", action: showAll)
                         .font(.caption.weight(.semibold))
                         .buttonStyle(.plain)
                         .foregroundStyle(.blue)
@@ -1715,7 +1715,7 @@ private struct MessageComposer: View {
                 }
                 .frame(maxWidth: 130, alignment: .trailing)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Recognized contact: \\(contact.name)")
+                .accessibilityLabel("已识别联系人：\(contact.name)")
             }
         }
         .padding(.horizontal, 16)
@@ -2488,7 +2488,7 @@ struct ActiveCallView: View {
         let status = moduleIsReachable ? "Module online" : "Module connecting"
         let signal = model.modemStatus?.signalDBM ?? model.cloudAgentStatus?.signalDBM
         guard let signal else { return status }
-        return "\\(status) · Signal \\(signal) dBm"
+        return "\(status) · 信号 \(signal) dBm"
     }
 
     private var audioStatusColor: Color {
@@ -2694,7 +2694,7 @@ private struct DTMFKeypadView: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(DTMFGlassButtonStyle())
-                        .accessibilityLabel("Send DTMF \\(digit)")
+                        .accessibilityLabel("发送 DTMF \(digit)")
                     }
                 }
             }

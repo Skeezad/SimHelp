@@ -312,8 +312,8 @@ struct AgentVerboseTraceView: View {
                     }
 
                     LabeledContent("Agent channel", value: model.agentState)
-                    LabeledContent("local link", value: "\\(model.localEntries.count) 条")
-                    LabeledContent("Agent event", value: "\\(model.agentEvents.count) 条")
+                    LabeledContent("local link", value: "\(model.localEntries.count) 条")
+                    LabeledContent("Agent event", value: "\(model.agentEvents.count) 条")
                     Button {
                         Task { await model.readAgent() }
                     } label: {

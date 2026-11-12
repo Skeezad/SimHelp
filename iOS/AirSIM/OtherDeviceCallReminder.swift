@@ -47,7 +47,7 @@ final class OtherDeviceCallReminderController: ObservableObject {
             guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else { return }
             guard lookup(reminder.key)?.stillRinging == true else { return }
             let content = UNMutableNotificationContent()
-            content.title = "Other Android calls · \\(reminder.deviceName)"
+            content.title = "其他安卓来电 · \(reminder.deviceName)"
             content.body = reminder.number ?? "Number not provided"
             content.userInfo = reminder.userInfo
             content.sound = nil // Never mix a second ringtone into the current call.

@@ -179,7 +179,7 @@ struct RootView: View {
                 Button {
                     _ = model.openOtherDeviceCallNotification(reminder.userInfo)
                 } label: {
-                    Label("\\(reminder.deviceName) Incoming calls · Other devices \\(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
+                    Label("\(reminder.deviceName) 来电 · 其他设备 \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
                         .font(.subheadline.weight(.semibold)).padding(12)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))

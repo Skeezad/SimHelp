@@ -52,7 +52,7 @@ struct AppUpdateSheet: View {
                 List {
                     Section { Text(result.message) }
                     if let candidate = result.candidate {
-                        Section("Public version \\(candidate.version)(\\(candidate.build))") {
+                        Section("公开版本 \(candidate.version)（\(candidate.build)）") {
                             Text(candidate.notes.isEmpty ? "Please check the release page for update instructions." : candidate.notes)
                                 .textSelection(.enabled)
                             Link("View the GitHub release notes", destination: candidate.page)
@@ -171,7 +171,7 @@ struct NewFeatureOnboardingView: View {
                     Text("SimHelp")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("Version \\(version)")
+                    Text("版本 \(version)")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.55))
                 }

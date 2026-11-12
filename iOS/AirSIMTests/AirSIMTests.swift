@@ -5433,7 +5433,7 @@ final class MinimalSMSAndHangupTests: XCTestCase {
             let incoming = try IncomingRemoteSMS(userInfo: ["event": "incoming_sms", "delivery_id": "fixture",
                 "sender": "fixture", "content": "synthetic", "timestamp": "2026-11-03T09:00:00Z", "sim_slot": slot])
             XCTAssertEqual(incoming.message.simSlot, slot)
-            XCTAssertEqual(incoming.message.simDeliveryLabel, "received in \\(slot)")
+            XCTAssertEqual(incoming.message.simDeliveryLabel, "接收于 \(slot)")
             let data = try JSONEncoder().encode(incoming.message)
             XCTAssertEqual(try JSONDecoder().decode(SMSMessage.self, from: data).simSlot, slot)
         }
