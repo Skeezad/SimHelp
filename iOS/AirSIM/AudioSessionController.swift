@@ -163,7 +163,7 @@ enum SpeakerRoutePolicy {
     }
 }
 
-/// 管理 iPhone/iPad 内置麦克风, 扬声器 and  VoWLAN Network PCM 之间的双向CallsAudio. 
+/// 管理 iPhone/iPad 内置麦克风、扬声器与 VoWLAN 网络 PCM 之间的双向Calls音频。
 @MainActor
 final class AudioSessionController: ObservableObject {
     @Published private(set) var active = false
@@ -207,7 +207,7 @@ final class AudioSessionController: ObservableObject {
 
     init(toneOutput: (any CallToneOutput)? = nil) {
         self.toneOutput = toneOutput ?? SystemCallToneOutput()
-        // CallKit, 蓝牙 or systemControl中心都can 能改变输出路by,  by 钮Status必须跟随真实会话. 
+        // CallKit、蓝牙或系统控制中心都可能改变输出路由，按钮状态必须跟随真实会话。
         routeChangeObserver = NotificationCenter.default.addObserver(
             forName: AVAudioSession.routeChangeNotification,
             object: AVAudioSession.sharedInstance(),
@@ -234,7 +234,7 @@ final class AudioSessionController: ObservableObject {
         if #available(iOS 17.0, *) {
             return await AVAudioApplication.requestRecordPermission()
         }
-        // iOS 16 仍 via  AVAudioSession 的回调接口Please 求录音Permission. 
+        // iOS 16 仍通过 AVAudioSession 的回调接口请求录音权限。
         return await withCheckedContinuation { continuation in
             AVAudioSession.sharedInstance().requestRecordPermission { granted in
                 continuation.resume(returning: granted)
@@ -264,7 +264,7 @@ final class AudioSessionController: ObservableObject {
         guard !Task.isCancelled, isCurrent() else { return false }
         guard permission else {
             recordStartup("failed")
-            errorMessage = "Microphone permission is required for two-way calls"
+            errorMessage = "需要麦克风权限才能进行双向Calls"
             return false
         }
 
@@ -278,7 +278,7 @@ final class AudioSessionController: ObservableObject {
             if !sessionAlreadyActive {
                 try session.setActive(true, options: .notifyOthersOnDeactivation)
             }
-            // 每次Calls默认use 听筒; 仅在用户主动开启扬声器后覆盖输出路by. 
+            // 每次Calls默认使用听筒；仅在用户主动开启扬声器后覆盖输出路由。
             if !receiveOnly || sessionAlreadyActive {
                 try session.overrideOutputAudioPort(requestedSpeakerOverride ? .speaker : .none)
             }
@@ -287,7 +287,7 @@ final class AudioSessionController: ObservableObject {
             let engine = AVAudioEngine()
             let player = AVAudioPlayerNode()
             let encoder = VoicePCMEncoder()
-            // 用户can 能在Permission弹窗 or Audio启动期间Switch静音, new 编码器必须继承期望Status. 
+            // 用户可能在权限弹窗或音频启动期间Switch静音，新编码器必须继承期望状态。
             encoder.setMuted(muted)
             let earlyLease = earlyMedia.map(EarlyMediaLeaseState.init)
             let handshakeSequence = PCMHandshakeSequence {
@@ -368,7 +368,7 @@ final class AudioSessionController: ObservableObject {
             transportReady = false
             routeDescription = route.isOverlayHost ? "Connecting VPN Direct Voice…"
                 : (route.requiresWiFi ? "Connecting VoWLAN Voice…" : "Connecting module network voice...")
-            diagnosticDescription = "\(DeviceContext.displayName) PCM has not yet shaken hands"
+            diagnosticDescription = "\(DeviceContext.displayName) PCM 尚未握手"
             moduleDiagnosticDescription = ""
             errorMessage = nil
             if !receiveOnly { retryRequestedSpeakerRoute() }
@@ -379,12 +379,12 @@ final class AudioSessionController: ObservableObject {
             Task { await AgentVerboseTraceRecorder.shared.recordFailure(category: "vowlan", phase: phase, error: error) }
             recordStartup("failed")
             deactivate()
-            errorMessage = "Unable to enable CallsAudio: \(error.localizedDescription)"
+            errorMessage = "无法启用Calls音频：\(error.localizedDescription)"
             return false
         }
     }
 
-    /// CallKit 执行动作前先声明语音类别, 真正激活bysystem随后回调 didActivate. 
+    /// CallKit 执行动作前先声明语音类别，真正激活由系统随后回调 didActivate。
     func prepareForCallKit() throws {
         resetSpeakerPreferenceForNewCall()
         try configureCallAudioSession()
@@ -397,7 +397,7 @@ final class AudioSessionController: ObservableObject {
         encoder?.setMuted(muted)
     }
 
-    /// 根据模块CallsStatus播放Incoming call铃声 or 呼出等待音, 接通后立即让位给Network PCM. 
+    /// 根据模块Calls状态播放Incoming call铃声或呼出等待音，接通后立即让位给网络 PCM。
     func updateCallTone(for call: CallRecord?) {
         guard !active else {
             // Keep the existing waiting tone until the early stream actually
@@ -407,7 +407,7 @@ final class AudioSessionController: ObservableObject {
             return
         }
         guard let call else {
-            // Settings页试听not 属于CallsStatus, 空闲轮询not 能提前将它停止. 
+            // 设置页试听不属于Calls状态，空闲轮询不能提前将它停止。
             if case .preview? = currentCallTone { return }
             if case .outgoingEnded? = currentCallTone { return }
             stopCallTone()
@@ -431,7 +431,7 @@ final class AudioSessionController: ObservableObject {
         return earlyMediaLease.renew(grant, now: Int64(Date().timeIntervalSince1970 + earlyMediaClockOffset))
     }
 
-    /// Settings页只试听一遍, not 能像真实Incoming call一样无限循环. 
+    /// 设置页只试听一遍，不能像真实Incoming call一样无限循环。
     func previewRingtone(named ringtone: String) {
         guard !active else { return }
         playCallTone(.preview(ringtone), looping: false)
@@ -456,12 +456,12 @@ final class AudioSessionController: ObservableObject {
         endedToneTask?.cancel(); endedToneTask = nil
         let hadTone = currentCallTone != nil
         currentCallTone = nil
-        // 空闲轮询会反复调用本方法; No铃声时绝not 能停用后台待机正在use 的会话. 
-        // CallKit 的 didActivate 回调之后, Audio会话 also 只能bysystem释放. 
+        // 空闲轮询会反复调用本方法；没有铃声时绝不能停用后台待机正在使用的会话。
+        // CallKit 的 didActivate 回调之后，音频会话也只能由系统释放。
         toneOutput.stop(deactivateSession: hadTone && deactivateSession && !active && !sessionActivationManagedByCallKit)
     }
 
-    /// SwitchCurrentCalls的输出路by; 关闭扬声器时交still 给system选择听筒 or already connect的蓝牙device. 
+    /// SwitchCurrentCalls的输出路由；关闭扬声器时交还给系统选择听筒或已连接的蓝牙设备。
     func setSpeakerEnabled(_ enabled: Bool) {
         requestedSpeakerOverride = enabled
         speakerRoutePending = !SpeakerRoutePolicy.routeMatches(
@@ -487,8 +487,8 @@ final class AudioSessionController: ObservableObject {
         refreshRouteDescription()
     }
 
-    /// CallKit 的 didActivate  and  AVAudioEngine 真正启动之间存在短暂窗口. 
-    /// 在窗口内Switch会得到 OSStatus -50, 因此把用户选择保留并做有界重试. 
+    /// CallKit 的 didActivate 与 AVAudioEngine 真正启动之间存在短暂窗口。
+    /// 在窗口内Switch会得到 OSStatus -50，因此把用户选择保留并做有界重试。
     func retryRequestedSpeakerRoute() {
         let requested = requestedSpeakerOverride
         speakerRouteRetryTask?.cancel()
@@ -508,8 +508,8 @@ final class AudioSessionController: ObservableObject {
                     try AVAudioSession.sharedInstance().overrideOutputAudioPort(
                         requested ? .speaker : .none
                     )
-                    // API 返回只表示system接受了Please 求; currentRoute 的Switch是异步的. 
-                    // 等待一个很短的确认窗口, 再 as 真实输出端口决定 by 钮高亮. 
+                    // API 返回只表示系统接受了请求；currentRoute 的Switch是异步的。
+                    // 等待一个很短的确认窗口，再以真实输出端口决定按钮高亮。
                     try? await Task.sleep(for: .seconds(SpeakerRoutePolicy.routeVerificationDelay))
                     guard !Task.isCancelled, requestedSpeakerOverride == requested else { return }
                     refreshRouteDescription()
@@ -520,33 +520,33 @@ final class AudioSessionController: ObservableObject {
                         return
                     }
                 } catch {
-                    // Audio会话still 没by CallKit 激活时保留选择, 等待下一次短重试. 
+                    // 音频会话还没由 CallKit 激活时保留选择，等待下一次短重试。
                 }
             }
             refreshRouteDescription()
         }
     }
 
-    /// 合并模块侧 D5/D6 统计, 避免把 TCP 连通误判 for 实际存在语音. 
+    /// 合并模块侧 D5/D6 统计，避免把 TCP 连通误判为实际存在语音。
     func updateModuleDiagnostics(_ config: MaVoAudioHostConfig) {
         var details: [String] = []
         if let routeError = config.routeError, !routeError.isEmpty {
-            details.append("Module voice bridge Error: \(routeError)")
+            details.append("模块语音桥Error：\(routeError)")
         } else if config.routeRunning != true {
             details.append("Module PCM not started")
         } else if config.routeSessionReady == false || config.routeReady == false {
             details.append("Module voice routing is not ready yet")
         }
         if let statistics = config.statistics, config.statisticsAvailable == true {
-            details.append("D5 ↑ \(statistics.uplinkBytes) B Peak \(statistics.uplinkPeak) · D6 ↓ \(statistics.downlinkBytes) B Peak \(statistics.downlinkPeak)")
+            details.append("D5 ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · D6 ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)")
         } else if config.routeRunning == true {
             details.append("Module PCM has been started, waiting for the first statistical period")
         }
-        // 只显示最后一 items日志, 保留真正的启动失败原因, 同时避免Calls页被日志刷屏. 
+        // 只显示最后一条日志，保留真正的启动失败原因，同时避免Calls页被日志刷屏。
         if let lastLog = config.logTail?.last, !lastLog.isEmpty {
-            details.append("Log: \(lastLog)")
+            details.append("日志：\(lastLog)")
         }
-        moduleDiagnosticDescription = details.joined(separator: "; ")
+        moduleDiagnosticDescription = details.joined(separator: "；")
     }
 
     func deactivate(preservingSharedSession: Bool = false) {
@@ -579,7 +579,7 @@ final class AudioSessionController: ObservableObject {
         if !preservingSharedSession {
             do {
                 let session = AVAudioSession.sharedInstance()
-                // 清除本次Calls的外放覆盖, 避免影响下一次Calls or 其他 App. 
+                // 清除本次Calls的外放覆盖，避免影响下一次Calls或其他 App。
                 try session.overrideOutputAudioPort(.none)
                 if !callKitManagedSession, !CallKitController.shared.audioSessionIsActive {
                     try session.setActive(false, options: .notifyOthersOnDeactivation)
@@ -607,13 +607,13 @@ final class AudioSessionController: ObservableObject {
         } catch {
             toneOutput.stop(deactivateSession: !sessionActivationManagedByCallKit)
             currentCallTone = nil
-            errorMessage = "Unable to play Calls tone: \(error.localizedDescription)"
+            errorMessage = "无法播放Calls提示音：\(error.localizedDescription)"
         }
     }
 
     private func configureCallAudioSession() throws {
         let session = AVAudioSession.sharedInstance()
-        // voiceChat use  VoiceProcessingIO,  for 听筒 and 扬声器Calls提供system回声消除. 
+        // voiceChat 使用 VoiceProcessingIO，为听筒和扬声器Calls提供系统回声消除。
         try session.setCategory(
             .playAndRecord,
             mode: .voiceChat,
@@ -628,7 +628,7 @@ final class AudioSessionController: ObservableObject {
         case .connected:
             recordStartup("pcm_ready")
             transportReady = true
-            diagnosticDescription = "\(DeviceContext.displayName) PCM has handshake, waiting for voice data"
+            diagnosticDescription = "\(DeviceContext.displayName) PCM 已握手，等待语音数据"
             refreshRouteDescription()
             errorMessage = nil
         case let .statistics(statistics):
@@ -646,20 +646,20 @@ final class AudioSessionController: ObservableObject {
                 "output_route": AVAudioSession.sharedInstance().currentRoute.outputs.map(\.portType.rawValue).joined(separator: ",")]
             Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "vowlan",
                 phase: "media_statistics", title: "VoWLAN actual audio status", fields: fields) }
-            let handshakeState = transportReady ? "PCM has shaken hands" : "PCM has not shaken hands yet"
+            let handshakeState = transportReady ? "PCM 已握手" : "PCM has not shaken hands yet"
             let playbackDrops = playbackQueue.droppedFrames > 0
-                ? "· Playback drops \(playbackQueue.droppedFrames) frames"
+                ? " · 播放丢弃\(playbackQueue.droppedFrames)帧"
                 : ""
-            diagnosticDescription = "\(DeviceContext.displayName) \(handshakeState) ↑ \(statistics.uplinkBytes) B Peak \(statistics.uplinkPeak) · ↓ \(statistics.downlinkBytes) B Peak \(statistics.downlinkPeak) \(playbackDrops)"
+            diagnosticDescription = "\(DeviceContext.displayName) \(handshakeState) ↑\(statistics.uplinkBytes)B 峰值\(statistics.uplinkPeak) · ↓\(statistics.downlinkBytes)B 峰值\(statistics.downlinkPeak)\(playbackDrops)"
             refreshRouteDescription()
         case let .status(message):
-            // connectStatus单独显示, 避免把“尚未握手”误读成模块already 经拒绝握手. 
-            diagnosticDescription = "\(DeviceContext.displayName) PCM: \(message)"
+            // 连接状态单独显示，避免把“尚未握手”误读成模块已经拒绝握手。
+            diagnosticDescription = "\(DeviceContext.displayName) PCM：\(message)"
         case let .failed(message):
             recordStartup("failed")
             transportReady = false
             routeDescription = "Internet voice not connected"
-            diagnosticDescription = "\(DeviceContext.displayName) PCM connection failed: \(message)"
+            diagnosticDescription = "\(DeviceContext.displayName) PCM 连接失败：\(message)"
             errorMessage = message
         case .closed:
             transportReady = false
@@ -670,7 +670,7 @@ final class AudioSessionController: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         let input = session.currentRoute.inputs.map { "\($0.portName)[\($0.portType.rawValue)]" }.joined(separator: ", ")
         let output = session.currentRoute.outputs.map { "\($0.portName)[\($0.portType.rawValue)]" }.joined(separator: ", ")
-        let inputs = session.availableInputs?.map(\.portName).joined(separator: ", ") ?? "none"
+        let inputs = session.availableInputs?.map(\.portName).joined(separator: ", ") ?? "无"
         let routedToSpeaker = session.currentRoute.outputs.contains { $0.portType == .builtInSpeaker }
         if speakerEnabled != routedToSpeaker {
             speakerEnabled = routedToSpeaker
@@ -679,8 +679,8 @@ final class AudioSessionController: ObservableObject {
             requestedSpeaker: requestedSpeakerOverride,
             currentRouteIsSpeaker: routedToSpeaker
         )
-        routeDescription = receiveOnly ? "Only accepts → \(output.isEmpty ?"无输出" : output)"
-            : "\(input.isEmpty ? "无输入" : input) ↔ Network PCM ↔ \(output.isEmpty ? "无输出": output) (available input: \(inputs) )"
+        routeDescription = receiveOnly ? "仅接收 → \(output.isEmpty ? "无输出" : output)"
+            : "\(input.isEmpty ? "无输入" : input) ↔ 网络 PCM ↔ \(output.isEmpty ? "无输出" : output)（可用输入：\(inputs)）"
         IPhoneCloudCallSession.shared.recordAudioRoute(output.isEmpty ? "unknown" : output)
     }
 
@@ -790,7 +790,7 @@ struct PCMFrameAccumulator {
     }
 }
 
-/// Calls等待阶段use 的声音类型; 关联值同时用于检测用户是否Switch了Incoming call铃声. 
+/// Calls等待阶段使用的声音类型；关联值同时用于检测用户是否Switch了Incoming call铃声。
 private enum CallTone: Equatable {
     case incoming(String)
     case outgoingWaiting
@@ -813,7 +813,7 @@ private enum CallTone: Equatable {
     }
 }
 
-/// 运行时合成短促, 无版权依赖的 PCM 铃声, 并封装 for  AVAudioPlayer can 读取的 WAV. 
+/// 运行时合成短促、无版权依赖的 PCM 铃声，并封装为 AVAudioPlayer 可读取的 WAV。
 private enum SynthesizedCallTone {
     private struct Segment {
         let frequencies: [Double]
@@ -844,7 +844,7 @@ private enum SynthesizedCallTone {
                 let wave = segment.frequencies.reduce(0.0) {
                     $0 + sin(2 * .pi * $1 * time)
                 } / Double(segment.frequencies.count)
-                // 每段两端加入 10 ms 淡入淡出, 避免波形截断产生爆音. 
+                // 每段两端加入 10 ms 淡入淡出，避免波形截断产生爆音。
                 let edge = min(index, sampleCount - index - 1)
                 let envelope = envelopeSamples > 0
                     ? min(1, Double(edge) / Double(envelopeSamples))
@@ -863,7 +863,7 @@ private enum SynthesizedCallTone {
                     .silence(0.08), Segment(frequencies: [440], duration: 0.2, amplitude: 0.3)]
         }
         if case .outgoingWaiting = tone {
-            // 425 Hz, 1 秒响 4 秒停, 接近国内常见呼叫等待节奏. 
+            // 425 Hz、1 秒响 4 秒停，接近国内常见呼叫等待节奏。
             return [
                 Segment(frequencies: [425], duration: 1.0, amplitude: 0.34),
                 .silence(4.0),
@@ -924,7 +924,7 @@ private enum SynthesizedCallTone {
     }
 }
 
-/// 维护低延迟 TCP 字节流; 每次connect尝试都生成new 的认证握手. 
+/// 维护低延迟 TCP 字节流；每次连接尝试都生成新的认证握手。
 final class NetworkPCMTransport: @unchecked Sendable {
     enum Event: Sendable {
         case connected
@@ -960,7 +960,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
     private var lastFailureMessage = ""
 
     private static let acknowledgement = Data("AIRSIMREADY".utf8)
-    // 模块first加载语音驱动, ACDB 校basis and  D4 route session 最坏requires约 35 秒. 
+    // 模块首次加载语音驱动、ACDB 校准和 D4 route session 最坏需要约 35 秒。
     private static let coldStartRetryWindowNanoseconds: UInt64 = 45_000_000_000
 
     init(
@@ -1025,7 +1025,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 self.queue.async {
                     guard !self.stopped, self.generation == attempt else { return }
                     if let error {
-                        self.retryOrFail("Microphone uplink transmission failed: \(error.localizedDescription)", attempt: attempt)
+                        self.retryOrFail("麦克风上行发送失败：\(error.localizedDescription)", attempt: attempt)
                         return
                     }
                     self.uplinkBytes += UInt64(pcm.count)
@@ -1057,8 +1057,8 @@ final class NetworkPCMTransport: @unchecked Sendable {
             self.queue.async {
                 guard !self.stopped, self.generation == attempt else { return }
                 let interfaces = path.availableInterfaces.map { String(describing: $0.type) }.joined(separator: ",")
-                let route = path.status == .satisfied ? "Available" : "Not available"
-                self.onEvent(.status("PCM Network path \(route):\(interfaces.isEmpty?"Unknown接口" : interfaces)"))
+                let route = path.status == .satisfied ? "Available" : "不可用"
+                self.onEvent(.status("PCM 网络路径\(route)：\(interfaces.isEmpty ? "Unknown接口" : interfaces)"))
             }
         }
         connection.stateUpdateHandler = { [weak self, weak connection] state in
@@ -1069,8 +1069,8 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 case .ready:
                     self.sendHandshake(connection, attempt: attempt)
                 case let .waiting(error):
-                    // NWConnection 在模块 helper 冷启动时会短暂报告 POSIX 61; 
-                    // 这是can 恢复Status, not 能把底层Error原样暴露成Calls失败. 
+                    // NWConnection 在模块 helper 冷启动时会短暂报告 POSIX 61；
+                    // 这是可恢复状态，不能把底层Error原样暴露成Calls失败。
                     self.onEvent(.status(self.transientStatus(for: error)))
                 case let .failed(error):
                     self.retryOrFail(error.localizedDescription, attempt: attempt, allowFallback: !self.usesSystemRouting)
@@ -1094,7 +1094,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
         do {
             handshake = try handshakeSequence.next()
         } catch {
-            retryOrFail("PCM authentication handshake generation failed: \(error.localizedDescription)", attempt: attempt)
+            retryOrFail("PCM 认证握手生成失败：\(error.localizedDescription)", attempt: attempt)
             return
         }
         connection.send(content: handshake, completion: .contentProcessed {
@@ -1130,7 +1130,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 }
                 data.removeFirst(Self.acknowledgement.count)
                 self.readyForPCM = true
-                // 每次成功握手都重new 开启恢复窗口, 避免长Calls在first 45 秒窗口后断线即永久静音. 
+                // 每次成功握手都重新开启恢复窗口，避免长Calls在首次 45 秒窗口后断线即永久静音。
                 self.deadline = DispatchTime.now().uptimeNanoseconds
                     + Self.coldStartRetryWindowNanoseconds
                 self.onEvent(.connected)
@@ -1167,8 +1167,8 @@ final class NetworkPCMTransport: @unchecked Sendable {
         downlinkBytes += UInt64(data.count)
         downlinkPeak = max(downlinkPeak, Self.peak(of: data))
         emitStatisticsIfNeeded()
-        // 一次 Network.framework 回调中的完整 20 ms 帧合并后再跨到主线程, 
-        // 避免每个小帧各创建一个 MainActor task 造成播放schedule抖动. 
+        // 一次 Network.framework 回调中的完整 20 ms 帧合并后再跨到主线程，
+        // 避免每个小帧各创建一个 MainActor task 造成播放调度抖动。
         if let batch = pcmAccumulator.append(data) { onPCM(batch) }
     }
 
@@ -1206,15 +1206,15 @@ final class NetworkPCMTransport: @unchecked Sendable {
         connection?.cancel()
         connection = nil
         if allowFallback && !fallbackAttempted {
-            // 本地 Wi-Fi 路径失败时放宽接口筛选, 但not 改变目标地址; 
-            // 远程/overlay 地址already 经走system路by, not requires这一步. 
+            // 本地 Wi-Fi 路径失败时放宽接口筛选，但不改变目标地址；
+            // 远程/overlay 地址已经走系统路由，不需要这一步。
             fallbackAttempted = true
             onEvent(.status("Wi-Fi path connection failed, retrying PCM"))
             queue.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.startAttempt() }
             return
         }
         if !stopped, DispatchTime.now().uptimeNanoseconds < deadline {
-            // connect拒绝通常只表示模块语音桥still 在启动; 保留重试, 但not 显示 NWError. 
+            // 连接拒绝通常只表示模块语音桥还在启动；保留重试，但不显示 NWError。
             onEvent(.status(transientStatus(for: message)))
             queue.asyncAfter(deadline: .now() + 0.25) { [weak self] in
                 self?.startAttempt()
@@ -1224,7 +1224,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
         }
     }
 
-    /// 将启动阶段的底层connectError压缩 for 用户can 理解的can 恢复Status. 
+    /// 将启动阶段的底层连接Error压缩为用户可理解的可恢复状态。
     private func transientStatus(for error: NWError) -> String {
         transientStatus(for: error.localizedDescription)
     }
@@ -1245,7 +1245,7 @@ struct NetworkPCMStatistics: Sendable {
     let downlinkPeak: Int
 }
 
-/// 对麦克风做语音带限 and 线性降采样, 输出模块requires的 8 kHz PCM16LE. 
+/// 对麦克风做语音带限与线性降采样，输出模块需要的 8 kHz PCM16LE。
 final class VoicePCMEncoder: @unchecked Sendable {
     private let lock = NSLock()
     private var conditioner = VoiceCaptureConditioner()
@@ -1300,7 +1300,7 @@ final class VoicePCMEncoder: @unchecked Sendable {
     }
 }
 
-/// 两级低通避免降采样混叠, 高通去除直流 and 桌面低频振动. 
+/// 两级低通避免降采样混叠，高通去除直流与桌面低频振动。
 private struct VoiceCaptureConditioner {
     private var sampleRate = 0.0
     private var previousInput: Float = 0

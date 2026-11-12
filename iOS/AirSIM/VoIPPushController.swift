@@ -17,8 +17,8 @@ enum VoIPPushPayloadError: LocalizedError {
         case .unsupportedEvent: return "Not a valid call push"
         case .missingCallID: return "Incoming call notification is missing call_id"
         case .invalidCallUUID: return "Incoming call notification lacks valid call_uuid"
-        case .invalidVirtualCall: return "The virtual incoming call lacks valid local broadcast content"
-        case .expired: return "Incoming call push has expired"
+        case .invalidVirtualCall: return "虚拟Incoming call缺少有效的本地播报内容"
+        case .expired: return "Incoming call推送已经过期"
         }
     }
 }
@@ -31,11 +31,11 @@ struct IncomingVoIPCall: Equatable, Sendable {
     let number: String?
     let callerName: String?
     let expiresAt: Date?
-    /// Dashboard 虚拟Incoming call仅use 本机 TTS, not 触发模块 AT  or public network PCM. 
+    /// Dashboard 虚拟Incoming call仅使用本机 TTS，不触发模块 AT 或公网 PCM。
     let isVirtual: Bool
     let isOutgoing: Bool
     let ttsText: String?
-    /// public network PCM 仅作 for  VoWLAN Control链路not can 用时的回退. 完整带签名地址只保存在内存中. 
+    /// 公网 PCM 仅作为 VoWLAN 控制链路不可用时的回退。完整带签名地址只保存在内存中。
     let authenticatedMediaURL: URL?
     let requestedMediaTransport: CloudMediaTransport
 
@@ -71,7 +71,7 @@ struct IncomingVoIPCall: Equatable, Sendable {
             }
             ttsText = candidateTTS
         } else {
-            // 普通Incoming call绝not 执行推送中夹带的文字, 防止真实电话路径被意外播报. 
+            // 普通Incoming call绝不执行推送中夹带的文字，防止真实电话路径被意外播报。
             ttsText = nil
         }
         authenticatedMediaURL = Self.authenticatedMediaURL(from: userInfo)
@@ -306,7 +306,7 @@ struct ConnectionModePresentation: Equatable, Sendable {
         if selectedMode == .localDual {
             return .init(mode: selected == .vowlan ? .vowlan : (selected == .bluetooth ? .bluetooth : .offline),
                 title: "VoWLAN+VoBLE",
-                status: vowlanOnline && bluetoothReady ? "Dual link ready" : (vowlanOnline ? "VoWLAN online only" : (bluetoothReady ? "VoBLE online only" : "No local route available")),
+                status: vowlanOnline && bluetoothReady ? "Dual link ready" : (vowlanOnline ? "VoWLAN online only" : (bluetoothReady ? "VoBLE online only" : "无可用本地路由")),
                 detail: "The same Android gives priority to VoWLAN, followed by VoBLE; the cloud is turned off, and the link is fixed during the call.")
         }
         if selected == .vowlan {
@@ -315,8 +315,8 @@ struct ConnectionModePresentation: Equatable, Sendable {
                 title: "VoWLAN",
                 status: "Connected",
                 detail: bluetoothReady || cloudOnline
-                    ? "Auto mode prioritizes using the same Wi-Fi / Samsung hotspot"
-                    : "Same Wi-Fi/Samsung Hotspot"
+                    ? "自动模式优先使用同一 Wi-Fi / 三星热点"
+                    : "同一 Wi-Fi / 三星热点"
             )
         }
         if selected == .bluetooth {
@@ -337,8 +337,8 @@ struct ConnectionModePresentation: Equatable, Sendable {
         }
         switch selectedMode {
         case .localDual:
-            return .init(mode: .offline, title: "VoWLAN+VoBLE", status: "No local route available",
-                         detail: "Waiting for VoWLAN or VoBLE certification for selected Android; Cloud is turned off")
+            return .init(mode: .offline, title: "VoWLAN+VoBLE", status: "无可用本地路由",
+                         detail: "等待所选Android的 VoWLAN 或 VoBLE 认证；Cloud已关闭")
         case .vowlan:
             return .init(mode: .vowlan, title: "VoWLAN", status: "Not reachable",
                          detail: "No paired and authenticated VoWLAN Agent found yet")
@@ -349,7 +349,7 @@ struct ConnectionModePresentation: Equatable, Sendable {
             return .init(mode: .cloud, title: "Cloud", status: "Not reachable",
                          detail: "Run cloud mode self-diagnosis to locate faults")
         case .automatic:
-            return .init(mode: .offline, title: "automatic", status: "No route available",
+            return .init(mode: .offline, title: "automatic", status: "无可用路由",
                          detail: "Looking for dial-up routes in order VoWLAN, VoBLE, cloud")
         }
     }
@@ -395,10 +395,10 @@ struct CloudSelfTestReport: Equatable, Sendable {
 
     static let initial = CloudSelfTestReport(
         steps: [
-            CloudSelfTestStep(id: .configuration, title: "Native configuration", state: .pending, detail: "Waiting for inspection"),
-            CloudSelfTestStep(id: .relayIdentity, title: "Relay identity", state: .pending, detail: "Waiting for inspection"),
-            CloudSelfTestStep(id: .deviceRegistration, title: "Device registration", state: .pending, detail: "Waiting for inspection"),
-            CloudSelfTestStep(id: .agentDirectory, title: "Agent record", state: .pending, detail: "Query the Android Agent registered by Relay"),
+            CloudSelfTestStep(id: .configuration, title: "Native configuration", state: .pending, detail: "等待检查"),
+            CloudSelfTestStep(id: .relayIdentity, title: "Relay identity", state: .pending, detail: "等待检查"),
+            CloudSelfTestStep(id: .deviceRegistration, title: "设备注册", state: .pending, detail: "等待检查"),
+            CloudSelfTestStep(id: .agentDirectory, title: "Agent 记录", state: .pending, detail: "查询 Relay 已登记的 Android Agent"),
             CloudSelfTestStep(id: .agentHeartbeat, title: "Agent heartbeat", state: .pending, detail: "Check the last 150 seconds of heartbeat"),
             CloudSelfTestStep(id: .commandRouting, title: "command routing", state: .pending, detail: "Check whether the Agent supports directed answer/hangup"),
         ],
@@ -595,11 +595,11 @@ enum CloudAgentStatusError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unavailable: return "Cloud status has not been configured yet"
-        case .invalidRelayURL: return "Relay must use HTTPS"
+        case .unavailable: return "Cloud状态尚未配置"
+        case .invalidRelayURL: return "Relay 必须使用 HTTPS"
         case .invalidResponse: return "Relay status response is invalid"
         case .requestLimitExceeded: return "Relay daily request quota has been exhausted (Cloudflare 1027), please wait for the quota to be reset or upgrade the Workers package"
-        case let .relayHTTP(statusCode): return "Relay request failed (HTTP \(statusCode))"
+        case let .relayHTTP(statusCode): return "Relay 请求失败（HTTP \(statusCode)）"
         }
     }
 }
@@ -617,7 +617,7 @@ enum CloudCommandError: LocalizedError {
         case .unavailable: return "The module cloud control channel has not been connected yet"
         case .invalidResponse: return "Relay returned an invalid cloud control response"
         case let .failed(message): return message
-        case .timeout: return "Timeout waiting for module to execute Cloud command"
+        case .timeout: return "等待模块执行Cloud命令超时"
         }
     }
 }
@@ -823,7 +823,7 @@ struct AgentPushStatus: Decodable, Sendable {
     }
 }
 
-/// 只向Settings页暴露can 诊断的凭据Status, not 泄露device密钥 or 完整 Push token. 
+/// 只向设置页暴露可诊断的凭据状态，不泄露设备密钥或完整 Push token。
 struct PushRegistrationReadiness: Equatable, Sendable {
     let deviceIdentityReady: Bool
     let voIPTokenReady: Bool
@@ -881,7 +881,7 @@ struct IncomingRemoteSMS: Equatable, Sendable {
     }
 
     private static func parseTimestamp(_ value: String) -> Date? {
-        // Agent use  RFC3339Nano; Foundation 的默认 ISO8601 格式not 接受小数秒. 
+        // Agent 使用 RFC3339Nano；Foundation 的默认 ISO8601 格式不接受小数秒。
         let fractional = ISO8601DateFormatter()
         fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let date = fractional.date(from: value) { return date }
@@ -910,7 +910,7 @@ struct IncomingRemoteSMS: Equatable, Sendable {
     }
 }
 
-/// PushKit 是被system挂起 or 终止后恢复 CallKit 的entry; 本地长轮询仍作 for 前台兜底. 
+/// PushKit 是被系统挂起或终止后恢复 CallKit 的入口；本地长轮询仍作为前台兜底。
 @MainActor
 final class VoIPPushController: NSObject {
     static let shared = VoIPPushController()
@@ -949,7 +949,7 @@ final class VoIPPushController: NSObject {
         guard CloudSignalingPreference.isEnabled() else { return }
         startActivityKitRegistration()
         if let registry {
-            // 重new 赋值会让system在授权 or NetworkStatus变化后再次核对现有凭据. 
+            // 重新赋值会让系统在授权或网络状态变化后再次核对现有凭据。
             registry.desiredPushTypes = [.voIP]
 #if DEBUG
             print("[SimHelp PushKit] VoIP token registration refreshed")
@@ -1291,7 +1291,7 @@ final class VoIPPushController: NSObject {
         )
     }
 
-    /// 只验证Control面, not 发起电话 or SMS: 本机凭据 → Relay  state  → 注册鉴权 → Agent 心跳. 
+    /// 只验证控制面，不发起电话或SMS：本机凭据 → Relay 身份 → 注册鉴权 → Agent 心跳。
     func runCloudSelfTest(
         onUpdate: @MainActor @escaping (CloudSelfTestReport) -> Void = { _ in }
     ) async -> CloudSelfTestReport {
@@ -1313,16 +1313,16 @@ final class VoIPPushController: NSObject {
         if !readiness.voIPTokenReady { missing.append("PushKit token is not ready") }
         if !readiness.alertTokenReady { missing.append("Notification token is not ready") }
         guard missing.isEmpty, let registration = currentRegistration(allowLocalMode: true) else {
-            report.fail(.configuration, detail: missing.isEmpty ? "Device registration information is incomplete" : missing.joined(separator: "; "))
+            report.fail(.configuration, detail: missing.isEmpty ? "设备注册信息不完整" : missing.joined(separator: "；"))
             onUpdate(report)
             return report
         }
         var configDetail = [
             "Checking method = manual self-test (without changing the connection mode)",
-            "device=\(readiness.deviceIDHint ??"already 生成")",
+            "设备=\(readiness.deviceIDHint ?? "已生成")",
             "APNs=\(readiness.environment)",
             "PushKit=\(readiness.voIPTokenReady ? "就绪" : "缺失")",
-            "Notification token=\(readiness.alertTokenReady ? "就绪" : "缺失")",
+            "通知Token=\(readiness.alertTokenReady ? "就绪" : "缺失")",
         ].joined(separator: "\n")
         if let host = URL(string: registration.relayURL)?.host {
             configDetail += "\nRelay=\(host)"
@@ -1337,7 +1337,7 @@ final class VoIPPushController: NSObject {
             report.update(.relayIdentity, state: .passed, detail: "airsim-push-relay · v\(version)")
             onUpdate(report)
         } catch {
-            report.fail(.relayIdentity, detail: "Relay unreachable or service identity mismatch: \(error.localizedDescription)")
+            report.fail(.relayIdentity, detail: "Relay 不可达或服务身份不匹配：\(error.localizedDescription)")
             onUpdate(report)
             return report
         }
@@ -1353,12 +1353,12 @@ final class VoIPPushController: NSObject {
                 detail: "Relay has accepted device registration; an attempt has been made to synchronize reachable gateways. If the gateway fails, please check Verbose's push registration log; this does not mean that the call has been delivered.")
             onUpdate(report)
         } catch {
-            report.fail(.deviceRegistration, detail: "Registration denied: \(error.localizedDescription)")
+            report.fail(.deviceRegistration, detail: "注册被拒绝：\(error.localizedDescription)")
             onUpdate(report)
             return report
         }
 
-        report.update(.agentDirectory, state: .running, detail: "Query the Android Agent registered by Relay")
+        report.update(.agentDirectory, state: .running, detail: "查询 Relay 已登记的 Android Agent")
         onUpdate(report)
         let status: CloudAgentStatus
         do {
@@ -1372,7 +1372,7 @@ final class VoIPPushController: NSObject {
             }
         } catch {
             report.fail(.agentDirectory,
-                detail: "Relay Status query timeout: \(error.localizedDescription) \n Cloud dial-up will still be attempted based on the bound/cached Agent, subject to the enqueue result.")
+                detail: "Relay 状态查询超时：\(error.localizedDescription)\nCloud拨号仍会按绑定/缓存的 Agent 尝试，以 enqueue 结果为准。")
             onUpdate(report)
             return report
         }
@@ -1390,7 +1390,7 @@ final class VoIPPushController: NSObject {
             return "  - \(name) · \(kind) · \(online) · \(routing)"
         }.joined(separator: "\n")
         report.update(.agentDirectory, state: .passed,
-            detail: "Registered \(status.agents.count) station \n \(directory) \n active=\(status.activeAgentID ??"none")")
+            detail: "已登记 \(status.agents.count) 台\n\(directory)\nactive=\(status.activeAgentID ?? "none")")
         onUpdate(report)
 
         report.update(.agentHeartbeat, state: .running, detail: "Check the last 150 seconds of heartbeats and versions")
@@ -1400,12 +1400,12 @@ final class VoIPPushController: NSObject {
                 "  - \($0.deviceName ?? $0.agentID) · \($0.cloudOnline ? "Online" : "超过90秒")"
             }.joined(separator: "\n")
             report.fail(.agentHeartbeat,
-                detail: "No valid heartbeat within 90 seconds \n Relay record: \n \(known) \n active=\(status.activeAgentID ??"none")")
+                detail: "90秒内无有效心跳\nRelay记录：\n\(known)\nactive=\(status.activeAgentID ?? "none")")
             onUpdate(report)
             return report
         }
         let version = status.agentVersion?.isEmpty == false ? status.agentVersion! : "Unknown version"
-        let cellular = status.cellularState?.isEmpty == false ? "· Cellular \(status.cellularState!)" : ""
+        let cellular = status.cellularState?.isEmpty == false ? " · 蜂窝 \(status.cellularState!)" : ""
         report.update(.agentHeartbeat, state: .passed,
             detail: "Agent \(version) Online\(cellular) · active=\(status.activeAgentID ?? "none")")
         onUpdate(report)
@@ -1421,12 +1421,12 @@ final class VoIPPushController: NSObject {
         }
         guard let routing = active.commandRoutingVersion, routing >= 1 else {
             report.fail(.commandRouting,
-                detail: "Agent \(active.deviceName ?? active.agentID) does not declare command_routing_version; the answer/hangup command cannot be directed")
+                detail: "Agent \(active.deviceName ?? active.agentID) 未声明 command_routing_version；接听/挂断命令无法定向")
             onUpdate(report)
             return report
         }
         report.update(.commandRouting, state: .passed,
-            detail: "Agent \(active.deviceName ?? active.agentID) supports command_routing=v \(routing)")
+            detail: "Agent \(active.deviceName ?? active.agentID) 支持 command_routing=v\(routing)")
         report.completedAt = Date()
         onUpdate(report)
         return report
@@ -1443,8 +1443,8 @@ final class VoIPPushController: NSObject {
         }
     }
 
-    /// 本地 VoWLAN not can 达时,  via  Relay Recents心跳判断 Agent 是否仍在public networkOnline. 
-    /// Please 求体中的device密钥仅在内存中编码, 并use not 落盘的临时 URLSession. 
+    /// 本地 VoWLAN 不可达时，通过 Relay Recents心跳判断 Agent 是否仍在公网Online。
+    /// 请求体中的设备密钥仅在内存中编码，并使用不落盘的临时 URLSession。
     func fetchCloudAgentStatus() async throws -> CloudAgentStatus {
         guard CloudModePreference.isEnabled() else {
             throw CloudAgentStatusError.unavailable
@@ -1452,7 +1452,7 @@ final class VoIPPushController: NSObject {
         return try await fetchCloudAgentStatusForDiagnostics()
     }
 
-    /// 检查单即使在public network PCM 关闭时 also requires读取心跳, 避免用户无法判断开启 items件. 
+    /// 检查单即使在公网 PCM 关闭时也需要读取心跳，避免用户无法判断开启条件。
     func fetchCloudAgentStatusForDiagnostics(allowLocalMode: Bool = false) async throws -> CloudAgentStatus {
         guard !RelayEgressGate.shared.isBlocked,
               !UserDefaults.standard.bool(forKey: RelayEgressGate.persistenceKey) else {
@@ -1661,7 +1661,7 @@ final class VoIPPushController: NSObject {
         return decoded
     }
 
-    /// 验证Current iPhone 到 Relay 的 HTTPS Control面, not 携带device密钥. 
+    /// 验证Current iPhone 到 Relay 的 HTTPS 控制面，不携带设备密钥。
     func relayHealthReachable() async -> Bool {
         guard let registration = currentRegistration(),
               (try? await fetchRelayHealthVersion(registration: registration)) != nil else { return false }
@@ -1731,8 +1731,8 @@ final class VoIPPushController: NSObject {
         let (data, response) = try await RelayEgressGate.shared.send(request)
 #if DEBUG
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {
-            let detail = String(data: data.prefix(1_024), encoding: .utf8) ?? "<non-text response>"
-            print("[SimHelp PushKit] Relay registration refused; HTTP= \(http.statusCode) body= \(detail)")
+            let detail = String(data: data.prefix(1_024), encoding: .utf8) ?? "<非文本响应>"
+            print("[SimHelp PushKit] Relay 注册被拒绝；HTTP=\(http.statusCode) body=\(detail)")
         }
 #endif
         guard let http = response as? HTTPURLResponse else {
@@ -1807,7 +1807,7 @@ final class VoIPPushController: NSObject {
         let defaults = UserDefaults.standard
         guard let secret = Self.loadOrCreateDeviceSecret() else {
 #if DEBUG
-            print("[SimHelp PushKit] Unable to create device key, skipping synchronization")
+            print("[SimHelp PushKit] 无法创建设备密钥，跳过同步")
 #endif
             return nil
         }
@@ -1881,7 +1881,7 @@ extension VoIPPushController: PKPushRegistryDelegate {
         let token = VoIPPushToken.hex(pushCredentials.token)
         Task { @MainActor [weak self] in
 #if DEBUG
-            print("[SimHelp PushKit] VoIP token updated; number of bytes = \(pushCredentials.token.count)")
+            print("[SimHelp PushKit] VoIP token 已更新；字节数=\(pushCredentials.token.count)")
 #endif
             self?.store(token: token)
         }
@@ -1894,7 +1894,7 @@ extension VoIPPushController: PKPushRegistryDelegate {
         guard type == .voIP else { return }
         Task { @MainActor [weak self] in
 #if DEBUG
-            print("[SimHelp PushKit] VoIP token has expired")
+            print("[SimHelp PushKit] VoIP token 已失效")
 #endif
             UserDefaults.standard.removeObject(forKey: Keys.token)
             PushDiagnostics.record("PushKit push token has expired", fields: ["failure_kind": "token_invalidated"])
@@ -1937,7 +1937,7 @@ extension VoIPPushController: PKPushRegistryDelegate {
             } catch {
                 PushDiagnostics.record("PushKit call parsing failed", error: error)
 #if DEBUG
-                print("[SimHelp PushKit] Discard invalid Incoming call push: \(error.localizedDescription)")
+                print("[SimHelp PushKit] 丢弃无效Incoming call推送：\(error.localizedDescription)")
 #endif
                 completion()
             }
