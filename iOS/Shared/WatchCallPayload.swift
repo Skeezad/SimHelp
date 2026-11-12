@@ -131,9 +131,9 @@ enum WatchVoIPPayloadError: LocalizedError {
         case .unsupportedEvent: return "Not a valid watch call push notification"
         case .missingCallID: return "The call notification on the watch is missing call_id"
         case .invalidCallUUID: return "The watch push notification lacks a valid call_uuid"
-        case .missingSecret: return "手表Incoming call推送缺少媒体密钥"
+        case .missingSecret: return "Watch Incoming call push missing media key"
         case .invalidMediaURL: return "Incoming call notification on watch lacks secure media address"
-        case .expired: return "手表Incoming call推送已经过期"
+        case .expired: return "The watch incoming call push has expired"
         case .invalidLocalMedia: return "The local voice parameters of the watch are invalid"
         }
     }
@@ -194,8 +194,8 @@ enum WatchCallMedia: Equatable, Sendable {
     case pendingLocal
 }
 
-/// Watch 直接接听所需的完整 VoIP 会话。媒体密钥只保存在内存中，
-/// 不进入 WatchConnectivity 状态镜像或通知正文。
+/// Watch 直接接听所requires 的完整 VoIP 会话. 媒体密钥只保存在内存中, 
+/// not 进入 WatchConnectivity Status镜像 or 通知正文. 
 struct WatchVoIPCall: Equatable, Sendable {
     let agentID: String?
     let generation: UInt64

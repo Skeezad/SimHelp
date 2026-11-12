@@ -7,13 +7,13 @@ enum VirtualCallTTSError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidPayload: return "虚拟Incoming call没有可播报的内容"
+        case .invalidPayload: return "The virtual incoming call has no content to broadcast."
         }
     }
 }
 
-/// Dashboard 虚拟Incoming call的本地媒体源。CallKit 仍负责系统Incoming call生命周期与音频路由，
-/// 但接听/挂断不会向模块发送 AT，也不会建立公网 PCM 会话。
+/// Dashboard 虚拟Incoming call的本地媒体源. CallKit 仍负责systemIncoming call生命周期 and Audio路by, 
+/// 但接听/挂断Does not向模块发送 AT,  also Does not建立public network PCM 会话. 
 @MainActor
 final class VirtualCallTTSController: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = VirtualCallTTSController()
@@ -40,7 +40,7 @@ final class VirtualCallTTSController: NSObject, AVSpeechSynthesizerDelegate {
         started = false
     }
 
-    /// 只能在 CXProvider 激活 CallKit 的 AVAudioSession 后开始播报。
+    /// 只能在 CXProvider 激活 CallKit 的 AVAudioSession 后开始播报. 
     func start() {
         guard !started, let text = call?.ttsText else { return }
         started = true
@@ -73,7 +73,7 @@ final class VirtualCallTTSController: NSObject, AVSpeechSynthesizerDelegate {
     ) {
         Task { @MainActor in
             guard VirtualCallTTSController.shared.isPrepared else { return }
-            // 播报Done等同远端结束；CallKit 收起后由 didDeactivate 清理媒体状态。
+            // 播报Done等同远端结束; CallKit 收起后by didDeactivate 清理媒体Status. 
             CallKitController.shared.reportCurrentCallEnded(reason: .remoteEnded)
         }
     }

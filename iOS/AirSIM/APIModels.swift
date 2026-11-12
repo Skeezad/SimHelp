@@ -1,9 +1,9 @@
 import Foundation
 import CryptoKit
 
-// MARK: - Calls与SMS
+// MARK: - Calls and SMS
 
-/// 模块侧返回的单次Calls记录。
+/// 模块侧返回的单次Callsrecord. 
 struct CallRecord: Codable, Equatable, Sendable, Identifiable {
     let id: String
     let index: Int
@@ -41,7 +41,7 @@ struct CallRecord: Codable, Equatable, Sendable, Identifiable {
     }
 }
 
-/// Calls轮询结果；额外音频诊断字段由专门接口读取。
+/// Calls轮询结果; 额外Audio诊断字段by专门接口读取. 
 struct CallStatus: Codable, Sendable {
     let active: CallRecord?
     let history: [CallRecord]?
@@ -60,7 +60,7 @@ struct CallStatus: Codable, Sendable {
     }
 }
 
-/// Agent 的统一事件快照；Calls和SMS共用一个长轮询，避免后台保持两套本地请求。
+/// Agent 的统一事件快照; Calls and SMS共用一个长轮询, 避免后台保持两套本地Please 求. 
 struct AgentEventStatus: Codable, Sendable {
     let revision: UInt64
     let smsRevision: UInt64
@@ -95,7 +95,7 @@ struct AgentHealth: Codable, Sendable {
     }
 }
 
-/// Relay Recents一次收到的 Agent 心跳。该对象只包含可展示状态，不包含设备密钥。
+/// Relay Recents一次收到的 Agent 心跳. 该对象只包含can 展示Status, not 包含device密钥. 
 struct CloudAndroidAgent: Codable, Equatable, Sendable, Identifiable {
     var battery: AndroidBatteryReading? = nil
     var commandRoutingVersion: Int? = nil
@@ -326,9 +326,9 @@ struct SMSMessage: Codable, Equatable, Sendable, Identifiable {
     let content: String
     let code: String?
     let timestamp: Date
-    /// 模块交付队列的稳定标识；也用于推送与本地同步之间的去重。
+    /// 模块交付队列的稳定标识;  also 用于推送 and 本地同步之间的去重. 
     var deliveryID: String?
-    /// 旧模块没有方向字段，缺省按收到的SMS展示；发送成功后由 App 标记为 outgoing。
+    /// 旧模块No方向字段, 缺省 by 收到的SMS展示; 发送成功后by App 标记 for  outgoing. 
     var direction: SMSDirection? = nil
     /// Known authenticated producer. Legacy records remain explicitly unscoped.
     var sourceAgentID: String? = nil
@@ -339,10 +339,10 @@ struct SMSMessage: Codable, Equatable, Sendable, Identifiable {
 
     var simDeliveryLabel: String {
         let line = simSlot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return "\(isOutgoing ? "通过" : "接收于") \(line.isEmpty ? "SIM Unknown" : line)"
+        return "\(isOutgoing ? " via " : "接收于") \(line.isEmpty ? "SIM Unknown" : line)"
     }
 
-    /// 新版 Agent 用 delivery_id 对齐 APNs 与本地同步；旧版仍回退到内容指纹。
+    /// new 版 Agent 用 delivery_id 对齐 APNs  and 本地同步; 旧版仍回退到content指纹. 
     var id: String {
         if let deliveryID, !deliveryID.isEmpty { return scopedIdentity("delivery:\(deliveryID)") }
         return scopedIdentity("\(sender)\u{0}\(timestamp.timeIntervalSince1970)\u{0}\(content)\u{0}\(direction?.rawValue ?? SMSDirection.incoming.rawValue)")
@@ -437,7 +437,7 @@ struct SIMIdentity: Codable, Sendable {
     enum CodingKeys: String, CodingKey { case phoneNumber = "phone_number" }
 }
 
-// MARK: - 模块、网络与定位
+// MARK: - 模块, Network and Location
 
 struct ModemStatus: Codable, Equatable, Sendable {
     let imei: String?
@@ -490,7 +490,7 @@ struct NetworkTrafficSnapshot: Codable, Sendable {
     }
 }
 
-/// Agent 从模块只读 sysfs 接口采样的电源与温度数据。
+/// Agent 从模块只读 sysfs 接口采样的电源 and 温度数据. 
 struct SystemPowerStatus: Codable, Sendable {
     let supported: Bool
     let readings: [SystemPowerReading]
@@ -532,7 +532,7 @@ struct CellularPolicyStatus: Codable, Sendable {
     enum CodingKeys: String, CodingKey { case forceOff = "force_off"; case services }
 }
 
-// MARK: - WRT Lite 路由与流量控制
+// MARK: - WRT Lite 路by and 流量Control
 
 struct RouterConfig: Codable, Equatable, Sendable {
     var internetAccess: Bool
@@ -887,7 +887,7 @@ struct ESIMPhonebookProbe: Codable, Sendable {
     }
 }
 
-// MARK: - 诊断与语音运行时
+// MARK: - 诊断 and 语音运行时
 
 struct AgentFeedbackSnapshot: Codable, Sendable {
     let bridgeLog: String?
@@ -1148,7 +1148,7 @@ struct MaVoAudioHostConfig: Codable, Sendable {
     }
 }
 
-/// 模块语音桥的累计 PCM 统计；峰值为 PCM16 绝对幅度，0 代表纯静音。
+/// 模块语音桥的累计 PCM 统计; 峰值 for  PCM16 绝对幅度, 0 mean纯静音. 
 struct VoicePCMStatistics: Codable, Sendable {
     let uplinkBytes: UInt64
     let uplinkFrames: UInt64

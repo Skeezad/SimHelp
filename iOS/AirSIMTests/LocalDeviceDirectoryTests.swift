@@ -207,7 +207,7 @@ final class LocalDeviceDirectoryTests: XCTestCase {
         XCTAssertFalse(PairedAndroidDeviceStore.records().contains { $0.id == id })
         try await directory.verifyPairing(agentID: id, endpoint: endpoint, credential: VoWLANCredential(secret: aSecret))
         model.rememberVerifiedLocalDevice(candidate)
-        XCTAssertEqual(PairedAndroidDeviceStore.records().first { $0.id == id }?.deviceName, "Android 手机")
+        XCTAssertEqual(PairedAndroidDeviceStore.records().first { $0.id == id }?.deviceName, "Android phone")
         PairedAndroidDeviceStore.remember(.init(id: id, deviceName: "Previously paired phone", agentKind: nil))
         model.rememberVerifiedLocalDevice(candidate)
         XCTAssertEqual(PairedAndroidDeviceStore.records().first { $0.id == id }?.deviceName, "Previously paired phone")

@@ -13,6 +13,7 @@ try:
     cache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
 except Exception:
     cache = {}
+cache = {k: v for k, v in cache.items() if k != v and not re.search(r"[\u3400-\u9fff]", v)}
 
 def should_translate(token):
     raw = token[1:-1]
@@ -37,7 +38,7 @@ def translate(token):
         cache[token] = token
     return token
 
-files = list(ROOT.rglob("*.swift"))
+files = [p for p in ROOT.rglob("*.swift") if p.name not in {"AppUpdateView.swift", "AirSIMSetupView.swift"}]
 tokens = set()
 for path in files:
     tokens.update(t for t in LITERAL.findall(path.read_text(encoding="utf-8")) if should_translate(t))

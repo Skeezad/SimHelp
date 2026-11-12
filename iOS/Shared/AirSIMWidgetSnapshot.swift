@@ -152,7 +152,7 @@ struct SimHelpWidgetSnapshot: Codable, Equatable, Sendable {
                   date: now.addingTimeInterval(-3600), incoming: true, missed: true)
         ], messages: [
             .init(agentID: "preview-galaxy", date: now.addingTimeInterval(-600), incoming: true,
-                  contentPreview: "快递已送达，请及时查收。")
+                  contentPreview: "The express has been delivered, please check it in time.")
         ], controls: .init(mode: "vowlan", modeTitle: "VoWLAN", nextMode: "bluetooth",
                           nextModeTitle: "Bluetooth", currentAgentID: "preview-galaxy",
                           nextAgentID: "preview-redmi", nextAgentName: "Redmi", blockedByCall: false))

@@ -63,8 +63,8 @@ final class AppUpdateController: ObservableObject {
             pendingUpdate = candidate.flatMap {
                 defaults.string(forKey: "airsim.app-update.notified") == $0.identity ? nil : $0
             }
-            status = candidate.map { "发现应用新版 \($0.version)（\($0.build)）" }
-                ?? "未发现比Current更新的公开应用版本"
+            status = candidate.map { "Discover new version of app \($0.version) ( \($0.build) )" }
+                ?? "No public app version newer than Current found"
             return AppUpdateResult(message: status, candidate: candidate)
         } catch is CancellationError {
             return nil

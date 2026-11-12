@@ -1,7 +1,7 @@
 import Foundation
 import CryptoKit
 
-/// 负责保存手机本地的Calls记录和SMS，不依赖模块是否Online。
+/// 负责保存手机本地的Callsrecord and SMS, not 依赖模块是否Online. 
 final class LocalHistoryStore {
     // Background push persistence and the foreground model use separate store instances.
     private static let messageLock = NSRecursiveLock()
@@ -53,8 +53,8 @@ final class LocalHistoryStore {
                 attributes: nil
             )
         } catch {
-            // 本地缓存不能阻塞Calls和SMS；后续写入失败时仍会继续记录日志。
-            Self.log("创建本地历史目录失败：\(error.localizedDescription)")
+            // 本地缓存not 能阻塞Calls and SMS; 后续写入失败时仍会继续record日志. 
+            Self.log("Failed to create local history directory: \(error.localizedDescription)")
         }
     }
 
@@ -209,7 +209,7 @@ final class LocalHistoryStore {
             try encoder.encode(state).write(to: messagesURL, options: [.atomic])
             return true
         } catch {
-            Self.log("写入SMS历史失败")
+            Self.log("Failed to write SMS history")
             return false
         }
     }
@@ -223,7 +223,7 @@ final class LocalHistoryStore {
         } catch CocoaError.fileReadNoSuchFile {
             return nil
         } catch {
-            Self.log("读取本地历史失败（\(url.lastPathComponent)）：\(error.localizedDescription)")
+            Self.log("Failed to read local history (\(url.lastPathComponent)): \(error.localizedDescription)")
             return nil
         }
     }
@@ -233,11 +233,11 @@ final class LocalHistoryStore {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
             let data = try encoder.encode(records)
-            // 原子写入先生成临时文件再替换目标，避免断电留下半个 JSON 文件。
+            // 原子写入先生成临时文件再替换目标, 避免断电留下半个 JSON 文件. 
             try data.write(to: url, options: [.atomic])
             return true
         } catch {
-            Self.log("写入本地历史失败（\(url.lastPathComponent)）：\(error.localizedDescription)")
+            Self.log("Failed to write local history (\(url.lastPathComponent)): \(error.localizedDescription)")
             return false
         }
     }

@@ -11,7 +11,7 @@ struct SimHelpLiveActivityBundle: WidgetBundle {
     }
 }
 
-/// 待机态保持极简，展开与锁屏态再呈现网络详情和Calls动作。
+/// 待机态保持极简, 展开 and 锁屏态再呈现Network详情 and Calls动作. 
 struct SimHelpLiveActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SimHelpCallActivityAttributes.self) { context in
@@ -195,9 +195,9 @@ struct SimHelpLiveActivityWidget: Widget {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // ActivityKit 在锁屏上已经提供系统级 Live Activity 容器。iOS 26 再给
-        // 根内容叠加 glassEffect 会生成第二个采样层，真机上可能只显示空玻璃壳。
-        // 透明 activityBackgroundTint 负责启用宿主 Liquid Glass，正文保持普通布局。
+        // ActivityKit 在锁屏上already 经提供system级 Live Activity 容器. iOS 26 再给
+        // 根content叠加 glassEffect 会生成第二个采样层, 真机上can 能只显示空玻璃壳. 
+        // 透明 activityBackgroundTint 负责启用宿主 Liquid Glass, 正文保持普通布局. 
     }
 
     private func usesAgentList(
@@ -237,8 +237,8 @@ struct SimHelpLiveActivityWidget: Widget {
                 .accessibilityLabel("Switch to next page Android Agent")
             }
             Text(pages > 1
-                ? "第 \(page + 1)/\(pages) 页 · 共 \(count) 台"
-                : "共 \(count) 台")
+                ? "Page \(page + 1) / \(pages) · Total \(count) units"
+                : "Total \(count) units")
                 .font(.system(size: 9.5, weight: .medium))
                 .foregroundStyle(.white.opacity(0.52))
                 .lineLimit(1)
@@ -254,7 +254,7 @@ struct SimHelpLiveActivityWidget: Widget {
         let pages = LiveActivityAgentPaging.pageCount(for: count)
         if pages > 1 {
             let page = LiveActivityAgentPaging.pageIndex(state.agentPage, for: count)
-            return "第 \(page + 1)/\(pages) 页 · 右上角翻页"
+            return "Page \(page + 1) / \(pages) · Turn the page in the upper right corner"
         }
         return count > 1 ? "Tap the device to switch to the next dialing call" : "Android Agent List"
     }
@@ -284,7 +284,7 @@ struct SimHelpLiveActivityWidget: Widget {
         _ state: SimHelpCallActivityAttributes.ContentState
     ) -> [SimHelpCallActivityAttributes.ContentState.AgentSummary] {
         if let values = state.agents, !values.isEmpty {
-            // AppModel 已按“置顶固定 + 用户排序”排好序；每页最多 3 台。
+            // AppModel already  by “置顶固定 + 用户排序”排好序; 每页最多 3 台. 
             return LiveActivityAgentPaging.slice(values, requestedPage: state.agentPage)
         }
         guard let name = nonEmpty(state.agentDeviceName) else {
@@ -396,7 +396,7 @@ struct SimHelpLiveActivityWidget: Widget {
                 agentRowContent(agent, compact: compact)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(agent.name)，\(agent.isCurrent ? "Current设备" : "Switch到此设备")")
+            .accessibilityLabel("\(agent.name), \(agent.isCurrent ? "Currentdevice" : "Switch到此device")")
         } else {
             agentRowContent(agent, compact: compact)
         }
@@ -543,8 +543,8 @@ struct SimHelpLiveActivityWidget: Widget {
         }
     }
 
-    /// 展开态的设备名和连接状态已在顶部呈现；底部只保留一行补充信息，
-    /// 避免在系统限制的灵动岛高度里重复卡片并裁掉最后一行。
+    /// 展开态的device名 and connectStatusalready 在顶部呈现; 底部只保留一行补充信息, 
+    /// 避免在system限制的灵动岛高度里重复卡片并裁掉最后一行. 
     private func expandedAgentDetail(
         _ state: SimHelpCallActivityAttributes.ContentState
     ) -> some View {
@@ -588,7 +588,7 @@ struct SimHelpLiveActivityWidget: Widget {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Switch Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+            .accessibilityLabel("Switch Android Agent, total \(state.pairedAgentCount ?? 0) units")
         } else {
             pairedAgentCountView(state)
         }
@@ -599,7 +599,7 @@ struct SimHelpLiveActivityWidget: Widget {
     ) -> some View {
         Group {
             if let count = state.pairedAgentCount, count > 1 {
-                Text("\(count) 台")
+                Text("\(count) station")
             } else {
                 Image(systemName: state.phase == .cloudStandby ? "icloud.fill" : "smartphone")
             }
@@ -626,7 +626,7 @@ struct SimHelpLiveActivityWidget: Widget {
                         .minimumScaleFactor(0.8)
                         .layoutPriority(1)
                     if let count = state.pairedAgentCount, count > 1 {
-                        Text("共 \(count) 台")
+                        Text("Total \(count) units")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(.white.opacity(0.52))
                             .fixedSize(horizontal: true, vertical: false)
@@ -646,7 +646,7 @@ struct SimHelpLiveActivityWidget: Widget {
                             .background(Color.white.opacity(0.10), in: Capsule())
                         }
                         .buttonStyle(.plain)
-                        .accessibilityLabel("Switch Android Agent，共 \(state.pairedAgentCount ?? 0) 台")
+                        .accessibilityLabel("Switch Android Agent, total \(state.pairedAgentCount ?? 0) units")
                     }
                 }
                 Text(agentDetailLine(state))
@@ -804,7 +804,7 @@ struct SimHelpLiveActivityWidget: Widget {
         for state: SimHelpCallActivityAttributes.ContentState
     ) -> Color {
         if #available(iOSApplicationExtension 26.0, *) {
-            // 所有阶段让锁屏壁纸成为系统 Liquid Glass 的采样背景。
+            // 所有阶段让锁屏壁纸成 for system Liquid Glass 的采样背景. 
             return .clear
         }
         return Color(red: 0.012, green: 0.028, blue: 0.065)
@@ -904,7 +904,7 @@ private struct LiveActivityGlassButtonStyle: ViewModifier {
     }
 }
 
-/// 灵动岛外壳由系统绘制且不透明；渐变只作用于岛内的原生玻璃信息条。
+/// 灵动岛外壳bysystem绘制且not 透明; 渐变只作用于岛内的原生玻璃信息 items. 
 private struct ProgressiveIslandGlassSurface: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {

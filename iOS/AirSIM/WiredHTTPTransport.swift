@@ -72,7 +72,7 @@ enum LocalWiFiSubnet {
 enum VoWLANNetworkRoutePolicy {
     static func permitsDirectIPv4(_ host: String,
                                   custom: [NetworkRoutePreferences.Prefix] = NetworkRoutePreferences.stored()) -> Bool {
-        // 公网地址始终拒绝；内置私网加上用户在设置页追加的网段。
+        // public network地址始终拒绝; 内置私网加上用户在Settings页追加的网段. 
         NetworkRoutePreferences.permitsPrivateIPv4(host, custom: custom)
     }
     static func usesSystemRouting(host: String) -> Bool {
@@ -95,14 +95,14 @@ enum VoWLANNetworkRoutePolicy {
     }
 }
 
-/// 模块 HTTP 响应；传输层只保留上层解码和Error处理真正需要的字段。
+/// 模块 HTTP 响应; 传输层只保留上层解码 and Error处理真正requires的字段. 
 struct WiredHTTPResponse: Sendable {
     let statusCode: Int
     let body: Data
 }
 
-/// 使用 Network.framework 固定 VoWLAN 请求的网络路径：本地 Wi-Fi 子网强制 Wi-Fi，
-/// 远程局域网与 100.64/10 走系统路由（Tailscale/VPN）。
+/// use  Network.framework 固定 VoWLAN Please 求的Network路径: 本地 Wi-Fi 子网强制 Wi-Fi, 
+/// 远程局域网 and  100.64/10 走system路by（Tailscale/VPN）. 
 final class WiredHTTPTransport: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.jieden.airsim.wired-http", qos: .userInitiated)
 
@@ -273,7 +273,7 @@ private enum WiredHTTPBody {
     }
 }
 
-/// 单次请求使用独立 TCP 连接和 `Connection: close`，避免熄屏恢复后复用已失效的 Wi-Fi 路径。
+/// 单次Please 求use separate TCP connect and  `Connection: close`, 避免熄屏恢复后复用already 失效的 Wi-Fi 路径. 
 private final class WiredHTTPRequestOperation: @unchecked Sendable {
     private static let maximumResponseBytes = 32 * 1_024 * 1_024
     private static let uploadChunkBytes = 64 * 1_024
@@ -334,7 +334,7 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
 
     private func startOnQueue() {
         guard !finished else { return }
-        // NWConnection 的回调使用弱引用；请求结束前由操作自持有，避免局部变量离开作用域后提前释放。
+        // NWConnection 的回调use 弱引用; Please 求结束前by操作自持有, 避免局部变量离开作用域后提前释放. 
         keepAlive = self
 #if DEBUG
         connection.pathUpdateHandler = { [weak self] path in
@@ -369,7 +369,7 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
         }
         connection.start(queue: queue)
 
-        // 严格路径不匹配时连接可能一直 waiting；请求尚未发送，可安全交给上层决定是否回退。
+        // 严格路径not 匹配时connectcan 能一直 waiting; Please 求尚未发送, can 安全交给上层决定是否回退. 
         if let pathTimeout = WiredHTTPTransport.pathSetupTimeout(
             systemRouting: route.usesSystemRouting, requestTimeout: request.timeoutInterval
         ) {
@@ -393,9 +393,9 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
             connection.send(
                 content: header,
                 contentContext: .defaultStream,
-                // HTTP/1.1 已通过 Content-Length 声明请求体边界。这里不能把
-                // NWConnection stream 标记Done，否则 GET 会提前半关闭 TCP，
-                // Go 长轮询的 request.Context 会被取消并返回 200 空正文。
+                // HTTP/1.1 already  via  Content-Length 声明Please 求体边界. 这里not 能把
+                // NWConnection stream 标记Done, 否则 GET 会提前半关闭 TCP, 
+                // Go 长轮询的 request.Context 会被取消并返回 200 空正文. 
                 isComplete: false,
                 completion: .contentProcessed { [weak self] error in
                     guard let self else { return }
@@ -471,8 +471,8 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
         do {
             let data = try uploadHandle.read(upToCount: Self.uploadChunkBytes) ?? Data()
             if data.isEmpty {
-                // 文件长度已通过 Content-Length 声明，不发送 TCP FIN；服务端仍可
-                // 在同一连接上返回更新结果。
+                // 文件长度already  via  Content-Length 声明, not 发送 TCP FIN; 服务端仍can 
+                // 在同一connect上返回更new 结果. 
                 send(Data())
             } else {
                 send(data) { [weak self] in self?.sendNextFileChunk() }
@@ -510,7 +510,7 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
                 self.responseData.append(data)
             }
             if let error {
-                // 模块执行 ATD 时偶尔用 RST 结束连接；若完整 HTTP 响应已经到达，应采用响应而非误报失败。
+                // 模块执行 ATD 时偶尔用 RST 结束connect; 若完整 HTTP 响应already 经到达, 应采用响应而非误报失败. 
                 if let response = try? WiredHTTPResponseParser.parse(self.responseData) {
                     self.finish(.success(response))
                 } else {
@@ -541,7 +541,7 @@ private final class WiredHTTPRequestOperation: @unchecked Sendable {
 
 }
 
-/// 独立解析 HTTP/1.1 响应，便于对 Go Agent 的定长和分块响应做无网络测试。
+/// separate解析 HTTP/1.1 响应, 便于对 Go Agent 的定长 and 分块响应做无Network测试. 
 enum WiredHTTPResponseParser {
     static func parse(_ data: Data) throws -> WiredHTTPResponse {
         let separator = Data("\r\n\r\n".utf8)
@@ -635,10 +635,10 @@ private enum WiredHTTPError: LocalizedError {
         switch self {
         case .invalidRequest: return "VoWLAN request format is invalid"
         case .wiredPathUnavailable: return "No available VoWLAN network path found"
-        case let .connectionFailed(message): return "VoWLAN 连接失败：\(message)"
+        case let .connectionFailed(message): return "VoWLAN connection failed: \(message)"
         case .connectionClosed: return "VoWLAN connection is closed"
-        case let .sendFailed(message): return "VoWLAN 请求发送失败：\(message)"
-        case let .receiveFailed(message): return "VoWLAN 响应接收失败：\(message)"
+        case let .sendFailed(message): return "VoWLAN request failed: \(message)"
+        case let .receiveFailed(message): return "VoWLAN response reception failed: \(message)"
         case .timedOut: return "VoWLAN request timeout"
         case .responseTooLarge: return "VoWLAN response exceeds safe size limit"
         case .invalidResponse: return "Agent returned an invalid HTTP response"

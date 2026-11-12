@@ -63,7 +63,7 @@ enum DeviceCallRoutingError: LocalizedError, Equatable {
         case .unavailable: return "The selected Android has no available dial-up link and will not switch to another device"
         case .noSelection: return "There are multiple Android devices online. Please select the device you want to use on the dialing page first."
         case .busy: return "The current call has not ended yet. Incoming calls from other devices will only remind you."
-        case .stale: return "此Calls已结束或已失效"
+        case .stale: return "This call has ended or expired"
         case .unsupportedPeer: return "The Android version does not yet support call receipts with clear device ownership, please update the corresponding App/Agent."
         }
     }

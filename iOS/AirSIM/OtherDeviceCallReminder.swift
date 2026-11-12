@@ -47,7 +47,7 @@ final class OtherDeviceCallReminderController: ObservableObject {
             guard [.authorized, .provisional, .ephemeral].contains(settings.authorizationStatus) else { return }
             guard lookup(reminder.key)?.stillRinging == true else { return }
             let content = UNMutableNotificationContent()
-            content.title = "其他AndroidIncoming call · \(reminder.deviceName)"
+            content.title = "Other AndroidIncoming call · \(reminder.deviceName)"
             content.body = reminder.number ?? "Number not provided"
             content.userInfo = reminder.userInfo
             content.sound = nil // Never mix a second ringtone into the current call.
@@ -118,17 +118,17 @@ struct OtherDeviceCallSheet: View {
                     Text(reminder.deviceName).font(.headline)
                     Text(reminder.number ?? "Number not provided")
                     Text(model.cloudCallOwnsPrimaryPresentation
-                         ? "CurrentCloudCalls继续；请先结束CurrentCalls再接听"
+                         ? "CurrentCloudCalls continue; please end CurrentCalls before answering"
                          : (model.deviceCalls.active == nil
                             ? "Listening will use this device's local link"
-                            : "CurrentCalls继续；请先结束CurrentCalls再接听"))
+                            : "CurrentCalls continue; please end CurrentCalls before answering"))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-                Button("接听此设备", action: answer)
+                Button("Answer this device", action: answer)
                     .disabled(model.deviceCalls.active != nil || model.cloudCallOwnsPrimaryPresentation)
                 if let failure { Text(failure).foregroundStyle(.red) }
             }
-            .navigationTitle("其他设备Incoming call")
+            .navigationTitle("Incoming call from other devices")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }

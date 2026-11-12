@@ -83,14 +83,14 @@ actor AgentVerboseTraceRecorder {
         append(
             context,
             stage: .request,
-            detail: bodyBytes > 0 ? "发起请求 · body \(bodyBytes) B" : "Make a request"
+            detail: bodyBytes > 0 ? "Initiate a request · body \(bodyBytes) B" : "Make a request"
         )
         return context
     }
 
     func recordRoute(_ context: AgentVerboseTraceContext, route: String, attempt: Int, error: String? = nil) {
         guard enabled else { return }
-        var detail = "第 \(attempt) 次尝试 · \(route)"
+        var detail = "Attempt \(attempt) · \(route)"
         if let error, !error.isEmpty { detail += " · \(error)" }
         append(context, stage: .route, detail: detail)
     }
@@ -160,7 +160,7 @@ actor AgentVerboseTraceRecorder {
         entries.append(AgentVerboseTraceEntry(
             id: UUID(), traceID: "--------", timestamp: Date(),
             stage: phase == "failed" ? .failure : .event,
-            method: "AUDIO", path: "Calls音频启动", detail: "",
+            method: "AUDIO", path: "Calls audio start", detail: "",
             elapsedMilliseconds: elapsedMilliseconds.map { max(0, $0) },
             source: "APP", category: "call-audio", fields: fields
         ))

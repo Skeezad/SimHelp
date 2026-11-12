@@ -46,16 +46,6 @@ enum PhoneTab: String, CaseIterable, Identifiable {
         }
     }
 
-    // Reuse immutable symbol images when connection updates invalidate RootView.
-    // Keep titles and native hit targets independent of artwork size.
-    private static let tabImages: [PhoneTab: UIImage] = Dictionary(uniqueKeysWithValues:
-        allCases.map { tab in
-            (tab, UIImage(systemName: tab.icon, withConfiguration:
-                UIImage.SymbolConfiguration(pointSize: 20.57, weight: .regular, scale: .small)) ?? UIImage())
-        })
-
-    var tabImage: UIImage { Self.tabImages[self] ?? UIImage() }
-
     var tabTitle: String {
         switch self {
         case .recents: return "Recents"
@@ -66,8 +56,8 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 }
 
 
-/// 五个主要目的地使用系统 TabView；iOS 26 原生标签栏负责 Liquid Glass、
-/// 长按放大与选中态交互，避免分页手势和自绘按钮争抢横向滑动。
+/// 五个主要目的地use system TabView; iOS 26 原生标签栏负责 Liquid Glass, 
+/// 长 by 放大 and 选中态交互, 避免分页手势 and 自绘 by 钮争抢横向滑动. 
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: AppSettings
@@ -95,16 +85,12 @@ struct RootView: View {
                 TabView(selection: selectedTabBinding) {
                     DialPadView()
                         .tag(PhoneTab.dial)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.dial.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.dial.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.dial.tabTitle), systemImage: PhoneTab.dial.icon) }
 
 
                     RecentsView(onCall: dial, onMessage: composeMessage)
                         .tag(PhoneTab.recents)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.recents.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.recents.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.recents.tabTitle), systemImage: PhoneTab.recents.icon) }
 
                         .badge(SimHelpWidgetSnapshot.badgeText(model.unseenMissedCallIDs.count))
 
@@ -135,24 +121,18 @@ struct RootView: View {
                         }
                     }
                         .tag(PhoneTab.messages)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.messages.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.messages.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.messages.tabTitle), systemImage: PhoneTab.messages.icon) }
 
                         .badge(SimHelpWidgetSnapshot.badgeText(model.unreadMessageIDs.count))
 
                     ContactsView(onCall: dial, onMessage: composeMessage)
                         .tag(PhoneTab.contacts)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.contacts.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.contacts.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.contacts.tabTitle), systemImage: PhoneTab.contacts.icon) }
 
 
                     SimHelpSettingsView()
                         .tag(PhoneTab.settings)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.settings.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.settings.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.settings.tabTitle), systemImage: PhoneTab.settings.icon) }
 
                 }
                 // Keep navigation state, but remove the underlying native tab
@@ -179,7 +159,7 @@ struct RootView: View {
                 Button {
                     _ = model.openOtherDeviceCallNotification(reminder.userInfo)
                 } label: {
-                    Label("\(reminder.deviceName) Incoming call · 其他设备 \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
+                    Label("\(reminder.deviceName) Incoming call · Other devices \(model.otherDeviceCallReminders.count)", systemImage: "phone.badge.waveform")
                         .font(.subheadline.weight(.semibold)).padding(12)
                         .frame(maxWidth: .infinity)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -358,7 +338,7 @@ struct RootView: View {
     }
 }
 
-/// 浅色模式使用系统电话式纯白底；深色模式才绘制深蓝黑底部环境光。
+/// Light模式use system电话式纯白底; Dark模式才绘制深蓝黑底部环境光. 
 struct PhoneBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
 
@@ -383,7 +363,7 @@ struct PhoneBackdrop: View {
     }
 }
 
-/// 关键内容表面使用系统原生 Liquid Glass，旧系统回退为系统材质。
+/// 关键content表面use system原生 Liquid Glass, 旧system回退 for system材质. 
 struct PhoneCard: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -436,7 +416,7 @@ struct PhoneGlassSurface: ViewModifier {
     }
 }
 
-/// 自定义工具栏材质仅用于隐藏了系统共享背景的 ToolbarItem，确保始终只有一层玻璃。
+/// 自定义工具栏材质仅用于隐藏了system共享背景的 ToolbarItem, 确保始终只有一层玻璃. 
 private struct PhoneToolbarGlassMorph: ViewModifier {
     let id: String
     @Namespace private var glassNamespace
@@ -461,8 +441,8 @@ private struct PhoneToolbarGlassMorph: ViewModifier {
     }
 }
 
-/// iOS 26 隐藏导航栏自动生成的共享按钮背景，再使用上面的单层可变形玻璃；
-/// 旧系统继续交给 ToolbarItem 使用平台默认样式。
+/// iOS 26 隐藏导航栏Automatic生成的共享 by 钮背景, 再use 上面的单层can 变形玻璃; 
+/// 旧system继续交给 ToolbarItem use 平台默认样式. 
 @ToolbarContentBuilder
 func phoneMorphingToolbarItem<Content: View>(
     placement: ToolbarItemPlacement,
@@ -625,7 +605,7 @@ private struct AdaptiveMessagesView: View {
                     .id(sender)
             } else {
                 ContentUnavailableView("Select a conversation", systemImage: "message",
-                    description: Text("从左侧选择SMS，或新建一条SMS。"))
+                    description: Text("Select SMS from the left, or create a new SMS."))
             }
         }
         .navigationSplitViewStyle(.balanced)

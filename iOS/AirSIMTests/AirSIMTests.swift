@@ -252,7 +252,7 @@ final class CallKitNumberPresentationTests: XCTestCase {
     func testVirtualCallsStillUseTheirTitle() throws {
         let call = try IncomingVoIPCall(userInfo: [
             "event": "incoming_call", "call_id": "virtual-fixture", "call_uuid": UUID().uuidString,
-            "number": "+8613800138000", "caller_name": "测试通知", "virtual_call": true, "tts_text": "测试",
+            "number": "+8613800138000", "caller_name": "Test notification", "virtual_call": true, "tts_text": "test",
         ])
         let controller = CallKitController()
         controller.setEnabled(true)
@@ -260,8 +260,8 @@ final class CallKitNumberPresentationTests: XCTestCase {
         controller.reportIncomingPush(call, systemReport: { _, update, _ in
             reported = true
             XCTAssertEqual(update.remoteHandle?.type, .generic)
-            XCTAssertEqual(update.remoteHandle?.value, "测试通知")
-            XCTAssertEqual(update.localizedCallerName, "测试通知")
+            XCTAssertEqual(update.remoteHandle?.value, "Test notification")
+            XCTAssertEqual(update.localizedCallerName, "Test notification")
         }) { _ in }
         XCTAssertTrue(reported)
     }
@@ -285,8 +285,8 @@ final class CallKitNumberPresentationTests: XCTestCase {
     }
 
     func testNamesAndUnknownNumbersRemainDisplayable() {
-        let named = CallKitNumberPresentation.update(number: "13800138000", callerName: "测试联系人")
-        XCTAssertEqual(named.localizedCallerName, "测试联系人")
+        let named = CallKitNumberPresentation.update(number: "13800138000", callerName: "test contact")
+        XCTAssertEqual(named.localizedCallerName, "test contact")
         XCTAssertEqual(named.remoteHandle?.value, "13800138000")
         for number: String? in [nil, "", "   "] {
             let unknown = CallKitNumberPresentation.update(number: number, callerName: nil)
@@ -311,7 +311,7 @@ final class CallKitNumberPresentationTests: XCTestCase {
     }
 
     func testInvalidInternationalTextRemainsLiteral() {
-        for number in ["+", "++8613800138000", "+0123456789", "+8613800138000 ext 12", "+1234567890123456", "匿名Incoming call"] {
+        for number in ["+", "++8613800138000", "+0123456789", "+8613800138000 ext 12", "+1234567890123456", "Anonymous incoming call"] {
             let handle = CallKitNumberPresentation.handle(number: number)
             XCTAssertEqual(handle.type, .generic)
             XCTAssertEqual(handle.value, number)
@@ -325,7 +325,7 @@ final class ManualFeedbackPolicyTests: XCTestCase {
         for trigger in ["", "periodic", "error", "call_ended", "sms_sent", "sms_received", "crash", "startup", "MANUAL", " manual "] {
             XCTAssertFalse(FeedbackUploader.permitsUpload(trigger: trigger))
             let message = await FeedbackUploader.shared.upload(trigger: trigger, eventID: "fixture", api: nil, model: nil)
-            XCTAssertEqual(message, "自动反馈上传已关闭，请手动上传")
+            XCTAssertEqual(message, "Automatic feedback upload is turned off, please upload manually")
         }
     }
 
@@ -1264,13 +1264,13 @@ final class AudioGraphAndVerboseRegressionTests: XCTestCase {
 
     func testVerboseBLEOfflineNeedsNoAgentAPI() async {
         let recorder = AgentVerboseTraceRecorder(initiallyEnabled: true, maxEntries: 20, persistenceURL: nil)
-        await recorder.recordEvent(source: "ios", category: "voble", phase: "engine_ready", title: "蓝牙语音")
+        await recorder.recordEvent(source: "ios", category: "voble", phase: "engine_ready", title: "Bluetooth voice")
         let model = AgentVerboseTraceViewModel(api: nil, recorder: recorder)
         await model.refresh()
         XCTAssertFalse(model.canReadAgent)
         XCTAssertNil(model.errorMessage)
         XCTAssertEqual(model.localEntries.count, 1)
-        XCTAssertTrue(model.exportText.contains("蓝牙语音"))
+        XCTAssertTrue(model.exportText.contains("Bluetooth voice"))
         let document = AgentVerboseTextDocument(text: model.exportText)
         XCTAssertEqual(String(data: Data(document.text.utf8), encoding: .utf8), model.exportText)
     }
@@ -1340,7 +1340,7 @@ final class SamsungPairingDiscoveryTests: XCTestCase {
         browser.stop()
         browser.start()
         let ready = expectation(description: "current scan ready")
-        let readyObservation = browser.$stateText.filter { $0 == "正在等待Android配对广播…" }
+        let readyObservation = browser.$stateText.filter { $0 == "Waiting for Android pairing broadcast…" }
             .prefix(1).sink { _ in ready.fulfill() }
         current.stateUpdateHandler?(.ready)
         await fulfillment(of: [ready], timeout: 1)
@@ -1351,7 +1351,7 @@ final class SamsungPairingDiscoveryTests: XCTestCase {
         lateState?(.cancelled)
         await fulfillment(of: [staleUpdate], timeout: 0.1)
         lateObservation.cancel()
-        XCTAssertEqual(browser.stateText, "正在等待Android配对广播…")
+        XCTAssertEqual(browser.stateText, "Waiting for Android pairing broadcast…")
         XCTAssertEqual(current.starts, 1)
         XCTAssertEqual(old.cancels, 1)
     }
@@ -1362,7 +1362,7 @@ final class SamsungPairingDiscoveryTests: XCTestCase {
         let browser = SamsungPairingBrowser { _ in instances.removeFirst() }
         browser.start()
         let failed = expectation(description: "scan failure delivered")
-        let observation = browser.$stateText.filter { $0.hasPrefix("局域网扫描失败") }
+        let observation = browser.$stateText.filter { $0.hasPrefix("LAN scan failed") }
             .prefix(1).sink { _ in failed.fulfill() }
         old.stateUpdateHandler?(.failed(.posix(.ENETDOWN)))
         await fulfillment(of: [failed], timeout: 1)
@@ -3171,7 +3171,7 @@ final class SimHelpTests: XCTestCase {
 
     func testSMSFetchUsesReportingAgentAfterDiscoverySwitchesPhones() async throws {
         let samsung = AgentSMSInboxProbe(name: "Samsung", inbox: [SMSMessage(
-            sender: "10086", content: "来自三星", code: nil,
+            sender: "10086", content: "from Samsung", code: nil,
             timestamp: Date(timeIntervalSince1970: 1_791_448_212),
             deliveryID: "samsung-sms-1", direction: .incoming
         )])
@@ -3181,7 +3181,7 @@ final class SimHelpTests: XCTestCase {
             reportingAgent: samsung, discoveredAgent: xiaomi
         )
 
-        XCTAssertEqual(fetched.messages.map(\.content), ["来自三星"])
+        XCTAssertEqual(fetched.messages.map(\.content), ["from Samsung"])
         XCTAssertEqual(fetched.agent.name, "Samsung")
     }
 
@@ -4005,13 +4005,13 @@ final class SimHelpTests: XCTestCase {
         )
         XCTAssertEqual(
             VoBLEPairingRecovery.userMessage(for: "reconnect authentication failed"),
-            "两端 VoBLE 密钥不一致。请在 Android SimHelp → 设置 → VoBLE 认证中清除旧配对，再重新配对。"
+            "The VoBLE keys at both ends are inconsistent. Please clear the old pairing in Android SimHelp → Settings → VoBLE Authentication and pair again."
         )
         XCTAssertEqual(
             VoBLEPairingRecovery.userMessage(for: "peer is not paired"),
             "There is no corresponding VoBLE credential for Android. Please clear the old credentials for this machine and recheck the security code."
         )
-        XCTAssertEqual(VoBLEPairingRecovery.userMessage(for: "蓝牙配对失败"), "蓝牙配对失败")
+        XCTAssertEqual(VoBLEPairingRecovery.userMessage(for: "Bluetooth pairing failed"), "Bluetooth pairing failed")
     }
 
     func testVoBLEControlLedgerRejectsStaleResponseAndExpiresDeadline() {
@@ -4152,7 +4152,7 @@ final class SimHelpTests: XCTestCase {
     @MainActor
     func testVoWLANAgentRejectionDoesNotReplayDialThroughCloud() async {
         let local = OutgoingCallServiceProbe(
-            dialError: APIError.http(502, "Android Telecom 拒绝拨号")
+            dialError: APIError.http(502, "Android Telecom refused dialing")
         )
         var cloudAttempts = 0
 
@@ -4169,7 +4169,7 @@ final class SimHelpTests: XCTestCase {
         } catch APIError.http(let status, _) {
             XCTAssertEqual(status, 502)
         } catch {
-            XCTFail("预期保留 Agent HTTP Error，实际为 \(error)")
+            XCTFail("Expected to retain Agent HTTP Error, actually \(error)")
         }
 
         XCTAssertEqual(cloudAttempts, 0)
@@ -4541,7 +4541,7 @@ final class SimHelpTests: XCTestCase {
                 bluetoothOnline: false, isCurrent: false
             ),
             AndroidAgentPresentation(
-                id: "oneplus", deviceName: "一加 12", phoneNumber: "13800000001",
+                id: "oneplus", deviceName: "one plus 12", phoneNumber: "13800000001",
                 agentKind: "standalone", cloudOnline: false, vowlanOnline: false,
                 bluetoothOnline: true, isCurrent: true
             ),
@@ -4562,7 +4562,7 @@ final class SimHelpTests: XCTestCase {
 
         XCTAssertEqual(state.agents?.count, 3)
         XCTAssertEqual(state.agents?.filter(\.isCurrent).map(\.id), ["oneplus"])
-        XCTAssertEqual(state.agentDeviceName, "一加 12")
+        XCTAssertEqual(state.agentDeviceName, "one plus 12")
         XCTAssertEqual(state.agents?.first(where: { $0.id == "samsung" })?.transport, .vowlan)
         XCTAssertEqual(state.agents?.first(where: { $0.id == "oneplus" })?.transport, .bluetooth)
         XCTAssertEqual(state.agents?.first(where: { $0.id == "xiaomi" })?.transport, .cloud)
@@ -4893,7 +4893,7 @@ final class SimHelpWidgetTests: XCTestCase {
 
     func testRecentSummariesStayScopedAndOlderSnapshotsDecode() throws {
         let sample = SimHelpWidgetSnapshot.preview()
-        XCTAssertEqual(sample.latestMessage(for: "preview-galaxy")?.displayText, "快递已送达，请及时查收。")
+        XCTAssertEqual(sample.latestMessage(for: "preview-galaxy")?.displayText, "The express has been delivered, please check it in time.")
         XCTAssertNil(sample.latestMessage(for: "preview-redmi"))
         XCTAssertEqual(sample.latestCall(for: "preview-redmi")?.id, "example-2")
         XCTAssertNil(sample.latestCall(for: "unpaired"))
@@ -5433,7 +5433,7 @@ final class MinimalSMSAndHangupTests: XCTestCase {
             let incoming = try IncomingRemoteSMS(userInfo: ["event": "incoming_sms", "delivery_id": "fixture",
                 "sender": "fixture", "content": "synthetic", "timestamp": "2026-11-03T09:00:00Z", "sim_slot": slot])
             XCTAssertEqual(incoming.message.simSlot, slot)
-            XCTAssertEqual(incoming.message.simDeliveryLabel, "接收于 \(slot)")
+            XCTAssertEqual(incoming.message.simDeliveryLabel, "Received at \(slot)")
             let data = try JSONEncoder().encode(incoming.message)
             XCTAssertEqual(try JSONDecoder().decode(SMSMessage.self, from: data).simSlot, slot)
         }

@@ -1,8 +1,8 @@
 import Foundation
 import WatchConnectivity
 
-/// 镜像 iPhone Calls状态，并为 Watch 发起的公网呼叫代理设备认证与拨号命令。
-/// Watch 的 CallKit 和 PCM 仍在手表执行；媒体密钥仅经实时 WC 回复交接，不持久化。
+/// 镜像 iPhone CallsStatus, 并 for  Watch 发起的public network呼叫代理device认证 and 拨number命令. 
+/// Watch 的 CallKit  and  PCM 仍在手表执行; 媒体密钥仅经实时 WC 回复交接, not 持久化. 
 final class WatchCallCoordinator: NSObject, WCSessionDelegate {
     static let shared = WatchCallCoordinator()
 
@@ -49,7 +49,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             session.activate()
             self.session = session
 #if DEBUG
-			print("[SimHelp iPhone WC] 已请求激活；paired=\(session.isPaired) watchAppInstalled=\(session.isWatchAppInstalled)")
+			print("[SimHelp iPhone WC] Activation requested; paired= \(session.isPaired) watchAppInstalled= \(session.isWatchAppInstalled)")
 #endif
         }
     }
@@ -134,8 +134,8 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         if session.isReachable {
             session.sendMessage(dictionary, replyHandler: nil, errorHandler: nil)
         }
-        // 状态转移用后台队列保证手表 App 暂未运行时仍能在下次唤醒后收敛；
-        // 实时接听/拒接不使用队列，避免延迟动作误操作下一通电话。
+        // Status转移用后台队列保证手表 App 暂未运行时仍能在下次唤醒后收敛; 
+        // 实时接听/拒接not use 队列, 避免延迟动作误操作下一通电话. 
         session.transferUserInfo(dictionary)
     }
 
@@ -151,7 +151,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         error: Error?
     ) {
 #if DEBUG
-		print("[SimHelp iPhone WC] 激活Done；state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
+		print("[SimHelp iPhone WC] Activation completed; state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
 #endif
 		guard activationState == .activated else { return }
 		let context = session.receivedApplicationContext
@@ -255,12 +255,12 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
               CallKitController.shared.currentSystemCallUUID == nil,
               let model, !model.callLifecycleSnapshot.state.representsCall,
               model.deviceCallContext.reserveAdmission(requestID) else {
-            replyHandler(["ok": false, "error": "已有Calls或拨号任务正在进行"])
+            replyHandler(["ok": false, "error": "There are already Calls or dialing tasks in progress"])
             return
         }
         if cancelledWatchDialIDs.remove(requestID) != nil {
             model.deviceCallContext.releaseAdmission(requestID)
-            replyHandler(["ok": false, "error": "已取消拨号"])
+            replyHandler(["ok": false, "error": "Dial canceled"])
             return
         }
         pendingWatchDialID = requestID
@@ -277,7 +277,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                case let .vowlan(endpoint, credential) = owned.api.route {
                 if cancelledWatchDialIDs.contains(requestID) {
                     try? await model.callKitEnd(uuid: owned.route.systemUUID)
-                    replyHandler(["ok": false, "error": "已取消拨号"]); return
+                    replyHandler(["ok": false, "error": "Dial canceled"]); return
                 }
                 localWatchCall = LocalWatchCall(requestID: requestID, callID: owned.presentationID,
                     uuid: owned.route.systemUUID, api: owned.api, backendID: owned.backendID)
@@ -293,18 +293,18 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
             if let (api, pcmRoute) = await model.readyVoWLANRoute(),
                case let .vowlan(endpoint, credential) = pcmRoute {
                 guard !cancelledWatchDialIDs.contains(requestID) else {
-                    replyHandler(["ok": false, "error": "已取消拨号"])
+                    replyHandler(["ok": false, "error": "Dial canceled"])
                     return
                 }
                 try await api.dial(number: number, operationID: requestID)
                 guard let record = await waitForOutgoingCall(api: api, number: number) else {
                     try? await api.hangupCall()
-                    replyHandler(["ok": false, "error": "VoWLAN 未确认拨号状态"])
+                    replyHandler(["ok": false, "error": "VoWLAN dial-up status not confirmed"])
                     return
                 }
                 if cancelledWatchDialIDs.contains(requestID) {
                     try? await api.hangupCall(callID: record.id)
-                    replyHandler(["ok": false, "error": "已取消拨号"])
+                    replyHandler(["ok": false, "error": "Dial canceled"])
                     return
                 }
                 let uuid = UUID()
@@ -332,16 +332,16 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                 agents: status.agents.filter { PairedAndroidDeviceStore.permits($0.agentID) },
                 relayRoutingVersion: status.commandRoutingVersion)
             guard !cancelledWatchDialIDs.contains(requestID) else {
-                replyHandler(["ok": false, "error": "已取消拨号"])
+                replyHandler(["ok": false, "error": "Dial canceled"])
                 return
             }
-            // 没有可验证的本地 VoWLAN 时才回退公网 PCM。
+            // Nocan 验证的本地 VoWLAN 时才回退public network PCM. 
             let outgoing = try await VoIPPushController.shared.startCloudOutgoingCall(
                 number: number, target: target, operationID: requestID, mediaTransport: .legacyPCM, timeout: 15
             )
             guard !cancelledWatchDialIDs.contains(requestID) else {
                 await endAbandonedWatchCall(outgoing)
-                replyHandler(["ok": false, "error": "已取消拨号"])
+                replyHandler(["ok": false, "error": "Dial canceled"])
                 return
             }
             guard outgoing.requestedMediaTransport == .legacyPCM,
@@ -349,7 +349,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                   var components = URLComponents(url: authenticatedURL, resolvingAgainstBaseURL: false),
                   let secret = components.queryItems?.first(where: { $0.name == "token" })?.value else {
                 await endAbandonedWatchCall(outgoing)
-                replyHandler(["ok": false, "error": "Cloud未提供 Watch 可用的 PCM 音频"])
+                replyHandler(["ok": false, "error": "Cloud does not provide PCM audio available for Watch"])
                 return
             }
             components.queryItems = nil
@@ -565,14 +565,14 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
                         envelope: envelope, credentials: credentials
                     )
                     if final.status != "completed" || final.result?.ended != true {
-                        NSLog("[SimHelp Watch Dial] 模块未确认挂断：%@", final.error ?? final.status)
+                        NSLog("[SimHelp Watch Dial] Module unconfirmed hangup: %@", final.error ?? final.status)
                     }
                 } catch {
-                    NSLog("[SimHelp Watch Dial] 等待模块挂断确认失败：%@", error.localizedDescription)
+                    NSLog("[SimHelp Watch Dial] Failed to wait for module hang-up confirmation: %@", error.localizedDescription)
                 }
             }
         } catch {
-            // 已拨号但交接失败必须可诊断，不能悄悄遗留蜂窝Calls。
+            // already 拨number但交接失败必须can 诊断, not 能悄悄遗留蜂窝Calls. 
             NSLog("[SimHelp Watch Dial] Failed to cancel outgoing call: %@", error.localizedDescription)
         }
     }
@@ -634,7 +634,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
               !token.isEmpty, !bundleID.isEmpty else { return false }
         VoIPPushController.shared.storeWatchVoIPRegistration(token: token, bundleID: bundleID)
 #if DEBUG
-		print("[SimHelp iPhone WC] 已接收 Watch VoIP token；字符数=\(token.count)")
+		print("[SimHelp iPhone WC] Received Watch VoIP token; number of characters = \(token.count)")
 #endif
         return true
     }

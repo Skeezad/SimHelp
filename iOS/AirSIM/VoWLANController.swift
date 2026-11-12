@@ -60,7 +60,7 @@ enum RemoteDirectError: LocalizedError {
     case invalidAddress, callInProgress
     var errorDescription: String? {
         switch self {
-        case .invalidAddress: return "请填写有效域名（不含 https:// 或路径）及 1–65535 的控制、音频端口"
+        case .invalidAddress: return "Enter a valid domain without https:// or a path, plus Control and Audio ports from 1 to 65535."
         case .callInProgress: return "Please end the current call first, and then change the self-created domain name for direct connection."
         }
     }
@@ -291,8 +291,8 @@ enum VoWLANAvailability: Equatable, Sendable {
         return false
     }
 
-    /// 拨号动作会在真正发起前重新执行签名健康检查，因此 UI 只需确认该端点
-    /// 曾验证成功；不能用 10 秒的严格建链时效永久禁用拨号按钮。
+    /// 拨number动作会在真正发起前重new 执行签名健康检查, 因此 UI 只requires 确认该端点
+    /// 曾验证成功; not 能用 10 秒的严格建链时效永久禁用拨number by 钮. 
     var allowsCallAttempt: Bool { isOnlineForDisplay }
 }
 
@@ -302,7 +302,7 @@ enum ConnectionStatusHeadline {
         switch summary {
         case .localOnline: return L10n.t("online")
         case .localOnlineNoService: return "Online · Cellular No Service"
-        case .cloudOnly: return "CloudOnline · 网络重连中"
+        case .cloudOnly: return "CloudOnline · Network reconnecting"
         case .offline: return L10n.t("Offline")
         }
     }
@@ -331,7 +331,7 @@ struct ModuleConnectionPresentation: Equatable {
         if vowlanOnline {
             return Self(
                 title: "VoWLAN online",
-                routeTitle: "同一 Wi-Fi / 三星热点",
+                routeTitle: "Same Wi-Fi/Samsung Hotspot",
                 description: "VoWLAN is connected, the status will be automatically refreshed",
                 level: .online,
                 systemImage: "wifi"
@@ -340,20 +340,20 @@ struct ModuleConnectionPresentation: Equatable {
         switch summary {
         case .localOnline:
             return Self(
-                title: "Module online", routeTitle: "局域网直连",
+                title: "Module online", routeTitle: "LAN direct connection",
                 description: message ?? "The local network is connected and the status will be automatically refreshed.",
                 level: .online, systemImage: "checkmark.circle.fill"
             )
         case .localOnlineNoService:
             return Self(
-                title: "模块Online · 无服务", routeTitle: "Local network is connected",
+                title: "Module Online · No service", routeTitle: "Local network is connected",
                 description: message ?? "The local network is connected and the cellular network is automatically recovering",
                 level: .warning, systemImage: "antenna.radiowaves.left.and.right.slash"
             )
         case .cloudOnly:
             return Self(
                 title: "Cloud online", routeTitle: "Public network Relay",
-                description: message ?? "本地网络中断，模块仍可通过公网接收Incoming call和SMS",
+                description: message ?? "If the local network is interrupted, the module can still receive incoming calls and SMS through the public network.",
                 level: .cloud, systemImage: "icloud.fill"
             )
         case .offline:
@@ -380,7 +380,7 @@ enum VoWLANStatusCopy {
         switch availability {
         case .unpaired: return "Not paired"
         case .discovering: return "discovering"
-        case .discovered: return "已发现，正在验证"
+        case .discovered: return "Found, verifying"
         case .verified: return "VoWLAN ready"
         case let .unavailable(reason):
             return reason.contains("LAN is disconnected") ? "The LAN has been disconnected · Reverted to the cloud (next call)" : reason
@@ -398,7 +398,7 @@ enum VoWLANControllerError: LocalizedError {
         switch self {
         case .invalidAdvertisement: return "VoWLAN broadcast content is invalid"
         case .notDiscovered: return "Samsung VoWLAN not discovered yet"
-        case .notPaired: return "VoWLAN 尚未配对"
+        case .notPaired: return "VoWLAN not paired yet"
         case .authenticationFailed: return "VoWLAN authentication failed"
         }
     }
@@ -679,7 +679,7 @@ final class VoWLANController: ObservableObject {
         Task {
             await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "ios", category: "vowlan", phase: "browser_restarted",
-                title: "VoWLAN 浏览器已重建",
+                title: "VoWLAN browser has been rebuilt",
                 fields: ["generation": String(generation)]
             )
         }
@@ -980,7 +980,7 @@ final class VoWLANController: ObservableObject {
                     }
                 }
                 await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "vowlan",
-                    phase: "network_recovery_pending", title: "VoWLAN 尚未恢复，保留其他可用链路",
+                    phase: "network_recovery_pending", title: "VoWLAN has not been restored, other links remain available",
                     fields: ["revision": String(token)])
             } catch { /* Cancellation is normal on another network/mode transition. */ }
         }
@@ -1033,7 +1033,7 @@ final class VoWLANController: ObservableObject {
                   self.availability.endpoint == endpoint,
                   !self.availability.isOnlineForDisplay else { return }
             if self.verificationWatchdogAttempts >= 3 {
-                self.availability = .unavailable("VoWLAN 验证超时，请确认 iPhone 与Android处于同一 Wi-Fi")
+                self.availability = .unavailable("VoWLAN verification timed out, please make sure iPhone and Android are on the same Wi-Fi")
                 self.verificationWatchdogTask = nil
                 return
             }
@@ -1187,7 +1187,7 @@ final class VoWLANController: ObservableObject {
             endpointFailures[endpoint] = (failures, Date().addingTimeInterval(min(120, 5 * pow(2, Double(failures)))))
             await AgentVerboseTraceRecorder.shared.recordEvent(
                 source: "ios", category: "vowlan", phase: "probe_failed",
-                title: "VoWLAN 端点验证失败", detail: error.localizedDescription,
+                title: "VoWLAN endpoint authentication failed", detail: error.localizedDescription,
                 fields: ["host": endpoint.host, "control_port": String(endpoint.controlPort),
                          "pcm_port": String(endpoint.pcmPort)], isFailure: true)
             guard !Task.isCancelled, epoch == identityEpoch, discoveredEndpoint == endpoint,
@@ -1209,7 +1209,7 @@ final class VoWLANController: ObservableObject {
                 availability = .discovered(advertised, at: Date())
                 await AgentVerboseTraceRecorder.shared.recordEvent(
                     source: "ios", category: "vowlan", phase: "fallback",
-                    title: "VoWLAN Switch到 Android 通告的 Tailscale 地址",
+                    title: "VoWLAN Switch to Android advertised Tailscale address",
                     fields: ["host": advertised.host, "control_port": String(advertised.controlPort)]
                 )
                 guard !Task.isCancelled, epoch == identityEpoch, discoveredEndpoint == advertised,
@@ -1291,7 +1291,7 @@ final class VoWLANController: ObservableObject {
         return VoWLANDiscoveredAgent(
             id: record["agent_id"]?.isEmpty == false ? record["agent_id"]! : fallbackID,
             endpoint: endpoint,
-            deviceName: deviceName?.isEmpty == false ? deviceName! : "Android 手机",
+            deviceName: deviceName?.isEmpty == false ? deviceName! : "Android phone",
             manufacturer: record["manufacturer"],
             model: record["model"],
             phoneNumber: nil,

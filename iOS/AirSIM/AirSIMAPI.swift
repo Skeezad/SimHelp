@@ -38,7 +38,7 @@ enum SimHelpRoutePolicy {
     }
 }
 
-/// 统一封装模块代理 HTTP API；接口路径与 SimHelp Mac 版保持一致。
+/// 统一封装模块代理 HTTP API; 接口路径 and  SimHelp Mac 版保持一致. 
 protocol SimHelpHTTPTransport: Sendable {
     func send(_ request: URLRequest, uploadFileURL: URL?) async throws -> WiredHTTPResponse
 }
@@ -54,8 +54,8 @@ private actor OptionalAgentAPIs {
 }
 
 struct SimHelpAPI: Sendable {
-    /// Android Telecom 最长等待 12 秒确认；VoWLAN 必须晚于 Agent 的确认窗口超时，
-    /// 否则 iPhone 会把仍在执行的非幂等拨号误判为失败并可能触发重复呼叫。
+    /// Android Telecom 最长等待 12 秒确认; VoWLAN 必须晚于 Agent 的确认窗口超时, 
+    /// 否则 iPhone 会把仍在执行的非幂等拨number误判 for 失败并can 能触发重复呼叫. 
     static let voWLANDialTimeout: TimeInterval = 15
 
     let baseURL: URL
@@ -96,20 +96,20 @@ struct SimHelpAPI: Sendable {
         self.transport = transport ?? WiredHTTPTransport()
     }
 
-    /// 限制高权限控制接口只能指向环回或私有网络，避免误发到公网主机。
+    /// 限制高PermissionControl接口只能指向环回 or 私有Network, 避免误发到public network主机. 
     static func isAllowedLocalURL(_ url: URL) -> Bool {
         guard url.scheme == "http", let host = url.host?.lowercased() else { return false }
         if host == "localhost" || host == "127.0.0.1" || host == "::1" { return true }
         return VoWLANEndpoint.permitsDirectIPv4(host)
     }
 
-    // MARK: Calls与SMS
+    // MARK: Calls and SMS
 
     func health() async throws -> AgentHealth { try await get("api/health") }
     func resolvePushedCall(_ call: IncomingVoIPCall) async throws -> CallStatus {
         do { return try await postDecoded("api/calls/resolve", ["call_id": call.callID,
             "call_uuid": call.uuid.uuidString.lowercased(), "generation": String(call.generation)]) }
-        catch APIError.http(404, _) { throw APIError.unsupportedFeature("请更新Android SimHelp：Current网关缺少Cloud与局域网Calls身份映射接口") }
+        catch APIError.http(404, _) { throw APIError.unsupportedFeature("Please update Android SimHelp: Current gateway lacks Cloud and LAN Calls identity mapping interface") }
         catch APIError.http(409, _) { throw DeviceCallRoutingError.stale }
     }
     func callStatus() async throws -> CallStatus { try await get("api/calls/status") }
@@ -359,7 +359,7 @@ struct SimHelpAPI: Sendable {
         try await send("PATCH", "api/sms/settings", ["auto_cleanup_me": enabled])
     }
 
-    // MARK: 状态、网络、定位与调试
+    // MARK: Status, Network, Location and 调试
 
     func modemStatus() async throws -> ModemStatus { try await get("api/status") }
     func feedbackSnapshot() async throws -> AgentFeedbackSnapshot { try await get("api/feedback") }
@@ -430,7 +430,7 @@ struct SimHelpAPI: Sendable {
                     "active_terminal": String(call.active?.isTerminal == true),
                     "terminal_count": String((call.history ?? []).filter { $0.isTerminal }.count)]
                 Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "call-terminal",
-                    phase: "decoded_terminal", title: "Calls终态已解码", fields: fields) }
+                    phase: "decoded_terminal", title: "Calls final state has been decoded", fields: fields) }
             }
             return value
         } catch {
@@ -536,7 +536,7 @@ struct SimHelpAPI: Sendable {
         do {
             return try decoder.decode(type, from: data)
         } catch {
-            throw APIError.unreadablePayload("模块代理返回的数据无法识别：\(error.localizedDescription)")
+            throw APIError.unreadablePayload("Unrecognized data returned by module proxy: \(error.localizedDescription)")
         }
     }
 
@@ -558,7 +558,7 @@ enum APIError: LocalizedError {
         switch self {
         case let .unsupportedFeature(message): return message
         case .invalidResponse: return "Module proxy returned an invalid response"
-        case let .http(status, message): return message?.isEmpty == false ? message : "请求失败（HTTP \(status)）"
+        case let .http(status, message): return message?.isEmpty == false ? message : "Request failed (HTTP \(status))"
         case let .unreadablePayload(message): return message
         }
     }

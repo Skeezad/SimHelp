@@ -55,7 +55,7 @@ struct WatchCallView: View {
         .alert("connection status", isPresented: $showConnectionStatus) {
             Button("good", role: .cancel) {}
         } message: {
-            Text("\(session.pushStatus)\n\(session.microphoneStatus)\n拨号需要配对 iPhone 可达，且 VoWLAN 或Cloud可用。Calls音频在手表收发；连接蓝牙设备时，输出由 watchOS 选择。")
+            Text("\(session.pushStatus) \n \(session.microphoneStatus) \n Dial-up requires that the Pairing iPhone is reachable and VoWLAN or Cloud is available. CallsAudio is sent and received on the watch; when connected to a Bluetooth device, the output is selected by watchOS.")
         }
         .alert("Dial failed", isPresented: Binding(
             get: { session.errorMessage != nil },
@@ -87,7 +87,7 @@ struct WatchCallView: View {
                 .truncationMode(.head)
                 .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                .accessibilityLabel(dialNumber.isEmpty ? "No phone number entered yet" : "电话号码，\(dialNumber)")
+                .accessibilityLabel(dialNumber.isEmpty ? "No phone number entered yet" : "Phone number, \(dialNumber)")
 
             Button { showConnectionStatus = true } label: {
                 Image(systemName: "info.circle")
@@ -96,7 +96,7 @@ struct WatchCallView: View {
                     .frame(width: 36, height: 36)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("查看连接状态")
+            .accessibilityLabel("View connection status")
         }
     }
 
@@ -114,7 +114,7 @@ struct WatchCallView: View {
         }
         .buttonStyle(.plain)
         .disabled(session.isDialing)
-        .accessibilityLabel("数字 \(digit)")
+        .accessibilityLabel("Number \(digit)")
     }
 
     private func deleteButton(width: CGFloat, height: CGFloat) -> some View {

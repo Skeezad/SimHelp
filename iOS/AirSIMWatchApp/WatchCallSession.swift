@@ -6,8 +6,8 @@ import Network
 import PushKit
 import WatchConnectivity
 
-/// Apple Watch 自己注册 VoIP Push、上报 CallKit 并承载网络 PCM。
-/// WatchConnectivity 仅用于 token/所有权同步，不再是接听或音频的必经链路。
+/// Apple Watch 自己注册 VoIP Push, report  CallKit 并承载Network PCM. 
+/// WatchConnectivity 仅用于 token/所有权同步, not 再是接听 or Audio的必经链路. 
 final class WatchCallSession: NSObject, ObservableObject {
     @Published private(set) var call = WatchCallPayload(
         callID: "", callUUID: nil, phase: .idle, number: nil,
@@ -105,12 +105,12 @@ final class WatchCallSession: NSObject, ObservableObject {
             errorMessage = "Please end the current call first"
             return
         }
-        guard microphoneStatus == "麦克风已授权" else {
+        guard microphoneStatus == "Microphone is authorized" else {
             errorMessage = "Please allow the watch to use the microphone first"
             return
         }
         guard let connectivity, connectivity.isReachable else {
-            errorMessage = "请先在附近打开已配对 iPhone 上的 SimHelp"
+            errorMessage = "Please open SimHelp on the paired iPhone nearby first"
             return
         }
         let requestID = UUID()
@@ -126,7 +126,7 @@ final class WatchCallSession: NSObject, ObservableObject {
                 guard let self, self.dialRequestID == requestID else { return }
                 self.dialRequestID = nil
                 self.isDialing = false
-                self.errorMessage = "iPhone 未响应拨号请求：\(error.localizedDescription)"
+                self.errorMessage = "iPhone did not respond to dial request: \(error.localizedDescription)"
                 self.abortCompanionDial(requestID)
             }
         })
@@ -147,7 +147,7 @@ final class WatchCallSession: NSObject, ObservableObject {
         dialRequestID = nil
         isDialing = false
         guard reply["ok"] as? Bool == true else {
-            errorMessage = reply["error"] as? String ?? "无法发起手表Calls"
+            errorMessage = reply["error"] as? String ?? "Unable to initiate watch calls"
             return
         }
         guard reply["request_id"] as? String == requestID.uuidString else {
@@ -169,7 +169,7 @@ final class WatchCallSession: NSObject, ObservableObject {
                     guard let self else { return }
                     self.isSendingAction = false
                     if let error {
-                        self.errorMessage = "CallKit 无法发起呼叫：\(error.localizedDescription)"
+                        self.errorMessage = "CallKit cannot initiate call: \(error.localizedDescription)"
                         self.abortCompanionDial(requestID)
                         self.publishLocalPhase(.ended)
                         self.voIPCall = nil
@@ -320,7 +320,7 @@ final class WatchCallSession: NSObject, ObservableObject {
                 return
             }
             guard payload.matches(callID: ownCall.callID, callUUID: ownCall.uuid) else { return }
-            // Watch 呼出由自己的 CallKit/媒体会话管理，iPhone 状态镜像不能提前结束它。
+            // Watch 呼出by自己的 CallKit/媒体会话管理, iPhone Status镜像not 能提前结束它. 
             if ownCall.isOutgoing, payload.phase != .ended { return }
             if payload.phase == .active, !self.answered, !self.answering {
                 self.recordEnded(ownCall.callID, uuid: ownCall.uuid, aliases: payload.aliases)
@@ -344,7 +344,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 		pendingWatchToken = token
 		pushStatus = "Watch VoIP registered, syncing iPhone…"
 #if DEBUG
-		print("[SimHelp Watch PushKit] token 已生成；字节数=\(token.count)，WC=\(connectivity?.activationState.rawValue ?? -1)")
+		print("[SimHelp Watch PushKit] token generated; number of bytes = \(token.count), WC= \(connectivity?.activationState.rawValue ?? -1)")
 #endif
         notifyCompanion(event: "watch_voip_registration", extra: [
             "watch_voip_token": token.map { String(format: "%02x", $0) }.joined(),
@@ -355,7 +355,7 @@ final class WatchCallSession: NSObject, ObservableObject {
     private func notifyCompanion(event: String, extra: [String: Any]) {
 		guard let connectivity, connectivity.activationState == .activated else {
 #if DEBUG
-			print("[SimHelp Watch WC] 等待激活；event=\(event)")
+			print("[SimHelp Watch WC] Waiting for activation; event= \(event)")
 #endif
 			return
 		}
@@ -365,7 +365,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 			try connectivity.updateApplicationContext(payload)
 		} catch {
 #if DEBUG
-			print("[SimHelp Watch WC] updateApplicationContext 失败：\(error.localizedDescription)")
+			print("[SimHelp Watch WC] updateApplicationContext failed: \(error.localizedDescription)")
 #endif
 		}
 		connectivity.transferUserInfo(payload)
@@ -376,7 +376,7 @@ final class WatchCallSession: NSObject, ObservableObject {
 			pushStatus = "Watch VoIP synced"
 		}
 #if DEBUG
-		print("[SimHelp Watch WC] 已发送；event=\(event)，reachable=\(connectivity.isReachable)，queued=\(connectivity.outstandingUserInfoTransfers.count)")
+		print("[SimHelp Watch WC] Sent; event= \(event), reachable= \(connectivity.isReachable), queued= \(connectivity.outstandingUserInfoTransfers.count)")
 #endif
     }
 
@@ -402,13 +402,13 @@ final class WatchCallSession: NSObject, ObservableObject {
 	private func requestMicrophonePermissionIfNeeded() {
 		switch AVAudioApplication.shared.recordPermission {
 		case .granted:
-			microphoneStatus = "麦克风已授权"
+			microphoneStatus = "Microphone is authorized"
 		case .denied:
-			microphoneStatus = "请在手表设置中允许麦克风"
+			microphoneStatus = "Please allow microphone in watch settings"
 		case .undetermined:
 			AVAudioApplication.requestRecordPermission { [weak self] granted in
 				DispatchQueue.main.async {
-					self?.microphoneStatus = granted ? "麦克风已授权" : "请在手表设置中允许麦克风"
+					self?.microphoneStatus = granted ? "Microphone is authorized" : "Please allow microphone in watch settings"
 				}
 			}
 		@unknown default:
@@ -495,7 +495,7 @@ extension WatchCallSession: CXProviderDelegate {
                 DispatchQueue.main.async {
                     guard let self else { action.fail(); return }
                     if let error {
-                        self.errorMessage = "手表语音连接失败：\(error.localizedDescription)"
+                        self.errorMessage = "Watch voice connection failed: \(error.localizedDescription)"
                         action.fail()
                         self.provider.reportCall(with: voIPCall.uuid, endedAt: Date(), reason: .failed)
                         if let requestID = self.activeDialRequestID { self.abortCompanionDial(requestID) }
@@ -582,7 +582,7 @@ extension WatchCallSession: CXProviderDelegate {
                             connect(voIPCall.media)
                         } else {
                             self.answering = false
-                            self.errorMessage = "无法取得本地音频路由：\(error.localizedDescription)"
+                            self.errorMessage = "Unable to obtain local Audio route: \(error.localizedDescription)"
                             action.fail()
                         }
                     }
@@ -638,7 +638,7 @@ extension WatchCallSession: CXProviderDelegate {
                 publishLocalPhase(.active)
             }
         } catch {
-            errorMessage = "手表语音启动失败：\(error.localizedDescription)"
+            errorMessage = "Watch voice activation failed: \(error.localizedDescription)"
             if let voIPCall, case .local = voIPCall.media { requestLocalEnd(voIPCall) }
             if let voIPCall { provider.reportCall(with: voIPCall.uuid, endedAt: Date(), reason: .failed) }
             if let activeDialRequestID { abortCompanionDial(activeDialRequestID) }
@@ -678,7 +678,7 @@ extension WatchCallSession: WCSessionDelegate {
         if activationState == .activated {
 			let token = pendingWatchToken ?? pushRegistry.pushToken(for: .voIP)
 #if DEBUG
-			print("[SimHelp Watch WC] 激活Done；token=\(token == nil ? "无" : "有") error=\(error?.localizedDescription ?? "无")")
+			print("[SimHelp Watch WC] Activate Done; token=\(token == nil ?"无" : "有") error=\(error?.localizedDescription ?? "无")")
 #endif
 			if let token { sendWatchToken(token) }
             if !session.receivedApplicationContext.isEmpty { receiveMirror(session.receivedApplicationContext) }
@@ -922,9 +922,9 @@ private enum WatchMediaError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidAudioFormat: return "手表不支持 8 kHz 语音格式"
+        case .invalidAudioFormat: return "The watch does not support 8 kHz voice format"
         case .microphoneUnavailable: return "Watch microphone is currently unavailable"
-		case .microphonePermissionDenied: return "请先允许 SimHelp 使用手表麦克风"
+		case .microphonePermissionDenied: return "Please allow SimHelp to use the watch microphone first"
         case .localRouteUnavailable: return "VoWLAN local voice routing is not available"
         }
     }

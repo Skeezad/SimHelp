@@ -9,7 +9,7 @@ final class SMSNavigationUITests: XCTestCase {
         let alert = springboard.alerts.firstMatch
         guard alert.waitForExistence(timeout: 2) else { return }
         let description = alert.staticTexts.allElementsBoundByIndex.map(\.label).joined(separator: " ")
-        guard description.contains("麦克风") || description.localizedCaseInsensitiveContains("microphone") else { return }
+        guard description.contains("microphone") || description.localizedCaseInsensitiveContains("microphone") else { return }
         for label in ["not allowed", "Don’t Allow", "Don't Allow"] {
             let deny = alert.buttons[label]
             if deny.exists { deny.tap(); return }
@@ -208,7 +208,7 @@ final class SMSNavigationUITests: XCTestCase {
                 app.buttons["keyboard"].tap()
                 XCTAssertTrue(app.navigationBars["call keyboard"].waitForExistence(timeout: 5))
                 app.swipeUp()
-                XCTAssertTrue(app.buttons["发送 DTMF #"].isHittable)
+                XCTAssertTrue(app.buttons["Send DTMF #"].isHittable)
                 app.buttons["Cancel"].tap()
                 XCTAssertTrue(action.waitForExistence(timeout: 5))
             }
@@ -339,7 +339,7 @@ final class SettingsJourneyUITests: XCTestCase {
     @MainActor func testBluetoothModeAllowsManualCloudSelfTestWithoutRunningIt() {
         let app = launchSettings(); defer { app.terminate() }
         open("help", in: app); open("diagnostics", in: app); open("cloudCheck", in: app)
-        let run = app.buttons["运行Cloud模式自检"]
+        let run = app.buttons["Run Cloud Mode Self-Test"]
         XCTAssertTrue(run.waitForExistence(timeout: 3))
         XCTAssertTrue(run.isEnabled)
         // No live Relay request, call, SMS or feedback upload in this test.

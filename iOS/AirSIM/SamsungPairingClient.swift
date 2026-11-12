@@ -66,7 +66,7 @@ extension NWBrowser: SamsungPairingBrowsing {}
 @MainActor
 final class SamsungPairingBrowser: ObservableObject {
     @Published private(set) var services: [SamsungPairingService] = []
-    @Published private(set) var stateText = "正在扫描 VoWLAN 局域网…"
+    @Published private(set) var stateText = "Scanning VoWLAN LAN…"
 
     private let queue = DispatchQueue(label: "com.airsim.samsung-pair.browser")
     private var browser: SamsungPairingBrowsing?
@@ -84,7 +84,7 @@ final class SamsungPairingBrowser: ObservableObject {
         let scanID = UUID()
         self.scanID = scanID
         services = []
-        stateText = "正在扫描 VoWLAN 局域网…"
+        stateText = "Scanning VoWLAN LAN…"
         let parameters = NWParameters.tcp
         parameters.includePeerToPeer = true
         let active = makeBrowser(parameters)
@@ -92,11 +92,11 @@ final class SamsungPairingBrowser: ObservableObject {
             Task { @MainActor in
                 guard let self, self.scanID == scanID else { return }
                 switch state {
-                case .ready: self.stateText = "正在等待Android配对广播…"
+                case .ready: self.stateText = "Waiting for Android pairing broadcast…"
                 case .waiting: self.stateText = "Please make sure iPhone and Android are on the same Wi-Fi or Android hotspot"
                 case .failed(let error):
                     self.stop()
-                    self.stateText = "局域网扫描失败：\(error.localizedDescription)。请检查本地网络权限后重新扫描。"
+                    self.stateText = "LAN scan failed: \(error.localizedDescription) . Please check the local NetworkPermission and scan again."
                 case .cancelled: self.stop()
                 default: break
                 }
@@ -110,8 +110,8 @@ final class SamsungPairingBrowser: ObservableObject {
                 guard let self, self.scanID == scanID else { return }
                 self.services = parsed
                 self.stateText = parsed.isEmpty
-                    ? "正在等待Android配对广播…"
-                    : "已发现 \(parsed.count) 台待配对设备"
+                    ? "Waiting for Android pairing broadcast…"
+                    : "Found \(parsed.count) station waiting pairing device"
             }
         }
         browser = active
@@ -124,7 +124,7 @@ final class SamsungPairingBrowser: ObservableObject {
         browser?.cancel()
         browser = nil
         services = []
-        stateText = "扫描已停止"
+        stateText = "Scanning has stopped"
     }
 
     func restart() {
@@ -284,7 +284,7 @@ enum SamsungPairingClient {
         guard let agentID = response.agentID, !agentID.isEmpty else { throw SamsungPairingClientError.directGatewayUnavailable }
         PairedAndroidDeviceStore.allowPairing(agentID)
         return PairedDeviceResult(agentID: agentID,
-            message: response.deviceIDHint.map { "配对成功（设备 …\($0)）" } ?? "Pairing successful")
+            message: response.deviceIDHint.map { "Pairing successful (device … \($0) )" } ?? "Pairing successful")
     }
     static func pair(service: SamsungPairingService, code: String, registration: AgentPushRegistration) async throws -> String {
         try await pairDevice(service: service, code: code, registration: registration).message
@@ -324,7 +324,7 @@ enum SamsungPairingClient {
         let clockOffset = info.serverTime.map { $0 / 1_000 - Date().timeIntervalSince1970 } ?? 0
         // Do not persist an unverified server response or silently trust an old port.
         PairedAndroidDeviceStore.allowPairing(agentID)
-        return ManualResult(message: "加密配对成功，正在验证直连Calls网关…", route: route,
+        return ManualResult(message: "Encrypted pairing successful, verifying direct connection to Calls gateway...", route: route,
                             clockOffset: clockOffset)
     }
 
@@ -503,11 +503,11 @@ enum SamsungPairingClientError: LocalizedError, Equatable {
         case .responseTooLarge: return "The data returned by Samsung is abnormal"
         case .connectionClosed: return "LAN connection to Samsung has been lost"
         case .registrationUnavailable: return "Relay/push configuration is not ready. Please complete the cloud configuration in the settings first; if you only need a local connection, please turn on 'Local Mode Pairing'."
-        case .pairingBusy: return "另一个配对正在进行，请稍后重试"
-        case .invalidAddress: return "请按所选方式填写私网 IPv4 或 HTTPS 域名，以及 1–65535 的端口；域名不含协议、路径或 IP 地址。"
+        case .pairingBusy: return "Another pairing is in progress, please try again later"
+        case .invalidAddress: return "Please fill in the private IPv4 or HTTPS domain name according to your choice, and the port 1–65535; the domain name does not include the protocol, path, or IP address."
         case .manualUnsupported: return "No SimHelp pairing information was returned for this address. Please update the Android App and fill in the current one-time pairing port, not the ADB, Relay or call port."
         case .directGatewayUnavailable: return "Pairing has been written, but the direct call gateway is not ready or authentication failed. Please check the Android default phone role and PCM bridge, then open a new pairing window and try again."
-        case .timedOut: return "连接超时。请检查 IP、Current配对端口、局域网隔离或 Tailscale 两端连接及访问规则。"
+        case .timedOut: return "Connection timed out. Please check the IP, Current paired port, LAN isolation or Tailscale connection and access rules at both ends."
         }
     }
 }

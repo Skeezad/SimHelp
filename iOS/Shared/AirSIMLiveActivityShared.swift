@@ -2,7 +2,7 @@ import ActivityKit
 import AppIntents
 import Foundation
 
-/// 主 App 与灵动岛扩展共享的活动数据，字段必须保持精简且可编码。
+/// 主 App  and 灵动岛扩展共享的活动数据, 字段必须保持精简且can 编码. 
 struct SimHelpCallActivityAttributes: ActivityAttributes {
     struct ContentState: Codable, Hashable {
         enum Transport: String, Codable, Hashable {
@@ -33,15 +33,15 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
         let phase: Phase
         let startedAt: Date
         let transport: Transport?
-        /// 模块 SIM 的蜂窝状态；只在待机状态显示，Offline与Calls状态不携带旧快照。
+        /// 模块 SIM 的蜂窝Status; 只在待机Status显示, Offline and CallsStatusnot 携带旧快照. 
         let signalDBM: Int?
         let operatorName: String?
         let networkMode: String?
         let radioBand: String?
         let downloadBytesPerSecond: Double?
         let uploadBytesPerSecond: Double?
-        /// Current用于拨号和媒体路由的 Android Agent。字段保持可选，以兼容旧版 Relay
-        /// 推送的 ContentState，并避免升级时让已存在的 Live Activity 解码失败。
+        /// Current用于拨number and 媒体路by的 Android Agent. 字段保持can 选,  as 兼容旧版 Relay
+        /// 推送的 ContentState, 并避免升级时让already 存在的 Live Activity 解码失败. 
         let agentDeviceName: String?
         let agentPhoneNumber: String?
         let agentKind: String?
@@ -49,9 +49,9 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
         let vowlanOnline: Bool?
         let bluetoothOnline: Bool?
         let cloudOnline: Bool?
-        /// 排序后的完整待机列表；页码由主人 App 维护。可选以兼容旧版 ContentState。
+        /// 排序后的完整待机列表; 页码by主人 App 维护. can 选 as 兼容旧版 ContentState. 
         let agents: [AgentSummary]?
-        /// 0-based Current页；每页最多 5 台。旧版没有该字段时按第 1 页处理。
+        /// 0-based Current页; 每页最多 5 台. 旧版No该字段时 by 第 1 页处理. 
         let agentPage: Int?
 
         struct AgentSummary: Codable, Hashable, Identifiable {
@@ -132,7 +132,7 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
                 case .cloudStandby: return "Cloud online"
                 case .incoming: return "Agent Incoming call"
                 case .active: return "In call"
-                case .held: return "Calls保持"
+                case .held: return "Calls keep"
                 case .offline: return "Agent Offline"
                 }
             }
@@ -143,8 +143,8 @@ struct SimHelpCallActivityAttributes: ActivityAttributes {
 }
 
 extension SimHelpCallActivityAttributes.ContentState {
-    /// ActivityKit 的 stale 只表示主 App 暂时没有提交新内容，不能证明 Agent Offline。
-    /// 模块Offline由主 App 的真实 HTTP 探测失败显式写入 `.offline`。
+    /// ActivityKit 的 stale 只表示主 App 暂时No提交new content, not 能证明 Agent Offline. 
+    /// 模块Offlineby主 App 的真实 HTTP 探测失败显式写入 `.offline`. 
     func liveActivityDisplayState(isStale: Bool) -> Self {
         // CallKit exclusively owns in-call UI. Even an activity created by an older
         // build must never render a call phase, timer or hangup button.
@@ -291,11 +291,11 @@ enum LiveActivityActionBridge {
     }
 }
 
-/// 灵动岛动作只走 App 内统一处理，不再保存或猜测 Android 的控制地址。
+/// 灵动岛动作只走 App 内统一处理, not 再保存 or 猜测 Android 的Control地址. 
 
 @available(iOS 17.0, *)
 struct AnswerSimHelpCallIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "接听模块Incoming call"
+    static var title: LocalizedStringResource = "Receive module Incoming call"
     static var openAppWhenRun = false
 
     @Parameter(title: "Call ID") var callID: String
@@ -313,7 +313,7 @@ struct AnswerSimHelpCallIntent: LiveActivityIntent {
 
 @available(iOS 17.0, *)
 struct RejectSimHelpCallIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "拒绝模块Incoming call"
+    static var title: LocalizedStringResource = "Reject module Incoming call"
     static var openAppWhenRun = false
 
     @Parameter(title: "Call ID") var callID: String
@@ -329,8 +329,8 @@ struct RejectSimHelpCallIntent: LiveActivityIntent {
     }
 }
 
-/// 待机态翻到下一页 Android Agent；Calls中不翻页，避免媒体/控制会话
-/// 跨设备漂移。单台设备仍可通过行内点击选择。
+/// 待机态翻到下一页 Android Agent; Calls中not 翻页, 避免媒体/Control会话
+/// 跨device漂移. 单台device仍can  via 行内点击选择. 
 @available(iOS 17.0, *)
 struct SwitchSimHelpAgentIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Next page Android Agent"
@@ -408,7 +408,7 @@ struct SimHelpWidgetSwitchIntent: LiveActivityIntent {
     @available(iOS 26.0, *)
     static var supportedModes: IntentModes { .background }
     @Parameter(title: "operate") var action: String
-    @Parameter(title: "Current值") var expected: String
+    @Parameter(title: "Current value") var expected: String
     @Parameter(title: "target value") var target: String
 
     init() { action = ""; expected = ""; target = "" }

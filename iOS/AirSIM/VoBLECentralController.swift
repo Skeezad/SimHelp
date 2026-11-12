@@ -144,7 +144,7 @@ enum VoBLEPairingRecovery {
             return "Android still saves old VoBLE credentials. Please clear the old pairing in Android SimHelp → Settings → VoBLE Authentication and pair again."
         }
         if normalized.contains("reconnect authentication failed") {
-            return "两端 VoBLE 密钥不一致。请在 Android SimHelp → 设置 → VoBLE 认证中清除旧配对，再重新配对。"
+            return "The VoBLE keys at both ends are inconsistent. Please clear the old pairing in Android SimHelp → Settings → VoBLE Authentication and pair again."
         }
         if normalized.contains("peer is not paired") {
             return "There is no corresponding VoBLE credential for Android. Please clear the old credentials for this machine and recheck the security code."
@@ -801,7 +801,7 @@ final class VoBLECentralController: NSObject, ObservableObject, VoBLECentralCont
                 return
             }
             if object["ok"] as? Bool == false {
-                let raw = object["error"] as? String ?? "蓝牙配对失败"
+                let raw = object["error"] as? String ?? "Bluetooth pairing failed"
                 throw VoBLECentralError.bluetooth(VoBLEPairingRecovery.userMessage(for: raw))
             }
             if object["op"] as? String == "prepare" {
@@ -1026,12 +1026,12 @@ extension VoBLECentralController: @preconcurrency CBCentralManagerDelegate {
         guard self.peripheral === peripheral else { return }
         traceConnectionEvent(
             phase: "connect_failed",
-            title: "VoBLE 连接失败",
+            title: "VoBLE connection failed",
             fields: errorFields(error),
             isFailure: true
         )
         resetConnection()
-        apply(.disconnected(error?.localizedDescription ?? "蓝牙连接失败")); if enabled { restoreOrScan() }
+        apply(.disconnected(error?.localizedDescription ?? "Bluetooth connection failed")); if enabled { restoreOrScan() }
     }
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral,
                         error: Error?) {
@@ -1122,9 +1122,9 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
         pairing = nil; controlRX = nil; controlTX = nil; audioUplink = nil; audioDownlink = nil
         let required: [(CBUUID, CBCharacteristicProperties, String)] = [
             (Self.pairingUUID, [.write, .indicate], "pair"),
-            (Self.controlRXUUID, .write, "控制接收"),
+            (Self.controlRXUUID, .write, "control reception"),
             (Self.controlTXUUID, .indicate, "Control notifications"),
-            (Self.audioUplinkUUID, .writeWithoutResponse, "音频上行"),
+            (Self.audioUplinkUUID, .writeWithoutResponse, "Audio uplink"),
             (Self.audioDownlinkUUID, .notify, "Audio downlink")
         ]
         let values = service.characteristics ?? []
@@ -1146,7 +1146,7 @@ extension VoBLECentralController: @preconcurrency CBPeripheralDelegate {
                 // silently accept an incomplete/old GATT database.
                 peripheral.discoverServices([Self.serviceUUID])
             } else {
-                apply(.authenticationFailed("SimHelp 蓝牙特征不完整：缺少\(missing.joined(separator: "、")); Please confirm the Android App version and reconnect"))
+                apply(.authenticationFailed("SimHelp Bluetooth feature is incomplete: missing\(missing.joined(separator:", ")); Please confirm the Android App version and reconnect"))
             }
             return
         }

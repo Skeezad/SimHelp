@@ -8,7 +8,7 @@ enum VoBLEDiagnosticErrorCategory: String, Codable, Sendable {
         if value.contains("Certification") || value.contains("auth") || value.contains("key") { return .authentication }
         if value.contains("pcm") || value.contains("media") { return .pcm }
         if value.contains("audio") || value.contains("Audio") { return .audio }
-        if value.contains("超时") || value.contains("timeout") { return .timeout }
+        if value.contains("time out") || value.contains("timeout") { return .timeout }
         if value.contains("control") || value.contains("Order") { return .control }
         if value.contains("Bluetooth") || value.contains("bluetooth") { return .bluetooth }
         return .unknown

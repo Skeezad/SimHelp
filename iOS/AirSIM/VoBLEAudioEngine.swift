@@ -143,7 +143,7 @@ final class VoBLEAudioEngine: ObservableObject {
             playbackQueue.reset()
             running = true; errorMessage = nil
             Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "voble",
-                phase: "engine_ready", title: "蓝牙语音引擎已启动",
+                phase: "engine_ready", title: "Bluetooth voice engine started",
                 fields: ["input_rate": String(inputFormat.sampleRate)]) }
 #if DEBUG
             capturedFrames = 0
@@ -177,7 +177,7 @@ final class VoBLEAudioEngine: ObservableObject {
                             "input_route": AVAudioSession.sharedInstance().currentRoute.inputs.map(\.portType.rawValue).joined(separator: ","),
                             "output_route": AVAudioSession.sharedInstance().currentRoute.outputs.map(\.portType.rawValue).joined(separator: ",")]
                         await AgentVerboseTraceRecorder.shared.recordEvent(source: "APP", category: "voble",
-                            phase: "media_statistics", title: "VoBLE 实际音频状态", fields: fields)
+                            phase: "media_statistics", title: "VoBLE actual audio status", fields: fields)
                     }
 #if DEBUG
                     ticks += 1
@@ -192,7 +192,7 @@ final class VoBLEAudioEngine: ObservableObject {
             let failedPhase = phase
             Task { await AgentVerboseTraceRecorder.shared.recordFailure(category: "voble", phase: failedPhase, error: error) }
             stopEngine()
-            errorMessage = "无法启动蓝牙Calls音频：\(error.localizedDescription)"
+            errorMessage = "Unable to start Bluetooth CallsAudio: \(error.localizedDescription)"
             Task { await AgentVerboseTraceRecorder.shared.recordEvent(source: "ios", category: "voble",
                 phase: "engine_failed", title: "Bluetooth voice engine failed to start",
                 fields: ["error_domain": (error as NSError).domain,

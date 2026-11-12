@@ -1,7 +1,7 @@
 import Foundation
 
-/// 用户在设置页追加的私有网段。内置 RFC1918 / 链路本地 / Tailscale CGNAT
-/// 仍然默认生效；这里只做补充，不会让公网地址变成可信地址。
+/// 用户在Settings页追加的私有网段. 内置 RFC1918 / 链路本地 / Tailscale CGNAT
+/// 仍然默认生效; 这里只做补充, Does not让public network地址变成can 信地址. 
 enum NetworkRoutePreferences {
     static let prefixesKey = "airsim.private-prefixes"
 
@@ -77,7 +77,7 @@ enum NetworkRoutePreferences {
         defaults.set(text.trimmingCharacters(in: .whitespacesAndNewlines), forKey: prefixesKey)
     }
 
-    /// 公网地址始终拒绝；内置私网与用户追加网段一起判定。
+    /// public network地址始终拒绝; 内置私网 and 用户追加网段一起判定. 
     static func permitsPrivateIPv4(_ host: String, custom: [Prefix]) -> Bool {
         guard let value = parseIPv4(host) else { return false }
         let first = UInt8((value >> 24) & 0xFF)
@@ -87,7 +87,7 @@ enum NetworkRoutePreferences {
         }
         if first == 169 && second == 254 { return true }
         if first == 100 && (64...127).contains(second) { return true }
-        // 127/8 只用于回环，手动配对不接受；自定义网段也不能把它放进来。
+        // 127/8 只用于回环, 手动Pairingnot 接受; 自定义网段 also not 能把它放进来. 
         if first == 127 { return false }
         return custom.contains { $0.contains(value) }
     }

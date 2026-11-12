@@ -41,7 +41,7 @@ struct SimHelpDeviceWidgetView: View {
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 brand(size: 36)
-                Text("连接你的Android手机").font(.headline)
+                Text("Connect your Android phone").font(.headline)
                 Text("Open SimHelp to complete pairing").font(.caption).foregroundStyle(secondaryText)
                 if family != .systemSmall {
                     Link(destination: SimHelpWidgetDestination.status.url()) {
@@ -64,7 +64,7 @@ struct SimHelpDeviceWidgetView: View {
                 Text(d.status(at: date)).font(.caption2).lineLimit(1).minimumScaleFactor(0.6)
                 if snapshot.controls == nil, let observed = d.observedAt {
                     Text(observed, style: .time).font(.caption2).foregroundStyle(secondaryText)
-                        .accessibilityLabel("Recents更新时间 \(observed.formatted(date: .abbreviated, time: .shortened))")
+                        .accessibilityLabel("Recents update time \(observed.formatted(date: .abbreviated, time: .shortened) )")
                 }
             }
         } else if family == .systemMedium {
@@ -168,7 +168,7 @@ struct SimHelpDeviceWidgetView: View {
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
-        .accessibilityLabel("\(title)，\(count) 条\(destination == .recents ? "未查看的未接Incoming call" : "未读SMS")，\(text ?? "暂无记录")\(timestamp.map { "，" + $0.formatted(date: .abbreviated, time: .shortened) } ?? ""), open the record")
+        .accessibilityLabel("\(title), \(count) items\(destination == .recents ? "unviewed missed calls" : "unread SMS"), \(text ?? "no record")\(timestamp.map { ", " + $0.formatted(date: .abbreviated, time: .shortened) } ?? ""), open the record")
     }
 
     private func large(_ d: SimHelpWidgetSnapshot.Device) -> some View {
@@ -220,7 +220,7 @@ struct SimHelpDeviceWidgetView: View {
                             // Snapshot-local indices avoid exporting legacy IDs containing SMS bodies.
                             ForEach(Array(messages.enumerated()), id: \.offset) { _, message in
                                 historyRecord(text: message.displayText, date: message.date,
-                                    detail: message.incoming ? "收到" : "发出",
+                                    detail: message.incoming ? "receive" : "issue",
                                     attention: message.unread == true, missed: false)
                             }
                         }
@@ -243,7 +243,7 @@ struct SimHelpDeviceWidgetView: View {
         }
         .frame(maxWidth: .infinity, minHeight: historyRowHeight, maxHeight: historyRowHeight, alignment: .leading)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(text)，\(detail)，\(date.formatted(date: .abbreviated, time: .shortened))\(attention ? (missed ? "，未查看" : "，未读") : "")")
+                .accessibilityLabel("\(text), \(detail), \(date.formatted(date: .abbreviated, time: .shortened))\(attention ? (missed ? ", unviewed" : ", unread") : "")")
     }
 
     private func recordDetail<Content: View>(_ title: String, symbol: String,
@@ -263,7 +263,7 @@ struct SimHelpDeviceWidgetView: View {
             .contentShape(Rectangle())
         }
         .accessibilityElement(children: .combine)
-        .accessibilityHint("打开\(title)记录")
+        .accessibilityHint("Open \(title) record")
     }
 
     private func recordDate(_ value: Date) -> some View {
@@ -277,7 +277,7 @@ struct SimHelpDeviceWidgetView: View {
                 .foregroundStyle(.white).padding(.horizontal, 4)
                 .frame(minWidth: 18, minHeight: 18)
                 .background(Color.red, in: Capsule()).fixedSize()
-                .accessibilityLabel("\(count) 条\(missed ? "未查看的未接Incoming call" : "未读SMS")")
+                .accessibilityLabel("\(count) items\(missed ? "unviewed missed calls" : "unread SMS")")
         }
     }
 
@@ -322,11 +322,11 @@ struct SimHelpDeviceWidgetView: View {
                 switchControl(action: "device", title: "equipment",
                     value: snapshot.devices.first(where: { $0.id == controls.currentAgentID })?.name ?? "Not selected",
                     expected: controls.currentAgentID, target: controls.nextAgentID ?? "",
-                    hint: controls.nextAgentName.map { "Switch到 \($0)" } ?? "Only one paired device",
+                    hint: controls.nextAgentName.map { "Switch to \($0)" } ?? "Only one paired device",
                     disabled: controls.blockedByCall || controls.nextAgentID == nil, compact: compact)
                 switchControl(action: "mode", title: "model", value: controls.modeTitle,
                     expected: controls.mode, target: controls.nextMode,
-                    hint: "Switch为 \(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
+                    hint: "Switch is \(controls.nextModeTitle)", disabled: controls.blockedByCall, compact: compact)
             }
         }
     }
@@ -339,12 +339,12 @@ struct SimHelpDeviceWidgetView: View {
                 controlLabel(title: title, value: value, compact: compact)
             }
             .disabled(disabled).opacity(disabled ? 0.55 : 1)
-            .accessibilityLabel("\(title)：\(value)")
+            .accessibilityLabel("\(title): \(value)")
             .accessibilityHint(snapshot.controls?.blockedByCall == true ? "Cannot switch during a call" : hint + ", background execution")
         } else {
             controlLabel(title: title, value: value, compact: compact)
                 .opacity(0.55)
-                .accessibilityLabel("\(title)：\(value)，后台Switch需要 iOS 17 或更新版本")
+                .accessibilityLabel("\(title): \(value), background Switch requires iOS 17 or newer")
         }
     }
 
@@ -415,9 +415,9 @@ struct SimHelpDeviceWidgetView: View {
         Group {
             if let observed = d.observedAt {
                 if Calendar.current.isDate(observed, inSameDayAs: date) {
-                    Text("更新于 \(observed.formatted(date: .omitted, time: .shortened))")
+                    Text("updated by \(observed.formatted(date: .omitted, time: .shortened) )")
                 } else {
-                    Text("更新于 \(observed.formatted(.dateTime.month().day().hour().minute()))")
+                    Text("Updated from \(observed.formatted(.dateTime.month() .day().hour().minute()))")
                 }
             } else { Text("Waiting for first sync") }
         }.foregroundStyle(secondaryText).lineLimit(1)
@@ -430,7 +430,7 @@ struct SimHelpDeviceWidgetView: View {
             Text(reading.map { "\($0.percent)%" } ?? "—")
         }
             .font(.subheadline.weight(.semibold))
-            .accessibilityLabel(reading.map { "Android电量 \($0.percent)%，\($0.charging ? "正在充电" : "未充电")，采样于 \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "Android电量待Refresh")
+            .accessibilityLabel(reading.map { "Android battery \($0.percent)%, \($0.charging ? "charging" : "not charging"), sampled at \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "Android battery waiting for refresh")
     }
     private func transportSymbol(_ d: SimHelpWidgetSnapshot.Device) -> String {
         d.transport == "Cloud" ? "cloud" : d.transport == "VoBLE" ? "antenna.radiowaves.left.and.right" : "wifi"
@@ -451,7 +451,7 @@ struct SimHelpDeviceWidgetView: View {
     }
     private func actions(_ d: SimHelpWidgetSnapshot.Device, compact: Bool) -> some View {
         HStack(spacing: 8) {
-            action(compact ? "dial" : "打开拨号", symbol: "phone.fill", to: .dial, agent: d.id)
+            action(compact ? "dial" : "Open dialing", symbol: "phone.fill", to: .dial, agent: d.id)
             action(compact ? "Short message" : "View text messages", symbol: "message.fill", to: .messages, agent: d.id)
             if compact && !textSize.isAccessibilitySize { action("Contact person", symbol: "person.fill", to: .contacts, agent: d.id) }
         }
@@ -481,7 +481,7 @@ struct SimHelpDeviceWidgetView: View {
                                 .background(Color.secondary.opacity(0.08), in: Circle())
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(call.maskedNumber).font(.subheadline.weight(.semibold)).lineLimit(1)
-                                Text("\(call.date.formatted(.dateTime.month().day().hour().minute())) · \(call.missed ? "未接Incoming call" : call.incoming ? "呼入" : "呼出")")
+                                Text("\(call.date.formatted(.dateTime.month().day().hour().minute())) · \(call.missed ? "Missed calls" : call.incoming ? "Incoming" : "Outgoing")")
                                     .font(.caption2).foregroundStyle(secondaryText).lineLimit(1)
                             }
                             Spacer(minLength: 0)

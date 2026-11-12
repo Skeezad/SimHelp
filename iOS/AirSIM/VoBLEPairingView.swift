@@ -34,13 +34,13 @@ struct VoBLEPairingView: View {
             }
 
             if let sas = model.voble.pendingSAS {
-                Section("核对安全码") {
+                Section("Check security code") {
                     Text(sas)
                         .font(.system(size: 38, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .frame(maxWidth: .infinity)
-                        .accessibilityLabel("蓝牙配对安全码 \(sas)")
-                    Text("确认此六位数字与 Android SimHelp 显示的一致。")
+                        .accessibilityLabel("Bluetooth Pairing security code \(sas)")
+                    Text("Verify that the six-digit number matches what Android SimHelp displays.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                     Button("The numbers match and pairing is completed.", systemImage: "checkmark.shield.fill") {
@@ -104,7 +104,7 @@ struct VoBLEPairingView: View {
                     try? await model.voble.unpairCurrentPeer()
                 }
             }
-            Button("保留配对", role: .cancel) {}
+            Button("keep pairing", role: .cancel) {}
         } message: {
             Text("The six-digit security code needs to be rechecked after cancellation. VoWLAN and cloud configurations will not be affected.")
         }
@@ -112,7 +112,7 @@ struct VoBLEPairingView: View {
 
     private var stateTitle: String {
         switch model.vobleHub.pairingState {
-        case .stopped: "尚未启动"
+        case .stopped: "Not started yet"
         case .bluetoothUnavailable: "Bluetooth is not available"
         case .scanning: "Looking for Android Agent"
         case .connecting: "Connecting"
@@ -127,7 +127,7 @@ struct VoBLEPairingView: View {
         switch model.vobleHub.pairingState {
         case .ready: "Control channel authenticated; audio channel will be started on call"
         case .failed(let message): message
-        case .bluetoothUnavailable: "请在系统设置中打开蓝牙并允许 SimHelp 访问"
+        case .bluetoothUnavailable: "Please turn on Bluetooth in system settings and allow SimHelp access"
         default: "Please keep Android SimHelp running and enable Bluetooth mode"
         }
     }

@@ -207,7 +207,7 @@ struct DialPadLayoutMetrics {
     }
 }
 
-// MARK: - 拨号
+// MARK: - 拨number
 
 struct DialPadView: View {
     @EnvironmentObject private var model: AppModel
@@ -339,7 +339,7 @@ struct DialPadView: View {
                                         )
                                         .foregroundStyle(.secondary)
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("已配对 Android Agent · \(pairedAgents.count)")
+                                            Text("Pairing Android Agent · \(pairedAgents.count)")
                                                 .font(.subheadline.weight(.semibold))
                                             Text(pairedAgents.count > 1 ? "Please select a dialing device" : "Select the device and check the dial-up link")
                                                 .font(.caption)
@@ -394,7 +394,7 @@ struct DialPadView: View {
     @ViewBuilder
     private func dialKeyGrid(metrics: DialPadLayoutMetrics) -> some View {
         if #available(iOS 26.0, *) {
-            // 融合距离必须明显小于按键的真实间距，否则 Liquid Glass 会把相邻圆键吸成一体。
+            // 融合距离必须明显小于 by 键的真实间距, 否则 Liquid Glass 会把相邻圆键吸成一体. 
             GlassEffectContainer(spacing: 6) {
                 dialKeyRows(metrics: metrics)
             }
@@ -597,7 +597,7 @@ private struct DialPadCurrentAgentCard: View {
                 Spacer(minLength: 4)
 
                 if agentCount > 1 {
-                    Button("全部 \(agentCount)", action: showAll)
+                    Button("All \(agentCount)", action: showAll)
                         .font(.caption.weight(.semibold))
                         .buttonStyle(.plain)
                         .foregroundStyle(.blue)
@@ -646,7 +646,7 @@ private struct DialPadCurrentAgentCard: View {
                     HStack(spacing: 6) {
                         Image(systemName: "simcard.2")
                             .font(.caption)
-                        Text(selectedSlot?.displayName ?? "选择Calls卡")
+                        Text(selectedSlot?.displayName ?? "Select Calls card")
                             .font(.caption.weight(.semibold))
                             .lineLimit(1)
                         Image(systemName: "chevron.up.chevron.down")
@@ -684,9 +684,9 @@ private struct AgentTransportPill: View {
     }
 
     private var statusText: String {
-        if !enabled { return "关闭" }
+        if !enabled { return "closure" }
         if !online { return "Offline" }
-        return lastConfirmed ? "上次Online" : "online"
+        return lastConfirmed ? "Last time online" : "online"
     }
 
     private var color: Color { !enabled ? .secondary : (online ? .green : .secondary) }
@@ -769,7 +769,7 @@ private struct PairedAndroidAgentsView: View {
     }
 }
 
-/// 使用系统输入点击音，不启动新的音频会话，避免干扰 CallKit 路由。
+/// use system输入点击音, not 启动new 的Audio会话, 避免干扰 CallKit 路by. 
 private final class DialKeyFeedback {
     func play() {
         UIDevice.current.playInputClick()
@@ -940,7 +940,7 @@ struct RecentsView: View {
                 dismissCallDetails()
                 onCall(number)
             } label: {
-                Label(L10n.t("回拨"), systemImage: "phone.fill")
+                Label(L10n.t("call back"), systemImage: "phone.fill")
                     .frame(maxWidth: .infinity, minHeight: 32)
             }
             .buttonStyle(.borderedProminent)
@@ -1017,7 +1017,7 @@ struct RecentsView: View {
                     HStack(spacing: 4) {
                         Image(systemName: call.direction == "incoming" ? "arrow.down.left" : "arrow.up.right")
                             .font(.caption2.weight(.semibold))
-                        Text(call.missed ? L10n.t("Missed") : "SimHelp 音频")
+                        Text(call.missed ? L10n.t("Missed") : "SimHelp Audio")
                     }
                     .font(.subheadline)
                     .foregroundStyle(call.missed ? .red : .secondary)
@@ -1102,7 +1102,7 @@ struct SMSConversationListToolbar: ToolbarContent {
             Button { state.showingComposer = true } label: {
                 Image(systemName: "square.and.pencil")
             }
-            .accessibilityLabel(L10n.t("新信息"))
+            .accessibilityLabel(L10n.t("new information"))
             .accessibilityIdentifier("sms-compose")
         }
     }
@@ -1128,7 +1128,7 @@ struct MessagesView: View {
             List(selection: state.editMode.isEditing ? $state.selectedConversations : nil) {
                 if conversations.isEmpty {
                     EmptyStateView(title: state.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        ? L10n.t("暂无SMS") : L10n.t("No matching text message found"), systemImage: "message")
+                        ? L10n.t("No SMS yet") : L10n.t("No matching text message found"), systemImage: "message")
                         .listRowBackground(Color.clear)
                 } else {
                     ForEach(conversations, id: \.sender) { conversation in
@@ -1256,7 +1256,7 @@ struct MessagesView: View {
                                 .frame(minWidth: 20, minHeight: 20)
                                 .background(Color(uiColor: .systemBlue), in: Capsule())
                                 .fixedSize()
-                                .accessibilityLabel(String(format: L10n.t("%d 条未读SMS"), unreadCount))
+                                .accessibilityLabel(String(format: L10n.t("%d unread SMS"), unreadCount))
                                 .accessibilityIdentifier("smsConversation.unread.\(sender)")
                         }
                     }
@@ -1307,7 +1307,7 @@ private struct SMSAccountPicker: View {
                     .font(.caption)
                 }
                 .disabled(slots.count < 2)
-                .accessibilityLabel("发送线路，\(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android默认SMS卡")")
+                .accessibilityLabel("Sending line, \(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android默认SMS卡")")
                 .accessibilityIdentifier("sms.simSelector")
             } else {
                 Label("Android default SMS card", systemImage: "simcard").font(.caption).foregroundStyle(.secondary)
@@ -1401,7 +1401,7 @@ struct MessageThreadView: View {
                         .font(.subheadline.weight(.semibold))
                         .monospacedDigit()
                     Spacer()
-                    Button(copiedVerificationCode == code ? "Copied" : "复制验证码") {
+                    Button(copiedVerificationCode == code ? "Copied" : "Copy verification code") {
                         UIPasteboard.general.string = code
                         copiedVerificationCode = code
                     }
@@ -1478,7 +1478,7 @@ struct MessageThreadView: View {
             }
         }
         .confirmationDialog(
-            String(format: L10n.t("删除所选 %d 条SMS？"), pendingDeletion.count),
+            String(format: L10n.t("Delete selected %d SMS?"), pendingDeletion.count),
             isPresented: $showingDeleteConfirmation,
             titleVisibility: .visible
         ) {
@@ -1664,7 +1664,7 @@ private struct MessageComposer: View {
                 messageInputBar
             }
             .background(PhoneBackdrop())
-            .navigationTitle(L10n.t("新信息"))
+            .navigationTitle(L10n.t("new information"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -1695,7 +1695,7 @@ private struct MessageComposer: View {
                     .font(.title2)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(L10n.t("从Contacts选择"))
+            .accessibilityLabel(L10n.t("Select from Contacts"))
 
             Text(L10n.t("recipient:"))
                 .foregroundStyle(.secondary)
@@ -1715,7 +1715,7 @@ private struct MessageComposer: View {
                 }
                 .frame(maxWidth: 130, alignment: .trailing)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("已识别联系人：\(contact.name)")
+                .accessibilityLabel("Recognized contact: \(contact.name)")
             }
         }
         .padding(.horizontal, 16)
@@ -1784,7 +1784,7 @@ private struct MessageComposer: View {
                 .accessibilityLabel(L10n.t("send"))
             }
 
-            Text(L10n.t("SMS将通过 4G 模块发送"))
+            Text(L10n.t("SMS will be sent via 4G module"))
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }
@@ -1823,9 +1823,9 @@ private struct MessageContactPicker: View {
             Group {
                 if !model.contacts.isAuthorized {
                     EmptyStateView(
-                        title: L10n.t("授权访问Contacts"),
+                        title: L10n.t("Grant access to Contacts"),
                         systemImage: "person.crop.circle.badge.questionmark",
-                        actionTitle: L10n.t("授权访问Contacts")
+                        actionTitle: L10n.t("Grant access to Contacts")
                     ) {
                         Task { await model.contacts.requestAccessAndLoad() }
                     }
@@ -1863,7 +1863,7 @@ private struct MessageContactPicker: View {
             }
             .navigationTitle(L10n.t("Select contact"))
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $search, prompt: L10n.t("搜索姓名或号码"))
+            .searchable(text: $search, prompt: L10n.t("Search for a name or number"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L10n.t("Cancel")) { dismiss() }
@@ -1915,11 +1915,11 @@ struct ContactsView: View {
                     EmptyStateView(
                         title: model.contacts.authorizationState == .denied
                             ? "Address book permission has been turned off"
-                            : L10n.t("授权访问Contacts"),
+                            : L10n.t("Grant access to Contacts"),
                         systemImage: "person.crop.circle.badge.questionmark",
                         actionTitle: model.contacts.authorizationState == .denied
                             ? "Go to system settings"
-                            : L10n.t("授权访问Contacts")
+                            : L10n.t("Grant access to Contacts")
                     ) {
                         if model.contacts.authorizationState == .denied {
                             openURL(URL(string: UIApplication.openSettingsURLString)!)
@@ -1976,7 +1976,7 @@ struct ContactsView: View {
             .searchable(
                 text: $search,
                 placement: .navigationBarDrawer(displayMode: .always),
-                prompt: L10n.t("搜索姓名或号码")
+                prompt: L10n.t("Search for a name or number")
             )
             .refreshable { await model.contacts.requestAccessAndLoad() }
             .task { await model.contacts.loadIfAuthorized(force: true) }
@@ -2001,7 +2001,7 @@ struct ContactsView: View {
 }
 
 private extension View {
-    /// iOS 26 起SMS输入框使用原生 Liquid Glass；旧系统回退为系统填充色。
+    /// iOS 26 起SMS输入框use 原生 Liquid Glass; 旧system回退 for system填充色. 
     @ViewBuilder
     func smsComposerGlass() -> some View {
         if #available(iOS 26.0, *) {
@@ -2174,7 +2174,7 @@ struct InitialAvatar: View {
     }
 }
 
-/// 新系统使用原生 ContentUnavailableView，iOS 16 保留等价回退。
+/// new systemuse 原生 ContentUnavailableView, iOS 16 保留等价回退. 
 private struct EmptyStateView: View {
     let title: String
     let systemImage: String
@@ -2215,7 +2215,7 @@ private struct EmptyStateView: View {
     private var emptyStateDescription: String {
         switch systemImage {
         case "message": return "Received text messages will appear here."
-        case "phone.arrow.up.right": return "DoneCalls后，记录会显示在这里。"
+        case "phone.arrow.up.right": return "After DoneCalls, the records will be displayed here."
         case "person.2": return "Contacts are synced from the system address book."
         default: return "It can be used after completing the connection or authorization."
         }
@@ -2694,7 +2694,7 @@ private struct DTMFKeypadView: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(DTMFGlassButtonStyle())
-                        .accessibilityLabel("发送 DTMF \(digit)")
+                        .accessibilityLabel("Send DTMF \(digit)")
                     }
                 }
             }

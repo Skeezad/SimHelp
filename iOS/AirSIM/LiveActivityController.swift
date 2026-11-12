@@ -122,8 +122,8 @@ enum LiveActivityStateBuilder {
         downloadBytesPerSecond: Double? = nil,
         uploadBytesPerSecond: Double? = nil
     ) -> SimHelpCallActivityAttributes.ContentState {
-        // VoWLAN 本地控制、Relay 心跳、VoBLE 任一路可达即视为 Agent Online。
-        // 双通道下 Wi-Fi 断开但 BLE 仍连着时，不能把整个 Agent 误报成Offline。
+        // VoWLAN 本地Control, Relay 心跳, VoBLE 任一路can 达即视 for  Agent Online. 
+        // 双通道下 Wi-Fi 断开但 BLE 仍连着时, not 能把整个 Agent 误报成Offline. 
         // When a paired device is selected, its verified channels are authoritative.
         // A global/previous-device flag must not contradict the device rows.
         let localOnline = agent.map { $0.vowlanOnline || $0.bluetoothOnline } ?? moduleOnline
@@ -152,7 +152,7 @@ enum LiveActivityStateBuilder {
         return .init(
             callID: "",
             number: "",
-            displayName: cloudOnly ? "公网中继已连接" : "Waiting for Agent to call",
+            displayName: cloudOnly ? "The public network relay is connected" : "Waiting for Agent to call",
             phase: cloudOnly ? .cloudStandby : .standby,
             startedAt: idleStartedAt,
             transport: cloudOnly ? .cloud : transport,
@@ -271,7 +271,7 @@ final class LiveActivityController {
         }
     }
 
-    /// 用户关闭开关时立即清理系统活动；重新开启后由下一轮模块状态同步按需创建。
+    /// 用户关闭开关时立即清理system活动; 重new 开启后by下一轮模块Status同步 by requires 创建. 
     func setEnabled(_ enabled: Bool) {
         self.enabled = enabled
         if !enabled {

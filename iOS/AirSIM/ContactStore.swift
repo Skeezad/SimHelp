@@ -34,7 +34,7 @@ protocol ContactFetching: Sendable {
     func fetchAll() throws -> [ContactStore.Contact]
 }
 
-/// 非主线程联系人读取器，避免在 Swift 6 下跨线程持有 CNContactStore。
+/// 非主线程联系人读取器, 避免在 Swift 6 下跨线程持有 CNContactStore. 
 struct ContactFetcher: ContactFetching {
     func authorizationState() -> ContactAuthorizationState {
         let status = CNContactStore.authorizationStatus(for: .contacts)
@@ -116,7 +116,7 @@ final class ContactStore: ObservableObject {
          cache: ContactCacheStore? = nil) {
         self.cache = cache ?? ContactCacheStore(fileManager: fileManager)
         self.fetcher = fetcher
-        // 联系人属于手机数据。模块Offline或系统联系人数据库暂不可读时，先展示本机副本。
+        // 联系人属于手机数据. 模块Offline or system联系人数据库暂not can 读时, 先展示本机副本. 
         contacts = self.cache.load()
         let state = fetcher.authorizationState()
         authorizationState = state
@@ -159,7 +159,7 @@ final class ContactStore: ObservableObject {
 
     private func refresh(userInitiated: Bool = false, force: Bool = false) async {
         do {
-            // 手机重启后可能先在数据保护尚未解锁时读取到空数组；每次前台Refresh都重试磁盘缓存。
+            // 手机重启后can 能先在数据保护尚未解锁时读取到空数组; 每次前台Refresh都重试磁盘缓存. 
             let cachedContacts = cache.load()
             if !cachedContacts.isEmpty {
                 contacts = cachedContacts
@@ -181,7 +181,7 @@ final class ContactStore: ObservableObject {
                 authorizationState = state
                 guard granted else {
                     isAuthorized = false
-                    errorMessage = "未获得Contacts访问权限"
+                    errorMessage = "Contacts access not granted"
                     return
                 }
             case .load:
@@ -198,8 +198,8 @@ final class ContactStore: ObservableObject {
 
             isAuthorized = true
             isLimitedAccess = authorizationState == .limited
-            // 非用户主动Refresh时优先使用已恢复的缓存；联系人变更通知和联系人页
-            // 进入时会 force，确保新增联系人不会被旧缓存挡住。
+            // 非用户主动Refresh时优先use already 恢复的缓存; 联系人变更通知 and 联系人页
+            // 进入时会 force, 确保new 增联系人Does not被旧缓存挡住. 
             guard force || userInitiated || contacts.isEmpty || cache.needsNameRefresh else {
                 errorMessage = nil
                 return
@@ -236,7 +236,7 @@ final class ContactStore: ObservableObject {
     }
 }
 
-/// Contacts缓存仅保存在 App 沙盒，不会上传到模块或 Push Relay。
+/// Contacts缓存仅保存在 App 沙盒, Does not上传到模块 or  Push Relay. 
 final class ContactCacheStore {
     private struct Snapshot: Codable {
         let nameFormatVersion: Int
@@ -276,7 +276,7 @@ final class ContactCacheStore {
             needsNameRefresh = true
             return try JSONDecoder().decode([ContactStore.Contact].self, from: data)
         } catch {
-            Self.log("读取Contacts缓存失败：\(error.localizedDescription)")
+            Self.log("Failed to read Contacts cache: \(error.localizedDescription)")
             return []
         }
     }
@@ -290,7 +290,7 @@ final class ContactCacheStore {
             needsNameRefresh = false
             return true
         } catch {
-            Self.log("保存Contacts缓存失败：\(error.localizedDescription)")
+            Self.log("Failed to save Contacts cache: \(error.localizedDescription)")
             return false
         }
     }

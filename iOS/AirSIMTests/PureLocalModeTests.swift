@@ -8,7 +8,7 @@ final class PureLocalModeTests: XCTestCase {
         for mode in [SimHelpConnectionMode.vowlan, .bluetooth, .localDual, .cloud, .automatic] {
             let cloud = ConnectionModeRuntimePolicy(mode: mode).startsCloud
             XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: true, cloudOnline: true, usesCloudCalls: cloud), "Pure local mode blocked")
-            XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: nil, usesCloudCalls: cloud), "尚未检查，可手动自检")
+            XCTAssertEqual(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: nil, usesCloudCalls: cloud), "Not checked yet, can be manually self-checked")
             XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: true, usesCloudCalls: cloud).contains("Agent online"))
             XCTAssertTrue(CloudRelayStatusCopy.text(pureLocal: false, cloudOnline: false, usesCloudCalls: cloud).contains("Agent has no valid heartbeat"))
         }

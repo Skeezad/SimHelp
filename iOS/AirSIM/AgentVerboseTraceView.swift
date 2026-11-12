@@ -301,7 +301,7 @@ struct AgentVerboseTraceView: View {
                         Label {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("Verbose mode")
-                                Text(model.enabled ? "记录Calls、VoWLAN、VoBLE 与Cloud链路事件" : "Turn off detailed collection and keep basic audio startup records")
+                                Text(model.enabled ? "Record Calls, VoWLAN, VoBLE and Cloud link events" : "Turn off detailed collection and keep basic audio startup records")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -312,8 +312,8 @@ struct AgentVerboseTraceView: View {
                     }
 
                     LabeledContent("Agent channel", value: model.agentState)
-                    LabeledContent("local link", value: "\(model.localEntries.count) 条")
-                    LabeledContent("Agent event", value: "\(model.agentEvents.count) 条")
+                    LabeledContent("local link", value: "\(model.localEntries.count) items")
+                    LabeledContent("Agent event", value: "\(model.agentEvents.count) items")
                     Button {
                         Task { await model.readAgent() }
                     } label: {
@@ -352,7 +352,7 @@ struct AgentVerboseTraceView: View {
                             Image(systemName: "waveform.path.ecg")
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
-                            Text("暂无链路事件").font(.headline)
+                            Text("No link events yet").font(.headline)
                             Text(model.enabled ? "It will be displayed in real time after dialing, text messaging, settings or AT operations." : "Please enable Verbose link mode first.")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
@@ -473,7 +473,7 @@ private struct AgentVerboseTraceDetailView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("事件") {
+                Section("event") {
                     LabeledContent("source", value: item.source)
                     LabeledContent("Classification", value: item.category)
                     if let traceID = item.traceID { LabeledContent("Trace ID", value: traceID) }
@@ -488,11 +488,11 @@ private struct AgentVerboseTraceDetailView: View {
                     }
                 }
             }
-            .navigationTitle("链路详情")
+            .navigationTitle("Link details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("关闭") { dismiss() }
+                    Button("closure") { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("copy", systemImage: "doc.on.doc") {

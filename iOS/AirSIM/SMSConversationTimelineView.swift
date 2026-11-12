@@ -203,7 +203,7 @@ final class SMSConversationTimelineController: UIViewController, UICollectionVie
 
     private func rebuildItems() {
         items = SMSConversationPresentation.timeline(presentation.messages)
-        emptyLabel.text = L10n.t("暂无SMS")
+        emptyLabel.text = L10n.t("No SMS yet")
         emptyLabel.accessibilityLanguage = presentation.locale.identifier
         collection.backgroundView = items.isEmpty ? emptyLabel : nil
         dates.removeAll(keepingCapacity: true)

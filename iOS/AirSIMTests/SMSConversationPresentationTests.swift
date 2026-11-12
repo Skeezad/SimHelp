@@ -146,10 +146,10 @@ final class SMSConversationPresentationTests: XCTestCase {
         let cal = calendar()
         let now = date()
         XCTAssertEqual(SMSConversationPresentation.timestamp(now, relativeTo: now, calendar: cal, locale: locale),
-                       "今天 \(shortTime(now, calendar: cal, locale: locale))")
+                       "Today \(shortTime(now, calendar: cal, locale: locale) )")
         let yesterday = cal.date(byAdding: .day, value: -1, to: now)!
         XCTAssertEqual(SMSConversationPresentation.timestamp(yesterday, relativeTo: now, calendar: cal, locale: locale),
-                       "昨天 \(shortTime(yesterday, calendar: cal, locale: locale))")
+                       "Yesterday \(shortTime(yesterday, calendar: cal, locale: locale) )")
     }
 
     func testTimezoneChangesRelativeDayAndFormatterConfiguration() {

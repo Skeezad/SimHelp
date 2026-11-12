@@ -13,14 +13,14 @@ enum AppReleaseNotes {
     // Bundled: showing installed-version notes never needs GitHub, Relay or pairing.
     // Keep this summary in sync with the candidate's source and docs when publishing.
     static let items = [
-        "Supports connecting U30Air running compatible SimHelp devices to use call and text messaging functions on iPhone.",
-        "Desktop and lock screen widgets display device status; supported desktop sizes provide device and connection mode switching, summaries of recent calls and text messages.",
-        "小组件支持后台Switch，显示设备上报的电量；Refresh由系统调度，无有效采样时显示Unknown。",
-        "Experimental TLS public network domain name pairing and direct connection: Complete the first pairing through a self-built HTTPS/TLS portal, or add a public network portal for paired devices.",
-        "The bottom labels and widget titles of recent calls and text messages display the number of missed calls/unreads, and the corresponding records are also marked with eye-catching marks.",
-        "When the outgoing call is completed, the waiting tone and timing will be stopped according to the calling identity; network fluctuations will not automatically repeat the dialing."
+        "Supports U30Air with a compatible SimHelp device for calls and messages on iPhone.",
+        "Home and Lock Screen widgets show device status, device switching, recent calls, and message summaries.",
+        "Widgets support background switching and show reported battery level; iOS schedules refresh and shows Unknown without a valid sample.",
+        "Experimental TLS public networkDomainPairing and  direct connection:  via self-hosted HTTPS／TLS entryDonefirstPairing,  or for Paired devicesaddpublic networkentry. ",
+        "Bottom tabs and widget titles show missed and unread counts with clear record markers.",
+        "When an outgoing call ends by Calls state stop waiting audio and timer; Networknetwork changesDoes notAutomaticredial. "
     ]
-    static let limitations = "U30Air 需运行兼容设备端。运营商早期媒体仅在临时候选中Done单次试听，尚未正式开放。TLS 公网功能为试验性，需要可入站的自建网关、有效证书及独立音频转发；不自动穿透 NAT，也不新增后台推送。小组件Refresh由系统调度，模式Switch不代表已连接。GitHub 发布不代表 TestFlight 已可更新。"
+    static let limitations = "U30Air requires a compatible device app. Carrier media is experimental, and public TLS access requires a reachable gateway, valid certificates, and separate audio forwarding. Widgets are refreshed by iOS; switching modes does not guarantee a connection. A GitHub release does not mean a TestFlight update is available."
 }
 
 enum AppUpdateChannel {
@@ -28,7 +28,7 @@ enum AppUpdateChannel {
         Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
             && Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision") == nil
     }
-    static var title: String { isTestFlight ? "TestFlight" : "自签／侧载或其他安装渠道" }
+    static var title: String { isTestFlight ? "TestFlight" : "Sideload or another installation method" }
 }
 
 struct AppUpdateSheet: View {
@@ -52,25 +52,25 @@ struct AppUpdateSheet: View {
                 List {
                     Section { Text(result.message) }
                     if let candidate = result.candidate {
-                        Section("公开版本 \(candidate.version)（\(candidate.build)）") {
+                        Section("Public version \(candidate.version)（\(candidate.build)）") {
                             Text(candidate.notes.isEmpty ? "Please check the release page for update instructions." : candidate.notes)
                                 .textSelection(.enabled)
                             Link("View the GitHub release notes", destination: candidate.page)
                         }
                         Section("How to update") {
                             Text(AppUpdateChannel.isTestFlight
-                                ? "Please open TestFlight to see if there is an existing build available for this app. GitHub publishing does not mean that Apple has processed it or that it can be updated by testers."
+                                ? "Open TestFlight check this App whether a build is available. GitHub release does not mean Apple processedDone or testers can update. "
                                 : "GitHub IPA requires the sideloading tool to be re-signed and installed, and cannot be installed directly. Those using TestFlight please check in TestFlight.")
-                            Text("There will be no automatic download and installation, and no changes to pairing, calling or AVF Agent.")
+                            Text("Does notAutomaticdownload or install,  also Does notchangePairing, Calls or  AVF Agent. ")
                                 .foregroundStyle(.secondary)
                         }
                     }
                 }
-                .navigationTitle("应用更新")
+                .navigationTitle("App update")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("知道了") {
+                        Button("Got it") {
                             if let candidate = result.candidate { updates.acknowledgeUpdate(candidate) }
                             dismiss()
                         }
@@ -97,18 +97,18 @@ private enum NewFeatureCatalog {
     static let pages: [NewFeaturePage] = [
         NewFeaturePage(
             id: 0,
-            kicker: "U30Air 支持",
-            title: "Connect U30Air,\\nUse your phone and text messages with you",
-            body: "Connect a U30Air running a SimHelp-compatible device to make, receive calls, and send and receive text messages on your iPhone. Please update the device first and complete pairing.",
+            kicker: "U30Air support",
+            title: "Connect U30Air, use calls and messages anywhere",
+            body: "Connect a compatible U30Air device, then make calls and send messages on iPhone. Update the device app and pair it first.",
             symbol: "phone.connection.fill",
             accent: .cyan,
             demo: .u30Air
         ),
         NewFeaturePage(
             id: 1,
-            kicker: "桌面与锁屏小组件",
-            title: "不用打开 App，\n常用信息一眼可见",
-            body: "Check the device status, battery level, recent calls and text messages; the supported desktop sizes can directly switch devices and connection modes. Refresh is scheduled by the system, and the power consumption is subject to effective reporting by the device.",
+            kicker: "Home and Lock Screen widgets",
+            title: "No need to open the app; common information is visible at a glance.",
+            body: "check deviceStatus, battery, RecentsCalls and SMScontent; supported widget sizesdirectlySwitchdevice and Connection mode. Refreshbysystemschedule, battery as devicevalid report  for basis. ",
             symbol: "rectangle.grid.2x2.fill",
             accent: .green,
             demo: .widgetSummary
@@ -116,17 +116,17 @@ private enum NewFeatureCatalog {
         NewFeaturePage(
             id: 2,
             kicker: "TLS Public Network · Experimental",
-            title: "Use your own domain name,\\nYou can also pair and connect directly when you are outside.",
-            body: "Complete the first pairing through a self-built HTTPS/TLS gateway, or add a public network entrance to an existing device. Requires inbound network, valid certificate and independent audio forwarding; usage tutorial included in configuration page.",
+            title: "Use your ownDomain, \nconnect remotelyPairing direct connection",
+            body: " via self-hosted HTTPS／TLS gatewayDonefirstPairing,  or for existing deviceaddpublic networkentry. requires can inboundNetwork, valid certificate and separateAudioforwarding; setup page includesuse guide. ",
             symbol: "lock.shield.fill",
             accent: .blue,
             demo: .publicTLS
         ),
         NewFeaturePage(
             id: 3,
-            kicker: "Unread text messages · Missed calls",
+            kicker: "Unread messages · Missed calls",
             title: "Those that were not read and those that were not answered are clearly marked\\n",
-            body: "The bottom labels and widgets display unread/missed numbers, and corresponding text messages and call records are also marked. Open the record and you can find messages and calls that you have not yet viewed.",
+            body: "Tabs and widgets show unread and missed counts with markers on the related records. Open a record to find unseen messages and calls.",
             symbol: "app.badge.fill",
             accent: .orange,
             demo: .unreadBadges
@@ -171,7 +171,7 @@ struct NewFeatureOnboardingView: View {
                     Text("SimHelp")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("版本 \(version)")
+                    Text("Version \(version)")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.55))
                 }
@@ -353,8 +353,7 @@ private enum FeatureDemoHTML {
     <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">Calls</text></g>
     <g class="reveal delayed"><rect x="247" y="129" width="79" height="37" rx="12" fill="#233D57"/>
     <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">SMS</text></g>
-    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">连接示意 · 需兼容设备端</text>
-    """
+    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">Connection instructions · Need to be compatible with the device</text>"""
 
     private static let widgetSummary = """
     <rect x="14" y="18" width="332" height="182" rx="28" fill="#F4F8FC"/>
@@ -367,16 +366,16 @@ private enum FeatureDemoHTML {
     <rect x="296" y="47" width="2" height="4" rx="1" fill="#2AC466"/>
     <text x="270" y="73" fill="#152238" font-size="12">82%</text>
     <path d="M33 91H327" stroke="#D8E1EA"/>
-    <text x="33" y="112" fill="#64748B" font-size="10">设备</text>
+    <text x="33" y="112" fill="#64748B" font-size="10">Equipment</text>
     <text x="33" y="132" fill="#0064CC" font-size="14" font-weight="600">Galaxy ↻</text>
-    <text x="195" y="112" fill="#64748B" font-size="10">连接模式</text>
+    <text x="195" y="112" fill="#64748B" font-size="10">Connection mode</text>
     <text class="mode-a" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">VoWLAN ↻</text>
-    <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">自动 ↻</text>
+    <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">Automatic ↻</text>
     <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">RecentsCalls</text>
     <text x="33" y="180" fill="#64748B" font-size="11">138 •••• 6028</text>
     <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">RecentsSMS</text>
-    <text x="195" y="180" fill="#64748B" font-size="11">我已经到家了。</text>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · Refresh由系统调度</text>
+    <text x="195" y="180" fill="#64748B" font-size="11">I'm already home. </text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Sample data · refreshed by iOS</text>
     """
 
     private static let publicTLS = """
@@ -388,29 +387,28 @@ private enum FeatureDemoHTML {
     <path class="route" d="M101 130H134M226 130H259" stroke="#64B6FF" stroke-width="2"/>
     <rect x="139" y="91" width="82" height="78" rx="18" fill="#163D66" stroke="#4D9FE8"/>
     <text x="180" y="123" text-anchor="middle" fill="#A6D7FF" font-size="15" font-weight="700">TLS</text>
-    <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">自建网关</text>
+    <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">Self-built gateway</text>
     <rect x="264" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
     <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">Android</text>
-    <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">首次配对 · 控制 · 音频</text>
-    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">试验性 · 需自行部署可入站网关</text>
-    """
+    <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">firstPairing · Control · Audio</text>
+    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">Experimental · You need to deploy your own inbound gateway</text>"""
 
     private static let unreadBadges = """
     <rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
     <rect x="33" y="33" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse" cx="47" cy="59" r="4" fill="#FF625A"/>
-    <text x="61" y="54" fill="white" font-size="14" font-weight="600">未接Incoming call</text>
+    <text x="61" y="54" fill="white" font-size="14" font-weight="600">Missed calls</text>
     <text x="61" y="74" fill="#B8C6DA" font-size="11">138 •••• 6028</text>
     <rect x="33" y="94" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse delayed" cx="47" cy="120" r="4" fill="#FF625A"/>
-    <text x="61" y="115" fill="white" font-size="14" font-weight="600">未读SMS</text>
-    <text x="61" y="135" fill="#B8C6DA" font-size="11">我已经到家了。</text>
+    <text x="61" y="115" fill="white" font-size="14" font-weight="600">UnreadSMS</text>
+    <text x="61" y="135" fill="#B8C6DA" font-size="11">I'm already home. </text>
     <text x="98" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">Recents</text>
     <g class="pulse"><rect x="115" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="125" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">2</text></g>
     <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">SMS</text>
     <g class="pulse delayed"><rect x="261" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="271" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text></g>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · 数字角标与记录标记</text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Sample data · badge counts and record markers</text>
     """
 }
