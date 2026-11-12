@@ -19,14 +19,9 @@ enum CallAudioGraph {
         guard rate > 0, input.outputFormat(forBus: 0).channelCount > 0 else {
             throw VoiceAudioError.microphoneUnavailable
         }
-        // The native tap preserves the I/O format. Never reapply a stale format
-        // after VoiceProcessingIO replaces/configures its buses.
-        if #available(iOS 27.0, *) {
-            try input.__installTap(onBus: 0, bufferSize: AVAudioFrameCount(max(1024, rate * 0.1)),
-                                   format: nil, error: (), block: block)
-        } else {
-            input.installTap(onBus: 0, bufferSize: 1024, format: nil, block: block)
-        }
+        // Use the public API so the project builds across hosted Xcode/iOS SDKs.
+        input.installTap(onBus: 0, bufferSize: AVAudioFrameCount(max(1024, rate * 0.1)),
+                         format: format, block: block)
     }
 }
 
