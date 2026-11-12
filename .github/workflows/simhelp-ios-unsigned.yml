@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   ipa:
-    runs-on: macos-14
+    runs-on: macos-13
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -44,3 +44,4 @@ jobs:
           name: SimHelp-iPhone-unsigned
           path: build/SimHelp-iPhone-unsigned.ipa
           if-no-files-found: error
+
