@@ -1063,7 +1063,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
                 guard !self.stopped, self.generation == attempt else { return }
                 let interfaces = path.availableInterfaces.map { String(describing: $0.type) }.joined(separator: ",")
                 let route = path.status == .satisfied ? "Available" : "Not available"
-                self.onEvent(.status("PCM network path\(route):\(interfaces.isEmpty?"Unknown interface" : interfaces)"))
+                self.onEvent(.status("PCM network path\(route):\(interfaces.isEmpty ? "Unknown interface" : interfaces)"))
             }
         }
         connection.stateUpdateHandler = { [weak self, weak connection] state in
