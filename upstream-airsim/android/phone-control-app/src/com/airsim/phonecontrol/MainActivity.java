@@ -638,7 +638,7 @@ public final class MainActivity extends Activity {
         boolean available = accountKey.isEmpty() || accounts.accounts().stream()
                 .anyMatch(account -> account.key().equals(accountKey));
         callAccountCard.addView(label(DefaultCallAccount.selectedLabel(this)
-                + (available ? "" : "Â· Currently unavailable"), 14, available ? TEXT : WARNING, Gravity.START));
+                + (available ? "" : "· Currently unavailable"), 14, available ? TEXT : WARNING, Gravity.START));
         callAccountCard.addView(description("Used for SimHelp Bluetooth, VoWLAN and cloud dialing without changing the system calling card or SMS card."
                 + "Dialing will stop when the specified card is closed or removed, please select again."), matchWithTop(6));
         if (!accounts.error().isEmpty()) {
@@ -678,8 +678,8 @@ public final class MainActivity extends Activity {
 		smsCard.setPadding(dp(16), dp(16), dp(16), dp(16));
 		boolean inboxGranted = checkSelfPermission(Manifest.permission.READ_SMS)
 				== PackageManager.PERMISSION_GRANTED;
-		smsCard.addView(label(inboxGranted ? "Authorized Â· Scan only newly received text messages"
-				: "Unauthorized Â· Continue to use SMS broadcast reception", 14, TEXT, Gravity.START));
+		smsCard.addView(label(inboxGranted ? "Authorized · Scan only newly received text messages"
+				: "Unauthorized · Continue to use SMS broadcast reception", 14, TEXT, Gravity.START));
 		smsCard.addView(description("Optional permission; used to retrieve new text messages when the broadcast is not delivered, and does not import historical text messages."), matchWithTop(6));
 		if (!inboxGranted) {
 			TextView permissionAction = secondaryButton("Authorize reading text messages in system settings");
@@ -814,7 +814,7 @@ public final class MainActivity extends Activity {
         rangesInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         networkCard.addView(rangesInput, matchWithTop(10));
 
-        networkCard.addView(description("Preferred ports (1024â€“65535; when occupied or restricted, free ports will be automatically used."
+        networkCard.addView(description("Preferred ports (1024–65535; when occupied or restricted, free ports will be automatically used."
                 + "Bonjour advertises the actual port). Leave 0 for automatic selection."), matchWithTop(12));
         EditText controlInput = portField("VoWLAN control port", NetworkSettings.controlPort(this));
         networkCard.addView(controlInput, matchWithTop(8));
@@ -838,7 +838,7 @@ public final class MainActivity extends Activity {
             int pcm = parsePort(pcmInput, NetworkSettings.DEFAULT_PCM_PORT);
             int pairing = parsePort(pairingInput, NetworkSettings.DEFAULT_PAIRING_PORT);
             if (control < 0 || pcm < 0 || pairing < 0) {
-                toast("The port needs to be between 1024â€“65535, and the paired port can be filled in with 0");
+                toast("The port needs to be between 1024–65535, and the paired port can be filled in with 0");
                 return;
             }
             if (control == pcm) {
@@ -903,7 +903,7 @@ public final class MainActivity extends Activity {
         LinearLayout aboutCard = card(SURFACE, 22);
         aboutCard.setOrientation(LinearLayout.VERTICAL);
         aboutCard.setPadding(dp(16), dp(16), dp(16), dp(16));
-        aboutCard.addView(label("SimHelp Â· " + RuntimeMode.agentLabel(this), 16, TEXT, Gravity.START));
+        aboutCard.addView(label("SimHelp · " + RuntimeMode.agentLabel(this), 16, TEXT, Gravity.START));
         TextView version = label("Version" + AppInformation.version(this), 14, MUTED, Gravity.START);
         version.setTextIsSelectable(true);
         aboutCard.addView(version, matchWithTop(6));
@@ -1005,7 +1005,7 @@ public final class MainActivity extends Activity {
 
     private View voBLEAuthenticationPage() {
         LinearLayout root = pageRoot();
-        TextView back = label("â€¹", 40, TEXT, Gravity.START);
+        TextView back = label("‹", 40, TEXT, Gravity.START);
         back.setContentDescription("Return to settings");
         back.setOnClickListener(ignored -> {
             bottomBar.setVisibility(View.VISIBLE);
@@ -1115,7 +1115,7 @@ public final class MainActivity extends Activity {
 
     private View pairingPage() {
         LinearLayout root = pageRoot();
-        TextView back = label("â€¹", 40, TEXT, Gravity.START);
+        TextView back = label("‹", 40, TEXT, Gravity.START);
         back.setContentDescription("return");
         back.setOnClickListener(ignored -> {
             stopPairingServer();
@@ -1126,7 +1126,7 @@ public final class MainActivity extends Activity {
         TextView title = label("One-time pairing", 30, TEXT, Gravity.START);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         root.addView(title, matchWithTop(8));
-        root.addView(description("Connect iPhone and Samsung to the same Wiâ€‘Fi or Samsung hotspot"), matchWithTop(6));
+        root.addView(description("Connect iPhone and Samsung to the same Wi‑Fi or Samsung hotspot"), matchWithTop(6));
 
         LinearLayout pairingCard = card(SURFACE, 28);
         pairingCard.setOrientation(LinearLayout.VERTICAL);
@@ -1161,7 +1161,7 @@ public final class MainActivity extends Activity {
         });
         root.addView(cancel, matchWithTop(18));
 
-        TextView note = label("Temporary key Â· Can only be used once", 13, MUTED, Gravity.CENTER);
+        TextView note = label("Temporary key · Can only be used once", 13, MUTED, Gravity.CENTER);
         note.setCompoundDrawablesWithIntrinsicBounds(android.R.drawable.ic_lock_idle_lock, 0, 0, 0);
         note.setCompoundDrawableTintList(ColorStateList.valueOf(MUTED));
         note.setCompoundDrawablePadding(dp(8));
@@ -1178,7 +1178,7 @@ public final class MainActivity extends Activity {
         header.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout copy = column(0);
         copy.addView(overline("SMS assisted control"));
-        copy.addView(label(enabled ? "Enabled Â· Xiaomiâ€™s sending confirmation pop-up window can be automatically clicked" : "Not turned on Â· Only affects Xiaomiâ€™s sending confirmation pop-up window",
+        copy.addView(label(enabled ? "Enabled · Xiaomi’s sending confirmation pop-up window can be automatically clicked" : "Not turned on · Only affects Xiaomi’s sending confirmation pop-up window",
                 13, enabled ? PRIMARY : MUTED, Gravity.START), matchWithTop(3));
         header.addView(copy, weighted());
         card.addView(header);
@@ -1203,7 +1203,7 @@ public final class MainActivity extends Activity {
         card.addView(actions, matchWithTop(8));
         boolean notificationAccess = SmsNotificationListenerService.isEnabled(this);
         TextView notification = secondaryButton(notificationAccess
-                ? "Reply notification read Â· Authorized"
+                ? "Reply notification read · Authorized"
                 : "Enable reading of reply notifications (recommended by Xiaomi)");
         notification.setTextColor(notificationAccess ? MUTED : PRIMARY);
         notification.setOnClickListener(ignored -> {
@@ -1602,7 +1602,7 @@ public final class MainActivity extends Activity {
         final int generation = ++agentRefreshGeneration;
         agentDetail = "Under detection";
         if (showResult) setAgentRefreshMessage("Requesting" + AppConfig.endpoint(this)
-                + "Agent status ofâ€¦", MUTED);
+                + "Agent status of…", MUTED);
         updateVisibleStatus();
         Executors.newSingleThreadExecutor().execute(() -> {
             String address = AppConfig.endpoint(this);
@@ -1615,13 +1615,13 @@ public final class MainActivity extends Activity {
                 boolean healthy = result.optBoolean("ok", false);
                 String profile = result.optString("runtime_profile", "unknown");
                 String detail = paired
-                        ? "Interface: GET" + path + " Â· HTTP 200\nAgentï¼š" + address
+                        ? "Interface: GET" + path + " · HTTP 200\nAgent：" + address
                                 + "\n operating mode:" + profile
-                                + "Â· Command to be executed:" + result.optInt("pending_commands", 0)
+                                + "· Command to be executed:" + result.optInt("pending_commands", 0)
                                 + "\nRecent activities:" + result.optString("last_seen", "Not recorded")
-                        : "Interface: GET" + path + " Â· HTTP 200\nAgentï¼š" + address
+                        : "Interface: GET" + path + " · HTTP 200\nAgent：" + address
                                 + "\n version:" + result.optString("version", "unknown")
-                                + "Â· Operating mode:" + profile
+                                + "· Operating mode:" + profile
                                 + "\n control token: not configured yet";
                 BridgeLog.info("agent_status_refresh path=" + path + " ok=" + healthy
                         + " profile=" + profile + " endpoint=" + address);
@@ -1629,8 +1629,8 @@ public final class MainActivity extends Activity {
                     if (generation != agentRefreshGeneration) return;
                     agentOnline = paired && healthy;
                     agentDetail = healthy
-                            ? (paired ? "online" : "Reachable Â· Control token not yet paired")
-                            : "Reachable Â· Agent reports not ready";
+                            ? (paired ? "online" : "Reachable · Control token not yet paired")
+                            : "Reachable · Agent reports not ready";
                     if (showResult) setAgentRefreshMessage(
                             (healthy ? "Refresh successful" : "Agent is not ready") + "\n" + detail,
                             healthy ? PRIMARY : WARNING);
@@ -1645,7 +1645,7 @@ public final class MainActivity extends Activity {
                     });
                 } catch (Exception error) {
                     BridgeLog.error("push_status_refresh_failed endpoint=" + address, error);
-                    String pushError = error.getClass().getSimpleName() + " Â· " + error.getMessage();
+                    String pushError = error.getClass().getSimpleName() + " · " + error.getMessage();
                     runOnUiThread(() -> {
                         if (generation != agentRefreshGeneration) return;
                         pushConfigured = false;
@@ -1662,16 +1662,16 @@ public final class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     if (generation != agentRefreshGeneration) return;
                     agentOnline = false;
-                    agentDetail = "Offline Â·" + error.getClass().getSimpleName();
+                    agentDetail = "Offline ·" + error.getClass().getSimpleName();
                     pushConfigured = false;
                     pushDetail = "Agent is unreachable";
                     cloudRelayConfigured = false;
                     cloudLastError = RuntimeMode.agentLabel(this) + "Not reachable";
                     pushDiagnostic = "Restore first" + RuntimeMode.agentLabel(this)
                             + ";Currently unable to query /api/push/status.";
-                    if (showResult) setAgentRefreshMessage("Refresh failed Â· GET" + path
-                            + "\nAgentï¼š" + address + "\n Reason:"
-                            + DebugRedactor.sanitize(error.getClass().getSimpleName() + " Â· "
+                    if (showResult) setAgentRefreshMessage("Refresh failed · GET" + path
+                            + "\nAgent：" + address + "\n Reason:"
+                            + DebugRedactor.sanitize(error.getClass().getSimpleName() + " · "
                                     + String.valueOf(error.getMessage())), DANGER);
                     updateVisibleStatus();
                 });
@@ -1701,10 +1701,10 @@ public final class MainActivity extends Activity {
         pushDetail = !enabled ? "The cloud is closed" : pushConfigured ? "Push is configured" : "Incomplete configuration";
         pushDiagnostic = "Cloud switch:" + (enabled ? "turn on" : "closure")
                 + "\n incoming call Push:" + (calls ? "configured" : "Not ready")
-                + "Â· SMS Push:" + (messages ? "configured" : "Not ready")
-                + "\nRelayï¼š" + (relay.isEmpty() ? "Not configured" : relay)
+                + "· SMS Push:" + (messages ? "configured" : "Not ready")
+                + "\nRelay：" + (relay.isEmpty() ? "Not configured" : relay)
                 + "\nAPNs environment:" + result.optString("environment", "unknown")
-                + " Â· WANï¼š" + result.optString("wan_interface", "not detected")
+                + " · WAN：" + result.optString("wan_interface", "not detected")
                 + (lastError.isEmpty() ? "" : "\n Recent errors:" + DebugRedactor.sanitize(lastError))
                 + "\n Note: Configured does not mean that the public network Relay has been verified to be reachable.";
     }
@@ -1731,27 +1731,27 @@ public final class MainActivity extends Activity {
                         cloudLogs = cloudAgentLogs(new JSONObject(client.debugSnapshot()));
                     } catch (Exception error) {
                         cloudLogs = "Agent cloud event reading failed:" + DebugRedactor.sanitize(
-                                error.getClass().getSimpleName() + " Â· " + error.getMessage());
+                                error.getClass().getSimpleName() + " · " + error.getMessage());
                     }
                     String liveCloudLogs = cloudLogs;
                     runOnUiThread(() -> {
                         updatePushStatus(result);
                         updateVisibleStatus();
                         if (dialog.isShowing()) dialog.setMessage(featureDetails(feature,
-                                "Real-time query: /api/push/status Â· HTTP 200\n\nAgent cloud event (new to old)\n"
+                                "Real-time query: /api/push/status · HTTP 200\n\nAgent cloud event (new to old)\n"
                                         + liveCloudLogs));
                     });
                     return;
                 }
                 live = "Real-time query:" + (AppConfig.configured(this) ? "/api/android/status" : "/api/health")
-                        + "Â· HTTP 200\n returns: ok=" + result.optBoolean("ok", false)
-                        + " Â· runtime_profile=" + result.optString("runtime_profile", "unknown")
+                        + "· HTTP 200\n returns: ok=" + result.optBoolean("ok", false)
+                        + " · runtime_profile=" + result.optString("runtime_profile", "unknown")
                         + (AppConfig.configured(this)
-                            ? " Â· pending_commands=" + result.optInt("pending_commands", 0)
-                            : " Â· version=" + result.optString("version", "unknown"));
+                            ? " · pending_commands=" + result.optInt("pending_commands", 0)
+                            : " · version=" + result.optString("version", "unknown"));
             } catch (Exception error) {
                 live = "Real-time query failed:" + DebugRedactor.sanitize(
-                        error.getClass().getSimpleName() + " Â· " + error.getMessage());
+                        error.getClass().getSimpleName() + " · " + error.getMessage());
                 BridgeLog.error("feature_diagnostic_failed feature=" + feature, error);
             }
             String outcome = live;
@@ -1773,8 +1773,8 @@ public final class MainActivity extends Activity {
             if (!category.equals("push") && !category.startsWith("cloud")) continue;
             if (output.length() > 0) output.append('\n');
             output.append(DebugRedactor.sanitize(event.optString("timestamp", "")))
-                    .append(" Â· ").append(category)
-                    .append(" Â· ").append(DebugRedactor.sanitize(event.optString("summary", "")));
+                    .append(" · ").append(category)
+                    .append(" · ").append(DebugRedactor.sanitize(event.optString("summary", "")));
             String payload = event.optString("payload", "");
             if (!payload.isEmpty()) output.append("\n  ").append(
                     payload.contains("://") ? "[May contain media credentials, link details omitted]"
@@ -1948,7 +1948,7 @@ public final class MainActivity extends Activity {
 				});
 			} catch (Exception error) {
 				runOnUiThread(() -> {
-					if (installerStatus != null) installerStatus.setText("installerd is not available Â·" +
+					if (installerStatus != null) installerStatus.setText("installerd is not available ·" +
 							error.getClass().getSimpleName() +
 							". Please check sudo systemctl status airsim-installerd in Linux Terminal;" +
 							"Do not clear Linux data.");
@@ -1964,7 +1964,7 @@ public final class MainActivity extends Activity {
 					"Save the control token before updating, repairing, or rolling back.");
 			return;
 		}
-		if (installerStatus != null) installerStatus.setText("Agent operation in progress Â·" + action);
+		if (installerStatus != null) installerStatus.setText("Agent operation in progress ·" + action);
 		Executors.newSingleThreadExecutor().execute(() -> {
 			try {
 				AgentReleaseManager manager = new AgentReleaseManager(this);
@@ -1981,7 +1981,7 @@ public final class MainActivity extends Activity {
 			} catch (Exception error) {
 				BridgeLog.error("avf_agent_maintenance_failed action=" + action, error);
 				runOnUiThread(() -> {
-					if (installerStatus != null) installerStatus.setText("Agent operation failed Â·" + error.getMessage());
+					if (installerStatus != null) installerStatus.setText("Agent operation failed ·" + error.getMessage());
 					toast("AVF Agent operation failed");
 				});
 			}
@@ -1989,7 +1989,7 @@ public final class MainActivity extends Activity {
 	}
 
     private void updateVisibleStatus() {
-        if (status != null) status.setText(roleText() + "\nAgentï¼š" + agentDetail);
+        if (status != null) status.setText(roleText() + "\nAgent：" + agentDetail);
         if (currentPage == Page.STATUS && contentHost != null
                 && bottomBar.getVisibility() == View.VISIBLE) showPage(Page.STATUS);
     }
@@ -2006,7 +2006,7 @@ public final class MainActivity extends Activity {
                     if (pairingCodeView != null) pairingCodeView.setText(
                             MainScreenPresentation.formatPairingCode(code));
                     if (pairingStatus != null) {
-                        pairingStatus.setText("Wait for iPhone auto-discovery or manual address pairingâ€¦\n" + address);
+                        pairingStatus.setText("Wait for iPhone auto-discovery or manual address pairing…\n" + address);
                         pairingStatus.setTextIsSelectable(true);
                     }
                     startPairingCountdown();
@@ -2249,7 +2249,7 @@ public final class MainActivity extends Activity {
 
     private String vowlanNetworkLine() {
         String host = localVoWLANAddress();
-        return host.isEmpty() ? "Same Wiâ€‘Fi / Samsung Hotspot" : "Same Wiâ€‘Fi Â·" + host;
+        return host.isEmpty() ? "Same Wi‑Fi / Samsung Hotspot" : "Same Wi‑Fi ·" + host;
     }
 
     private boolean vowlanReady() {
@@ -2300,7 +2300,7 @@ public final class MainActivity extends Activity {
         String line = MainScreenPresentation.recentLogLines(BridgeLog.read(), "", 1);
         return "No Debug log yet".equals(line)
                 ? "Waiting for connection activity"
-                : "just Â·" + MainScreenPresentation.activitySummary(line);
+                : "just ·" + MainScreenPresentation.activitySummary(line);
     }
 
     private LinearLayout pageRoot() {
