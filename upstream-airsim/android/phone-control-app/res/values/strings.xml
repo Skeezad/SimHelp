@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sms_accessibility_description">only in SimHelp When sending a text message, identify Xiaomi\'s sending confirmation pop-up window and click on it“send”。Text message content will not be read or saved。</string>
+</resources>

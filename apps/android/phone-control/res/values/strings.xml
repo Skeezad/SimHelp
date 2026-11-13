@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="sms_accessibility_description">SimHelp only identifies and confirms the SMS send dialog on supported Xiaomi phones when you send a message. It does not read or store message contents.</string>
-</resources>

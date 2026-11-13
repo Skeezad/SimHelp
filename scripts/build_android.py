@@ -12,9 +12,9 @@ import subprocess
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT
-TOOLS = ROOT / ".local"
-OUT = ROOT / "build/android"
+SRC = ROOT / "upstream-airsim"
+TOOLS = ROOT / ".tools"
+OUT = ROOT / "dist/android-build"
 DIST = ROOT / "dist"
 DEPS = TOOLS / "dependencies"
 
@@ -36,8 +36,8 @@ def download(url, path, sha256):
 def main():
     import sys
     run(sys.executable, ROOT / "scripts/check_android_text.py")
-    jdk = Path(os.environ.get("JAVA_HOME", Path("C:/Program Files/Android/Android Studio/jbr")))
-    sdk = Path(os.environ.get("ANDROID_SDK_ROOT", Path(os.environ.get("LOCALAPPDATA", "")) / "Android/Sdk"))
+    jdk = Path(os.environ.get("JAVA_HOME", next(iter(TOOLS.glob("jdk-17*")), TOOLS / "jdk-17")))
+    sdk = Path(os.environ.get("ANDROID_SDK_ROOT", TOOLS / "android-sdk"))
     # Prefer the newest installed SDK pair; Android Studio installs newer
     # platform/build-tools revisions than the original 35.0.0 baseline.
     bt_candidates = sorted((sdk / "build-tools").glob("*/aapt2.exe"))
@@ -69,7 +69,7 @@ def main():
                          DEPS / "annotation.jar", "97dc45afefe3a1e421da42b8b6e9f90491477c45fc6178203e3a5e8a05ee8553"))
     jars.append(download("https://repo.maven.apache.org/maven2/org/bouncycastle/bcprov-jdk15to18/1.84/bcprov-jdk15to18-1.84.jar",
                          DEPS / "bcprov.jar", "a30777eebbd44aa1713c14ee04547de1df63ef3e383e910ed210e1d0f2c2ef92"))
-    java_dirs = [SRC / "apps/android/phone-control/src", SRC / "apps/android/audio-bridge/src"]
+    java_dirs = [SRC / "android/phone-control-app/src", SRC / "android/phone-audio-bridge/src"]
     sources = sorted(p for directory in java_dirs for p in directory.rglob("*.java"))
     # javac/d8 response files avoid Windows command-line length limits.
     quote = lambda p: '"' + str(p).replace("\\", "/") + '"'
@@ -85,9 +85,9 @@ def main():
     run(jdk / "bin/java.exe", "-Xmx2g", "-cp", bt / "lib/d8.jar", "com.android.tools.r8.D8",
         "--lib", android, "--min-api", "29", "--output", OUT / "dex", "@" + str(dex_args))
     resources = OUT / "resources.zip"
-    run(bt / "aapt2.exe", "compile", "--dir", SRC / "apps/android/phone-control/res", "-o", resources)
+    run(bt / "aapt2.exe", "compile", "--dir", SRC / "android/phone-control-app/res", "-o", resources)
     manifest = OUT / "AndroidManifest.xml"
-    manifest.write_text((SRC / "apps/android/standalone/AndroidManifest.xml").read_text(encoding="utf-8")
+    manifest.write_text((SRC / "android-standalone/AndroidManifest.xml").read_text(encoding="utf-8")
                         .replace('android:debuggable="true"', 'android:debuggable="false"'), encoding="utf-8")
     unsigned = OUT / "unsigned.apk"
     run(bt / "aapt2.exe", "link", "-o", unsigned, "-I", android, "--manifest", manifest, resources)
@@ -99,8 +99,7 @@ def main():
     aligned = OUT / "aligned.apk"
     run(bt / "zipalign.exe", "-f", "4", unsigned, aligned)
     # A separate fork key prevents this APK replacing an upstream installation.
-    key = Path(os.environ.get("SIMHELP_KEYSTORE", str(TOOLS / "keys/simhelp-personal.keystore")))
-    key.parent.mkdir(parents=True, exist_ok=True)
+    key = TOOLS / "simhelp-personal.keystore"
     if not key.exists():
         run(jdk / "bin/keytool.exe", "-genkeypair", "-keystore", key, "-storepass", "android",
             "-keypass", "android", "-alias", "simhelp", "-dname", "CN=SimHelp Personal",

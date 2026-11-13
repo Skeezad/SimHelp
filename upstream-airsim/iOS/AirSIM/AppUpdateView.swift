@@ -1,0 +1,408 @@
+import SwiftUI
+import WebKit
+
+enum AppUpdatePresentation: Identifiable {
+    case notes
+    case result(AppUpdateResult)
+    var id: String {
+        switch self { case .notes: return "notes"; case .result: return "result" }
+    }
+}
+
+enum AppReleaseNotes {
+    // Bundled: showing installed-version notes never needs GitHub, Relay or pairing.
+    // Keep this summary in sync with the candidate's source and docs when publishing.
+    static let items = [
+        "Supports connecting U30Air running compatible SimHelp devices to use call and text messaging functions on iPhone.",
+        "Desktop and lock screen widgets display device status; supported desktop sizes provide device and connection mode switching, summaries of recent calls and text messages.",
+        "The widget supports background switching and displays the power reported by the device; the refresh is scheduled by the system, and unknown is displayed when there is no valid sampling.",
+        "Experimental TLS public network domain name pairing and direct connection: Complete the first pairing through a self-built HTTPS/TLS portal, or add a public network portal for paired devices.",
+        "The bottom labels and widget titles of recent calls and text messages display the number of missed calls/unreads, and the corresponding records are also marked with eye-catching marks.",
+        "When the outgoing call is completed, the waiting tone and timing will be stopped according to the calling identity; network fluctuations will not automatically repeat the dialing."
+    ]
+    static let limitations = "U30Air needs to run a compatible device. The operator's early media only completed a single trial among temporary candidates and has not yet been officially opened. The TLS public network function is experimental and requires a self-built gateway with inbound access, a valid certificate, and independent audio forwarding; it does not automatically penetrate NAT, and does not add background push. Widget refresh is scheduled by the system, and mode switching does not mean that it is connected. GitHub release does not mean TestFlight is available for update."
+}
+
+enum AppUpdateChannel {
+    static var isTestFlight: Bool {
+        Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
+            && Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision") == nil
+    }
+    static var title: String { isTestFlight ? "TestFlight" : "Self-signing/sideloading or other installation channels" }
+}
+
+struct AppUpdateSheet: View {
+    let presentation: AppUpdatePresentation
+    @ObservedObject var updates: AppUpdateController
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        Group {
+            switch presentation {
+        case .notes:
+            NewFeatureOnboardingView(
+                version: AppInformation.version,
+                onConfirm: {
+                    updates.acknowledgeNotes()
+                    dismiss()
+                }
+            )
+        case .result(let result):
+            NavigationStack {
+                List {
+                    Section { Text(result.message) }
+                    if let candidate = result.candidate {
+                        Section("Public version \(candidate.version) (\(candidate.build))") {
+                            Text(candidate.notes.isEmpty ? "Please check the release page for update instructions." : candidate.notes)
+                                .textSelection(.enabled)
+                            Link("View the GitHub release notes", destination: candidate.page)
+                        }
+                        Section("How to update") {
+                            Text(AppUpdateChannel.isTestFlight
+                                ? "Please open TestFlight to see if there is an existing build available for this app. GitHub publishing does not mean that Apple has processed it or that it can be updated by testers."
+                                : "GitHub IPA requires the sideloading tool to be re-signed and installed, and cannot be installed directly. Those using TestFlight please check in TestFlight.")
+                            Text("There will be no automatic download and installation, and no changes to pairing, calling or AVF Agent.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .navigationTitle("Apply updates")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("knew") {
+                            if let candidate = result.candidate { updates.acknowledgeUpdate(candidate) }
+                            dismiss()
+                        }
+                    }
+                }
+            }
+        }
+        }
+        .interactiveDismissDisabled()
+    }
+}
+
+private struct NewFeaturePage: Identifiable {
+    let id: Int
+    let kicker: String
+    let title: String
+    let body: String
+    let symbol: String
+    let accent: Color
+    let demo: NewFeatureDemo
+}
+
+private enum NewFeatureCatalog {
+    static let pages: [NewFeaturePage] = [
+        NewFeaturePage(
+            id: 0,
+            kicker: "U30Air support",
+            title: "Connect U30Air, \n for phone and text messaging",
+            body: "Connect U30Air running an SimHelp-compatible device to make, receive calls, and send and receive text messages on your iPhone. Please update the device first and complete pairing.",
+            symbol: "phone.connection.fill",
+            accent: .cyan,
+            demo: .u30Air
+        ),
+        NewFeaturePage(
+            id: 1,
+            kicker: "Desktop and lock screen widgets",
+            title: "No need to open the App, \n frequently used information can be seen at a glance",
+            body: "Check the device status, battery level, recent calls and text messages; the supported desktop sizes can directly switch devices and connection modes. Refresh is scheduled by the system, and the power consumption is subject to effective reporting by the device.",
+            symbol: "rectangle.grid.2x2.fill",
+            accent: .green,
+            demo: .widgetSummary
+        ),
+        NewFeaturePage(
+            id: 2,
+            kicker: "TLS Public Network · Experimental",
+            title: "Using your own domain name, \n can be paired and connected directly outside the country.",
+            body: "Complete the first pairing through a self-built HTTPS/TLS gateway, or add a public network entrance to an existing device. Requires inbound network, valid certificate and independent audio forwarding; usage tutorial included in configuration page.",
+            symbol: "lock.shield.fill",
+            accent: .blue,
+            demo: .publicTLS
+        ),
+        NewFeaturePage(
+            id: 3,
+            kicker: "Unread text messages · Missed calls",
+            title: "Those that have not been read, those that have not been answered, \n are all marked clearly",
+            body: "The bottom labels and widgets display unread/missed numbers, and corresponding text messages and call records are also marked. Open the record and you can find messages and calls that you have not yet viewed.",
+            symbol: "app.badge.fill",
+            accent: .orange,
+            demo: .unreadBadges
+        ),
+    ]
+}
+
+struct NewFeatureOnboardingView: View {
+    let version: String
+    let onConfirm: () -> Void
+    @State private var page = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var selected: NewFeaturePage { NewFeatureCatalog.pages[page] }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color.black,
+                    selected.accent.opacity(0.34),
+                    Color.black,
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: page)
+
+            TabView(selection: $page) {
+                ForEach(Array(NewFeatureCatalog.pages.enumerated()), id: \.element.id) { index, item in
+                    NewFeaturePageView(item: item, isActive: page == index)
+                        .tag(index)
+                }
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: page)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SimHelp")
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("Version \(version)")
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.55))
+                }
+                Spacer()
+                Button("Sure") { onConfirm() }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 9)
+                    .background(.white, in: Capsule())
+                    .accessibilityLabel("Confirm and close new feature introduction")
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 10)
+            .padding(.bottom, 8)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 12) {
+                HStack(spacing: 7) {
+                    ForEach(NewFeatureCatalog.pages.indices, id: \.self) { index in
+                        Capsule()
+                            .fill(index == page ? .white : .white.opacity(0.25))
+                            .frame(width: index == page ? 22 : 7, height: 7)
+                            .animation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: page)
+                    }
+                }
+                Text("Swipe left or right · See all new features")
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .padding(.bottom, 6)
+            }
+            .padding(.top, 4)
+        }
+        .preferredColorScheme(.dark)
+        .interactiveDismissDisabled()
+    }
+}
+
+private struct NewFeaturePageView: View {
+    let item: NewFeaturePage
+    let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 12)
+
+            FeatureDemoView(demo: item.demo, isActive: isActive)
+                .accessibilityHidden(true)
+                .frame(height: 220)
+                .padding(.horizontal, 4)
+                .opacity(isActive ? 1 : 0.55)
+                .scaleEffect(isActive ? 1 : 0.94)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: isActive)
+                .padding(.bottom, 22)
+
+            Text(item.kicker.uppercased())
+                .font(.caption.weight(.bold))
+                .tracking(2.2)
+                .foregroundStyle(item.accent)
+
+            Text(item.title)
+                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white)
+                .minimumScaleFactor(0.8)
+                .padding(.top, 8)
+
+            Text(item.body)
+                .font(.callout)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white.opacity(0.68))
+                .lineSpacing(4)
+                .padding(.top, 14)
+                .padding(.horizontal, 8)
+
+            Spacer(minLength: 18)
+        }
+        .padding(.horizontal, 28)
+        .opacity(isActive ? 1 : 0.55)
+        .scaleEffect(isActive ? 1 : 0.94)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: isActive)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+
+private enum NewFeatureDemo: String {
+    case u30Air, widgetSummary, publicTLS, unreadBadges
+}
+
+private struct FeatureDemoView: UIViewRepresentable {
+    let demo: NewFeatureDemo
+    let isActive: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+
+    private var animationEnabled: Bool { isActive && !reduceMotion && scenePhase == .active }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
+        let view = WKWebView(frame: .zero, configuration: configuration)
+        view.isOpaque = false
+        view.backgroundColor = .clear
+        view.scrollView.backgroundColor = .clear
+        view.scrollView.isScrollEnabled = false
+        view.isUserInteractionEnabled = false
+        load(view, coordinator: context.coordinator)
+        return view
+    }
+
+    func updateUIView(_ view: WKWebView, context: Context) {
+        load(view, coordinator: context.coordinator)
+    }
+
+    private func load(_ view: WKWebView, coordinator: Coordinator) {
+        let key = "\(demo.rawValue)-\(animationEnabled)"
+        guard coordinator.key != key else { return }
+        coordinator.key = key
+        view.loadHTMLString(FeatureDemoHTML.html(for: demo, animated: animationEnabled), baseURL: nil)
+    }
+
+    final class Coordinator { var key: String? }
+}
+
+private enum FeatureDemoHTML {
+    // Bundled, decorative illustrations. Never fetch resources or use real device data.
+    static func html(for demo: NewFeatureDemo, animated: Bool) -> String {
+        let illustration: String
+        switch demo {
+        case .u30Air: illustration = u30Air
+        case .widgetSummary: illustration = widgetSummary
+        case .publicTLS: illustration = publicTLS
+        case .unreadBadges: illustration = unreadBadges
+        }
+        return """
+        <!doctype html><html><head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
+        <style>
+        html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
+        svg{display:block;width:100%;height:100%}
+        text{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif}
+        .route{stroke-dasharray:6 7;animation:flow 2s linear infinite}
+        .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 3s ease-in-out infinite}
+        .reveal{animation:reveal 4s ease-in-out infinite}
+        .delayed{animation-delay:.5s}
+        .mode-a{animation:mode-a 6s ease-in-out infinite}
+        .mode-b{opacity:0;animation:mode-b 6s ease-in-out infinite}
+        @keyframes flow{to{stroke-dashoffset:-26}}
+        @keyframes pulse{0%,70%,100%{transform:scale(1)}82%{transform:scale(1.12)}90%{transform:scale(1)}}
+        @keyframes reveal{0%,100%{opacity:.5}25%,80%{opacity:1}}
+        @keyframes mode-a{0%,40%,100%{opacity:1}50%,90%{opacity:0}}
+        @keyframes mode-b{0%,40%,100%{opacity:0}50%,90%{opacity:1}}
+        body.still *{animation:none!important}
+        @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+        </style></head><body class="\(animated ? "animated" : "still")">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220" aria-hidden="true">
+        \(illustration)
+        </svg></body></html>
+        """
+    }
+
+    private static let u30Air = """<rect x="20" y="51" width="104" height="122" rx="25" fill="#172A3B" stroke="#42738C"/>
+    <rect x="45" y="69" width="54" height="9" rx="4" fill="#304D63"/>
+    <circle class="pulse" cx="72" cy="109" r="8" fill="#55DBF6"/>
+    <text x="72" y="149" text-anchor="middle" fill="white" font-size="16" font-weight="700">U30Air</text>
+    <path class="route" d="M132 109H224" stroke="#55DBF6" stroke-width="2"/>
+    <rect x="151" y="91" width="54" height="35" rx="17" fill="#13394A"/>
+    <path d="M170 108l6 6 12-13" fill="none" stroke="#55DBF6" stroke-width="3" stroke-linecap="round"/>
+    <rect x="233" y="20" width="107" height="177" rx="23" fill="#182233" stroke="#54677C"/>
+    <rect x="269" y="31" width="35" height="7" rx="4" fill="#526178"/>
+    <text x="286" y="66" text-anchor="middle" fill="white" font-size="16" font-weight="700">SimHelp</text>
+    <g class="reveal"><rect x="247" y="83" width="79" height="37" rx="12" fill="#164458"/>
+    <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">Call</text></g>
+    <g class="reveal delayed"><rect x="247" y="129" width="79" height="37" rx="12" fill="#233D57"/>
+    <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">SMS</text></g>
+    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">Connection instructions · Must be compatible with the device</text>"""
+
+    private static let widgetSummary = """<rect x="14" y="18" width="332" height="182" rx="28" fill="#F4F8FC"/>
+    <rect x="32" y="35" width="42" height="42" rx="13" fill="#DCEEFF"/>
+    <path d="M43 46q-4 12 17 22l6-7-8-5-4 4-6-7 3-4z" fill="#008BEE"/>
+    <text x="85" y="53" fill="#152238" font-size="17" font-weight="700">Galaxy</text>
+    <circle cx="89" cy="69" r="3" fill="#279D56"/>
+    <text x="99" y="73" fill="#5B697B" font-size="11">Recently online</text>
+    <rect x="272" y="43" width="23" height="12" rx="3" fill="#2AC466"/>
+    <rect x="296" y="47" width="2" height="4" rx="1" fill="#2AC466"/>
+    <text x="270" y="73" fill="#152238" font-size="12">82%</text>
+    <path d="M33 91H327" stroke="#D8E1EA"/>
+    <text x="33" y="112" fill="#64748B" font-size="10">Equipment</text>
+    <text x="33" y="132" fill="#0064CC" font-size="14" font-weight="600">Galaxy ↻</text>
+    <text x="195" y="112" fill="#64748B" font-size="10">Connection mode</text>
+    <text class="mode-a" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">VoWLAN ↻</text>
+    <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">Auto ↻</text>
+    <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">Recent calls</text>
+    <text x="33" y="180" fill="#64748B" font-size="11">138 •••• 6028</text>
+    <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">Recent text messages</text>
+    <text x="195" y="180" fill="#64748B" font-size="11">I'm home. </text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Indicates data · Refresh is scheduled by the system</text>"""
+
+    private static let publicTLS = """<rect x="26" y="18" width="308" height="44" rx="15" fill="#193453" stroke="#4278AA"/>
+    <path d="M45 37v-5a5 5 0 0 1 10 0v5M43 37h14v12H43z" fill="none" stroke="#74BDFF" stroke-width="2"/>
+    <text x="69" y="45" fill="#D8EBFF" font-size="15">https://phone.example.com</text>
+    <rect x="18" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
+    <text x="57" y="135" text-anchor="middle" fill="white" font-size="15">iPhone</text>
+    <path class="route" d="M101 130H134M226 130H259" stroke="#64B6FF" stroke-width="2"/>
+    <rect x="139" y="91" width="82" height="78" rx="18" fill="#163D66" stroke="#4D9FE8"/>
+    <text x="180" y="123" text-anchor="middle" fill="#A6D7FF" font-size="15" font-weight="700">TLS</text>
+    <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">Self-built gateway</text>
+    <rect x="264" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
+    <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">Android</text>
+    <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">First time pairing · Control · Audio</text>
+    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">Experimental · You need to deploy your own inbound gateway</text>"""
+
+    private static let unreadBadges = """<rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
+    <rect x="33" y="33" width="294" height="52" rx="13" fill="#243148"/>
+    <circle class="pulse" cx="47" cy="59" r="4" fill="#FF625A"/>
+    <text x="61" y="54" fill="white" font-size="14" font-weight="600">Missed calls</text>
+    <text x="61" y="74" fill="#B8C6DA" font-size="11">138 •••• 6028</text>
+    <rect x="33" y="94" width="294" height="52" rx="13" fill="#243148"/>
+    <circle class="pulse delayed" cx="47" cy="120" r="4" fill="#FF625A"/>
+    <text x="61" y="115" fill="white" font-size="14" font-weight="600">Unread text messages</text>
+    <text x="61" y="135" fill="#B8C6DA" font-size="11">I'm home. </text>
+    <text x="98" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">Recent</text>
+    <g class="pulse"><rect x="115" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
+    <text x="125" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">2</text></g>
+    <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">SMS</text>
+    <g class="pulse delayed"><rect x="261" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
+    <text x="271" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text></g>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Schematic data · Numerical markers and record marks</text>"""
+}

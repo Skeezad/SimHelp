@@ -1,0 +1,250 @@
+import Foundation
+import CryptoKit
+
+/// Responsible for saving local call records and text messages on the mobile phone，Does not depend on whether the module is online。
+final class LocalHistoryStore {
+    // Background push persistence and the foreground model use separate store instances.
+    private static let messageLock = NSRecursiveLock()
+    private struct AttentionState: Codable {
+        var readMessages: Set<String> = []
+        var legacyReadMessages: Set<String> = []
+        var seenCalls: Set<String> = []
+        mutating func read(_ messages: [SMSMessage]) {
+            for message in messages where !message.isOutgoing {
+                readMessages.formUnion(LocalHistoryStore.visibilityKeys(message))
+                if message.deliveryID?.isEmpty != false {
+                    legacyReadMessages.formUnion(LocalHistoryStore.deletionKeys(message))
+                }
+            }
+        }
+    }
+    private struct MessageState: Codable {
+        var messages: [SMSMessage]
+        var deletedKeys: Set<String>
+        // Genuine no-ID deletions also suppress the same old SMS after an Agent adds delivery IDs.
+        var legacyDeletedKeys: Set<String>? = nil
+    }
+    private let fileManager: FileManager
+    private let directoryURL: URL
+    private let callHistoryURL: URL
+    private let messagesURL: URL
+    private let attentionURL: URL
+
+    init(fileManager: FileManager = .default, directoryURL: URL? = nil) {
+        self.fileManager = fileManager
+        let durableRoot = fileManager.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        ).first
+            ?? fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
+                .appendingPathComponent("Documents", isDirectory: true)
+        let resolvedDirectoryURL = directoryURL
+            ?? durableRoot.appendingPathComponent("SimHelp", isDirectory: true)
+        self.directoryURL = resolvedDirectoryURL
+        callHistoryURL = resolvedDirectoryURL.appendingPathComponent("call-history.json")
+        messagesURL = resolvedDirectoryURL.appendingPathComponent("messages.json")
+        attentionURL = resolvedDirectoryURL.appendingPathComponent("history-attention.json")
+
+        do {
+            try fileManager.createDirectory(
+                at: resolvedDirectoryURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+        } catch {
+            // Local caching cannot block calls and text messages；Logging will continue if subsequent writes fail。
+            Self.log("Failed to create local history directory: \(error.localizedDescription)")
+        }
+    }
+
+    func loadCallHistory() -> [CallRecord] {
+        load(CallRecord.self, from: callHistoryURL) ?? []
+    }
+
+    func loadMessages() -> [SMSMessage] {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        return readMessageState()?.messages ?? []
+    }
+
+    @discardableResult
+    func saveCallHistory(_ records: [CallRecord]) -> Bool {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        _ = readAttentionState() // Migrate old history before inserting new records.
+        return save(records, to: callHistoryURL)
+    }
+
+    @discardableResult
+    func saveMessages(_ records: [SMSMessage]) -> Bool {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        _ = readAttentionState()
+        guard var state = readMessageState() else { return false }
+        // A background push can arrive after another store instance captured its input array.
+        // Merge under the lock; deletion is explicit and never inferred from missing records.
+        let merged = SMSHistoryPolicy.deduplicated(state.messages + records)
+        state.messages = Array(merged.filter { Self.isVisible($0, in: state) }
+            .sorted { $0.timestamp > $1.timestamp }.prefix(2_000))
+        return writeMessageState(state)
+    }
+
+    func visibleMessages(_ records: [SMSMessage]) -> [SMSMessage] {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard let state = readMessageState() else { return [] }
+        return records.filter { Self.isVisible($0, in: state) }
+    }
+
+    @discardableResult
+    func deleteMessages(ids: Set<String>, from records: [SMSMessage]) -> Bool {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard var state = readMessageState() else { return false }
+        for message in records + state.messages where ids.contains(message.id) {
+            state.deletedKeys.formUnion(Self.deletionKeys(message))
+            if message.deliveryID?.isEmpty != false {
+                state.legacyDeletedKeys = (state.legacyDeletedKeys ?? []).union(Self.deletionKeys(message))
+            }
+        }
+        state.messages = SMSHistoryPolicy.deduplicated(state.messages + records).filter { Self.isVisible($0, in: state) }
+            .sorted { $0.timestamp > $1.timestamp }
+        return writeMessageState(state)
+    }
+
+    private static func deletionKeys(_ message: SMSMessage) -> Set<String> {
+        // Hash legacy fingerprints: an SMS id can itself contain the number and complete body.
+        let legacy = message.scopedIdentity("\(message.sender)\u{0}\(Int64(message.timestamp.timeIntervalSince1970.rounded(.down)))\u{0}\(message.content)\u{0}\(message.direction?.rawValue ?? "incoming")")
+        return Set([message.id, legacy].map {
+            SHA256.hash(data: Data($0.utf8)).map { String(format: "%02x", $0) }.joined()
+        })
+    }
+
+    private static func attentionCallKey(_ call: CallRecord) -> String {
+        let identity = "\(call.sourceAgentID ?? "")\u{0}\(call.androidID ?? call.sourceCallID ?? call.id)"
+        return SHA256.hash(data: Data(identity.utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// Existing history has no read information: baseline it once, before new
+    /// push/local deliveries are saved. Never turn a corrupt file into empty state.
+    private func readAttentionState() -> AttentionState? {
+        do {
+            return try JSONDecoder().decode(AttentionState.self, from: Data(contentsOf: attentionURL))
+        } catch CocoaError.fileReadNoSuchFile {
+            guard let existingMessages = readMessageState()?.messages else { return nil }
+            var state = AttentionState()
+            state.read(existingMessages)
+            state.seenCalls = Set(loadCallHistory().filter { $0.missed && $0.endedAt != nil }.map(Self.attentionCallKey))
+            return writeAttentionState(state) ? state : nil
+        } catch { return nil }
+    }
+
+    private func writeAttentionState(_ state: AttentionState) -> Bool {
+        do {
+            try JSONEncoder().encode(state).write(to: attentionURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            return true
+        } catch { return false }
+    }
+
+    func unreadMessageIDs(in records: [SMSMessage]) -> Set<String> {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard let state = readAttentionState() else { return [] }
+        return Set(SMSHistoryPolicy.deduplicated(records).filter {
+            !$0.isOutgoing && Self.visibilityKeys($0).isDisjoint(with: state.readMessages)
+                && Self.deletionKeys($0).isDisjoint(with: state.legacyReadMessages)
+        }.map(\.id))
+    }
+
+    func unseenMissedCallIDs(in records: [CallRecord]) -> Set<String> {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard let state = readAttentionState() else { return [] }
+        return Set(records.filter {
+            $0.missed && $0.direction == "incoming" && $0.endedAt != nil
+                && !state.seenCalls.contains(Self.attentionCallKey($0))
+        }.map(\.id))
+    }
+
+    @discardableResult
+    func markMessagesRead(_ records: [SMSMessage]) -> Bool {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard var state = readAttentionState() else { return false }
+        state.read(records)
+        return writeAttentionState(state)
+    }
+
+    @discardableResult
+    func markMissedCallsSeen(_ records: [CallRecord]) -> Bool {
+        Self.messageLock.lock(); defer { Self.messageLock.unlock() }
+        guard var state = readAttentionState() else { return false }
+        state.seenCalls.formUnion(records.filter { $0.missed && $0.endedAt != nil }.map(Self.attentionCallKey))
+        return writeAttentionState(state)
+    }
+
+    private static func visibilityKeys(_ message: SMSMessage) -> Set<String> {
+        if let id = message.deliveryID, !id.isEmpty {
+            // A different stable delivery ID always denotes a different SMS, even for identical OTPs.
+            return [SHA256.hash(data: Data(message.id.utf8)).map { String(format: "%02x", $0) }.joined()]
+        }
+        return deletionKeys(message)
+    }
+
+    private static func isVisible(_ message: SMSMessage, in state: MessageState) -> Bool {
+        visibilityKeys(message).isDisjoint(with: state.deletedKeys)
+            && deletionKeys(message).isDisjoint(with: state.legacyDeletedKeys ?? [])
+    }
+
+    private func readMessageState() -> MessageState? {
+        do {
+            let data = try Data(contentsOf: messagesURL)
+            let decoder = JSONDecoder(); decoder.dateDecodingStrategy = .iso8601
+            if let state = try? decoder.decode(MessageState.self, from: data) { return state }
+            return MessageState(messages: try decoder.decode([SMSMessage].self, from: data), deletedKeys: [])
+        } catch CocoaError.fileReadNoSuchFile {
+            return MessageState(messages: [], deletedKeys: [])
+        } catch {
+            Self.log("Failed to read SMS history; retain file and do not overwrite deletion mark")
+            return nil
+        }
+    }
+
+    private func writeMessageState(_ state: MessageState) -> Bool {
+        do {
+            let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+            try encoder.encode(state).write(to: messagesURL, options: [.atomic])
+            return true
+        } catch {
+            Self.log("Failed to write SMS history")
+            return false
+        }
+    }
+
+    private func load<Element: Decodable>(_ type: Element.Type, from url: URL) -> [Element]? {
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode([Element].self, from: data)
+        } catch CocoaError.fileReadNoSuchFile {
+            return nil
+        } catch {
+            Self.log("Failed to read local history (\(url.lastPathComponent)): \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    private func save<Element: Encodable>(_ records: [Element], to url: URL) -> Bool {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let data = try encoder.encode(records)
+            // Atomic write first generates a temporary file and then replaces the target，Avoid power outages and leave half JSON document。
+            try data.write(to: url, options: [.atomic])
+            return true
+        } catch {
+            Self.log("Failed to write local history (\(url.lastPathComponent)): \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    private static func log(_ message: String) {
+#if DEBUG
+        print("[SimHelp LocalHistory] \(message)")
+#endif
+    }
+}

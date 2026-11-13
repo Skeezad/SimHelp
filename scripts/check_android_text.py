@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
-APP = ROOT / 'apps/android/phone-control'
+APP = ROOT / 'upstream-airsim/android/phone-control-app'
 LITERALS = re.compile(r'"(?:\\.|[^"\\])*"')
 PLACEHOLDER = re.compile(r'\bText(?:[\s\u200c]+Text)+\b')
 def check(value, path):

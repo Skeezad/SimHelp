@@ -1,0 +1,44 @@
+name: Build iOS app
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "upstream-airsim/iOS/**"
+      - ".github/workflows/ios-build.yml"
+
+jobs:
+  build-ios:
+    runs-on: macos-14
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build unsigned iOS app
+        working-directory: upstream-airsim/iOS
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project AirSIM.xcodeproj \
+            -scheme AirSIM \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/AirSIM.app"
+          test -d "$APP"
+          mkdir -p dist/Payload
+          cp -R "$APP" dist/Payload/SimHelp.app
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent dist/Payload dist/SimHelp-iPhone-unsigned.ipa
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimHelp-iPhone-unsigned
+          path: dist/SimHelp-iPhone-unsigned.ipa

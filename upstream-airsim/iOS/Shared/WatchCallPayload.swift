@@ -1,0 +1,364 @@
+import Foundation
+
+enum WatchCallPhase: String, Codable, Sendable {
+    case idle
+    case incoming
+    case connecting
+    case active
+    case ended
+}
+
+struct WatchCallPayload: Equatable, Sendable {
+    let callID: String
+    let callUUID: UUID?
+    let aliases: [String]
+    let phase: WatchCallPhase
+    let number: String?
+    let callerName: String?
+    let transport: String?
+    let updatedAt: Date
+
+    var dictionary: [String: Any] {
+        var value: [String: Any] = [
+            "event": "watch_call_state",
+            "call_id": callID,
+            "call_uuid": callUUID?.uuidString ?? "",
+            "phase": phase.rawValue,
+            "updated_at": updatedAt.timeIntervalSince1970,
+        ]
+        if !aliases.isEmpty { value["call_aliases"] = aliases }
+        if let number, !number.isEmpty { value["number"] = number }
+        if let callerName, !callerName.isEmpty { value["caller_name"] = callerName }
+        if let transport, !transport.isEmpty { value["transport"] = transport }
+        return value
+    }
+
+    init(
+        callID: String,
+        callUUID: UUID?,
+        aliases: [String] = [],
+        phase: WatchCallPhase,
+        number: String?,
+        callerName: String?,
+        transport: String? = nil,
+        updatedAt: Date
+    ) {
+        self.callID = callID
+        self.callUUID = callUUID
+        self.aliases = aliases.filter { !$0.isEmpty && $0 != callID }
+        self.phase = phase
+        self.number = number
+        self.callerName = callerName
+        self.transport = transport
+        self.updatedAt = updatedAt
+    }
+
+    /// Identity and presentation fields, excluding the timestamp used only for
+    /// stale/ordering checks. Re-publishing the same state must not create a new
+    /// WatchConnectivity transfer on every update.
+    func isSamePresentation(as other: WatchCallPayload) -> Bool {
+        callID == other.callID
+            && callUUID == other.callUUID
+            && aliases == other.aliases
+            && phase == other.phase
+            && number == other.number
+            && callerName == other.callerName
+            && transport == other.transport
+    }
+
+    func matches(callID: String?, callUUID: UUID?) -> Bool {
+        let idMatches = callID.map { $0 == self.callID || aliases.contains($0) } ?? false
+        if let expectedUUID = self.callUUID, let candidateUUID = callUUID {
+            return expectedUUID == candidateUUID
+        }
+        return idMatches || callUUID != nil && callUUID == self.callUUID
+    }
+
+    init?(dictionary: [String: Any]) {
+        guard dictionary["event"] as? String == "watch_call_state",
+              let phaseValue = dictionary["phase"] as? String,
+              let phase = WatchCallPhase(rawValue: phaseValue),
+              let updatedAt = dictionary["updated_at"] as? TimeInterval else { return nil }
+        let callID = dictionary["call_id"] as? String ?? ""
+        let aliases = dictionary["call_aliases"] as? [String] ?? []
+        let uuidValue = dictionary["call_uuid"] as? String
+        self.init(
+            callID: callID,
+            callUUID: uuidValue.flatMap(UUID.init(uuidString:)),
+            aliases: aliases,
+            phase: phase,
+            number: dictionary["number"] as? String,
+            callerName: dictionary["caller_name"] as? String,
+            transport: dictionary["transport"] as? String,
+            updatedAt: Date(timeIntervalSince1970: updatedAt)
+        )
+    }
+}
+enum WatchCallMirrorPolicy {
+    static func identityKeys(for payload: WatchCallPayload) -> Set<String> {
+        var keys = Set(payload.aliases.filter { !$0.isEmpty })
+        if !payload.callID.isEmpty { keys.insert(payload.callID) }
+        if let callUUID = payload.callUUID {
+            keys.insert("uuid:\(callUUID.uuidString.lowercased())")
+        }
+        return keys
+    }
+
+    static func isTombstoned(
+        _ payload: WatchCallPayload, endedCallIDs: Set<String>, endedCallUUIDs: Set<UUID>
+    ) -> Bool {
+        !endedCallIDs.isDisjoint(with: Set([payload.callID] + payload.aliases))
+            || payload.callUUID.map(endedCallUUIDs.contains) == true
+    }
+
+    static func isNewer(_ payload: WatchCallPayload, than timestamp: Date?) -> Bool {
+        guard let timestamp else { return true }
+        return payload.updatedAt.timeIntervalSinceReferenceDate >= timestamp.timeIntervalSinceReferenceDate
+    }
+}
+
+enum WatchVoIPPayloadError: LocalizedError {
+    case unsupportedEvent
+    case missingCallID
+    case invalidCallUUID
+    case missingSecret
+    case invalidMediaURL
+    case expired
+    case invalidLocalMedia
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedEvent: return "Not a valid watch call push notification"
+        case .missingCallID: return "The call notification on the watch is missing call_id"
+        case .invalidCallUUID: return "The watch push notification lacks a valid call_uuid"
+        case .missingSecret: return "Watch call push notification is missing media key"
+        case .invalidMediaURL: return "Incoming call notification on watch lacks secure media address"
+        case .expired: return "Watch call notification has expired"
+        case .invalidLocalMedia: return "The local voice parameters of the watch are invalid"
+        }
+    }
+}
+
+/// ASCII DNS names only; TLS always uses system certificate and hostname validation.
+/// Literal IPs, URLs, paths and numeric host aliases are deliberately excluded.
+enum RemoteDirectHost {
+    static func isValid(_ host: String) -> Bool {
+        let labels = host.split(separator: ".", omittingEmptySubsequences: false)
+        guard host.count <= 253, labels.count > 1,
+              let first = labels.last?.first, first.isASCII && first.isLetter else { return false }
+        return labels.allSatisfy { label in
+            !label.isEmpty && label.count <= 63 && label.first != "-" && label.last != "-"
+                && label.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }
+        }
+    }
+}
+
+struct WatchLocalPCMEndpoint: Equatable, Sendable {
+    let host: String
+    let port: UInt16
+    let secret: Data
+    let usesTLS: Bool
+
+    init?(dictionary: [String: Any]) {
+        guard let host = dictionary["pcm_host"] as? String,
+              let rawPort = dictionary["pcm_port"] as? Int,
+              (1...65535).contains(rawPort),
+              let encoded = dictionary["pcm_secret"] as? String else { return nil }
+        if let flag = dictionary["pcm_tls"], !(flag is Bool) { return nil }
+        let usesTLS = dictionary["pcm_tls"] as? Bool ?? false
+        if usesTLS {
+            guard RemoteDirectHost.isValid(host) else { return nil }
+        } else {
+            let parts = host.split(separator: ".", omittingEmptySubsequences: false)
+            let octets = parts.compactMap { UInt8($0) }
+            guard rawPort >= 1024, octets.count == 4, parts.count == 4,
+                  parts.allSatisfy({ !$0.isEmpty && $0.allSatisfy { $0.isASCII && $0.isNumber } }),
+                  octets[0] == 10 || (octets[0] == 172 && (16...31).contains(octets[1]))
+                    || (octets[0] == 192 && octets[1] == 168) else { return nil }
+        }
+        let base64 = encoded.replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+        let padded = base64 + String(repeating: "=", count: (4 - base64.count % 4) % 4)
+        guard let secret = Data(base64Encoded: padded), secret.count >= 32 else { return nil }
+        self.host = host
+        port = UInt16(rawPort)
+        self.secret = secret
+        self.usesTLS = usesTLS
+    }
+}
+
+enum WatchCallMedia: Equatable, Sendable {
+    case cloud(URL)
+    case local(WatchLocalPCMEndpoint)
+    /// APNs does not carry the paired VoWLAN secret; fetch it from the paired iPhone on answer.
+    case pendingLocal
+}
+
+/// Watch Direct answer required complete VoIP session。Media keys are only kept in memory，
+/// Do not enter WatchConnectivity Status image or notification text。
+struct WatchVoIPCall: Equatable, Sendable {
+    let agentID: String?
+    let generation: UInt64
+    let callID: String
+    let uuid: UUID
+    let number: String?
+    let callerName: String?
+    let expiresAt: Date?
+    let media: WatchCallMedia
+    let isOutgoing: Bool
+
+    var authenticatedMediaURL: URL? {
+        if case let .cloud(url) = media { return url }
+        return nil
+    }
+
+    var displayName: String { callerName ?? number ?? "SimHelp" }
+
+    func controlMessage(action: String) -> [String: Any] {
+        var value: [String: Any] = ["action": action, "call_id": callID,
+            "call_uuid": uuid.uuidString.lowercased(), "generation": generation]
+        if let agentID { value["agent_id"] = agentID }
+        return value
+    }
+
+    init(userInfo: [AnyHashable: Any], now: Date = Date()) throws {
+        guard userInfo["event"] as? String == "incoming_call" else {
+            throw WatchVoIPPayloadError.unsupportedEvent
+        }
+        guard let callID = Self.nonEmpty(userInfo["call_id"] as? String) else {
+            throw WatchVoIPPayloadError.missingCallID
+        }
+        guard let rawUUID = userInfo["call_uuid"] as? String,
+              let uuid = UUID(uuidString: rawUUID) else {
+            throw WatchVoIPPayloadError.invalidCallUUID
+        }
+        let expiresAt = Self.date(from: userInfo["expires_at"])
+        if let expiresAt, expiresAt.timeIntervalSinceReferenceDate <= now.timeIntervalSinceReferenceDate { throw WatchVoIPPayloadError.expired }
+        let media: WatchCallMedia
+        if userInfo["media_route"] as? String == "vowlan" {
+            let dictionary = Dictionary(uniqueKeysWithValues: userInfo.compactMap { key, value in
+                (key as? String).map { ($0, value) }
+            })
+            guard let endpoint = WatchLocalPCMEndpoint(dictionary: dictionary) else {
+                throw WatchVoIPPayloadError.invalidLocalMedia
+            }
+            media = .local(endpoint)
+        } else if userInfo["call_secret"] != nil || userInfo["media_url"] != nil {
+            guard let secret = Self.nonEmpty(userInfo["call_secret"] as? String),
+                  secret.count >= 24 else { throw WatchVoIPPayloadError.missingSecret }
+            guard let rawMediaURL = Self.nonEmpty(userInfo["media_url"] as? String),
+                  var components = URLComponents(string: rawMediaURL),
+                  components.scheme?.lowercased() == "wss",
+                  components.host?.isEmpty == false else {
+                throw WatchVoIPPayloadError.invalidMediaURL
+            }
+            components.queryItems = [
+                URLQueryItem(name: "role", value: "watch"),
+                URLQueryItem(name: "token", value: secret),
+            ]
+            guard let url = components.url else { throw WatchVoIPPayloadError.invalidMediaURL }
+            media = .cloud(url)
+        } else {
+            media = .pendingLocal
+        }
+        self.callID = callID
+        agentID = userInfo["agent_id"] as? String
+        generation = max(1, (userInfo["generation"] as? NSNumber)?.uint64Value
+            ?? (userInfo["generation"] as? String).flatMap(UInt64.init) ?? 1)
+        self.uuid = uuid
+        number = Self.nonEmpty(userInfo["number"] as? String)
+        callerName = Self.nonEmpty(userInfo["caller_name"] as? String)
+        self.expiresAt = expiresAt
+        self.media = media
+        isOutgoing = false
+    }
+
+    init(outgoingReply: [String: Any]) throws {
+        guard outgoingReply["media_route"] as? String == "vowlan"
+                || outgoingReply["call_secret"] != nil else {
+            throw WatchVoIPPayloadError.missingSecret
+        }
+        var payload: [AnyHashable: Any] = outgoingReply
+        payload["event"] = "incoming_call"
+        let parsed = try WatchVoIPCall(userInfo: payload)
+        self = WatchVoIPCall(
+            callID: parsed.callID,
+            uuid: parsed.uuid,
+            number: parsed.number,
+            callerName: parsed.callerName,
+            expiresAt: parsed.expiresAt,
+            media: parsed.media,
+            isOutgoing: true, agentID: parsed.agentID, generation: parsed.generation
+        )
+    }
+
+    func usingLocalMedia(_ endpoint: WatchLocalPCMEndpoint) -> WatchVoIPCall {
+        WatchVoIPCall(
+            callID: callID, uuid: uuid, number: number, callerName: callerName,
+            expiresAt: expiresAt, media: .local(endpoint), isOutgoing: isOutgoing,
+            agentID: agentID, generation: generation
+        )
+    }
+
+    private init(
+        callID: String, uuid: UUID, number: String?, callerName: String?,
+        expiresAt: Date?, media: WatchCallMedia, isOutgoing: Bool, agentID: String?, generation: UInt64
+    ) {
+        self.callID = callID
+        self.uuid = uuid
+        self.number = number
+        self.callerName = callerName
+        self.expiresAt = expiresAt
+        self.media = media
+        self.isOutgoing = isOutgoing
+        self.agentID = agentID
+        self.generation = generation
+    }
+
+    private static func nonEmpty(_ value: String?) -> String? {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else { return nil }
+        return value
+    }
+
+    private static func date(from value: Any?) -> Date? {
+        if let value = value as? TimeInterval { return Date(timeIntervalSince1970: value) }
+        if let value = value as? NSNumber { return Date(timeIntervalSince1970: value.doubleValue) }
+        guard let value = value as? String else { return nil }
+        return ISO8601DateFormatter().date(from: value)
+    }
+}
+
+enum WatchDialNumber {
+    static func validated(_ input: String) -> String? {
+        let value = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        let allowed = CharacterSet(charactersIn: "+*#0123456789")
+        guard !value.isEmpty, value.count <= 82,
+              value.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+        return value
+    }
+}
+
+struct WatchIncomingNotificationPlan: Equatable, Sendable {
+    static let maximumDeliveryAge: TimeInterval = 45
+
+    let identifier: String
+    let title: String
+    let body: String
+
+    init?(payload: WatchCallPayload, now: Date = Date()) {
+        guard payload.phase == .incoming, !payload.callID.isEmpty else { return nil }
+        let age = now.timeIntervalSince(payload.updatedAt)
+        guard age >= -5, age <= Self.maximumDeliveryAge else { return nil }
+        let name = payload.callerName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let number = payload.number?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = [name, number]
+            .compactMap { value in value.flatMap { $0.isEmpty ? nil : $0 } }
+            .reduce(into: [String]()) { result, value in
+                if !result.contains(value) { result.append(value) }
+            }
+        identifier = "airsim.watch.incoming.\(payload.callID)"
+        title = "SimHelp incoming call"
+        body = parts.isEmpty ? "The module receives an incoming call" : parts.joined(separator: " · ")
+    }
+}

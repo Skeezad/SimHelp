@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AirSIMWidgetAppGroup</key>
+	<string>$(AIRSIM_WIDGET_APP_GROUP)</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh_CN</string>
+	<key>CFBundleDisplayName</key>
+	<string>SimHelp</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).messaging</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>im</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER).liveactivity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>airsim</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>AirSIMPushRelayURL</key>
+	<string>$(AIRSIM_PUSH_RELAY_URL)</string>
+	<key>AirSIMAPNSEnvironment</key>
+	<string>$(AIRSIM_APNS_ENVIRONMENT)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Allow only local network，Public network requests are still accepted ATS Protect。 -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSContactsUsageDescription</key>
+	<string>Used when dialing, showing contact names in recent calls and text messages, and dialing directly from Contacts.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_airsim-pair._tcp</string>
+		<string>_airsim-vowlan._tcp</string>
+	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>for connection Android SimHelp Agent，and transmits call control and encrypted voice via Bluetooth。</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>For discovery and secure pairing within Samsung hotspots SimHelp telephone bridge。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>used to pass SimHelp VoWLAN or cloud mode for two-way voice calls。</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>bluetooth-central</string>
+		<!-- PushKit Wake-up call required VoIP Backend capabilities；The media is still audio mode keepalive。 -->
+		<string>voip</string>
+		<!-- ordinary APNs When SMS notification arrives，Synchronize local history within the background time allowed by the system。 -->
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>arm64</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>
