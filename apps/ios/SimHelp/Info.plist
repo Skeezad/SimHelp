@@ -61,8 +61,8 @@
 	<string>SimHelp uses Contacts to show names in Keypad, Recents, and Messages and to let you call a contact.</string>
 	<key>NSBonjourServices</key>
 	<array>
-		<string>_simhelp-pair._tcp</string>
-		<string>_simhelp-vowlan._tcp</string>
+		<string>_airsim-pair._tcp</string>
+		<string>_airsim-vowlan._tcp</string>
 	</array>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>SimHelp uses Bluetooth to connect to the Android agent and carry call control and encrypted voice.</string>
