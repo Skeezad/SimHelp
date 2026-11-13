@@ -241,8 +241,18 @@ struct SamsungPairingView: View {
                     )
                 try await model.completeLocalPairing(agentID: paired.agentID, registration: registration)
                 if !localPairingOnly { model.setCloudSignalingEnabled(true) }
-                return model.localDevices.api(for: paired.agentID) == nil
-                    ? "Encrypted pairing has been written into Android and is awaiting call gateway authentication; no available routes have been established yet." : paired.message
+                // Android starts the VoWLAN foreground service after accepting
+                // the claim. Bonjour can publish the call gateway a few seconds
+                // later, so keep verifying before reporting a false no-route result.
+                for attempt in 0..<12 {
+                    if model.localDevices.api(for: paired.agentID) != nil {
+                        return paired.message
+                    }
+                    guard attempt < 11 else { break }
+                    try await Task.sleep(for: .milliseconds(500))
+                    await model.vowlan.probeNow()
+                }
+                return "Encrypted pairing has been written into Android and is awaiting call gateway authentication; no available routes have been established yet."
             }
 #if DEBUG
             print("[SimHelp Pair] claim_completed session=\(service.sessionID)")
