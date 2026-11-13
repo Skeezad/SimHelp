@@ -132,7 +132,7 @@ private struct PairedAndroidDeviceRows: View {
                         Text(connectionText(device)).font(.caption2).foregroundStyle(.secondary)
                         if let pairing = VoWLANPairingRecordStore.records()
                             .first(where: { $0.agentID == device.id }) {
-                            Text("本机配对记录 · \(pairing.id.prefix(8)) · \(pairing.endpoints.count) 个地址")
+                            Text("Local pairing records | \(pairing.id.prefix(8)) · \(pairing.endpoints.count) addresses")
                                 .font(.caption2.monospaced())
                                 .foregroundStyle(.secondary)
                         }
@@ -142,7 +142,7 @@ private struct PairedAndroidDeviceRows: View {
                         Image(systemName: "trash").padding(10)
                     }
                     .buttonStyle(.borderless)
-                    .accessibilityLabel("删除 \(device.deviceName) 配对记录")
+                    .accessibilityLabel("Delete \(device.deviceName) pairing records")
                 }
             }
             Text("The current information will be re-read when reconnecting, and the number will not be saved in offline records.")
@@ -173,7 +173,7 @@ private struct PureLocalSlideControl: View {
     private var title: String {
         if busy { return "Switching connection strategy" }
         if blockedByCall { return "Cannot be switched during a call" }
-        return enabled ? "Pure local mode is enabled" : "滑动开启纯本地模式"
+        return enabled ? "Pure local mode is enabled" : "Slide to enable local-only mode"
     }
 
     private var statusText: String { enabled ? "Local connection only · Cloud disabled" : "Run by connection preference" }
@@ -275,7 +275,7 @@ private struct PureLocalSlideControl: View {
         .opacity(isInteractive ? 1 : 0.62)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("pure local mode")
-        .accessibilityValue("\(enabled ? "已开启" : "已关闭")，\(statusText)")
+        .accessibilityValue("\(enabled ? "Enabled" : "Disabled")，\(statusText)")
         .accessibilityHint(blockedByCall ? "You can switch after ending the call" : (enabled ? "Double-click to turn off pure local mode" : "Double-click to enable pure local mode"))
         .accessibilityAddTraits(isInteractive ? .isButton : [])
         .accessibilityAction {
@@ -329,7 +329,7 @@ private struct RemoteDirectSettingsView: View {
 
             Section {
                 Picker("Paired device", selection: $agentID) {
-                    Text("选择Android手机").tag("")
+                    Text("Choose an Android phone").tag("")
                     ForEach(model.pairedDeviceHistory) { device in
                         Text(device.deviceName).tag(device.id)
                     }
@@ -352,7 +352,7 @@ private struct RemoteDirectSettingsView: View {
                 .disabled(saving || model.vowlan.callInProgress() || model.activeCall != nil || model.remoteCall != nil || model.pendingOutgoingCall != nil)
             }
             Section {
-                Button(enabled ? "验证并保存" : "Save Close") {
+                Button(enabled ? "Verify and save" : "Save Close") {
                     saving = true
                     let target = agentID
                     saveTask = Task { @MainActor in
@@ -361,10 +361,10 @@ private struct RemoteDirectSettingsView: View {
                             let route = enabled ? try RemoteDirectConfiguration.route(agentID: target,
                                 host: host, controlPort: controlPort, pcmPort: pcmPort) : nil
                             try await model.configureRemoteDirect(agentID: target, route: route)
-                            message = route == nil ? "已关闭此设备的自建域名直连。" :
+                            message = route == nil ? "Direct connection through this device's custom domain is disabled." :
                                 "Control portal and device authentication passed and saved. Audio access needs to be verified during the actual call."
                         } catch is CancellationError {
-                            message = "配置已取消，请重新验证。"
+                            message = "Configuration cancelled. Please verify again."
                         } catch { message = error.localizedDescription }
                     }
                 }
@@ -375,7 +375,7 @@ private struct RemoteDirectSettingsView: View {
                 Text("After selecting VoWLAN or automatic mode, the LAN is given priority. If it is unreachable, try to create a self-made domain name. The NAS needs to provide TLS forwarding with valid certificates for control and audio respectively; web reverse proxy alone is not enough to transmit audio. This option does not provide background push notification for incoming calls and cannot be changed during a call.")
             }
         }
-        .navigationTitle("自建域名直连（试验性）")
+        .navigationTitle("Custom domain connection (experimental)")
         .onAppear {
             if agentID.isEmpty { agentID = model.pairedDeviceHistory.first?.id ?? "" }
             load()
@@ -436,7 +436,7 @@ enum SimHelpSettingsPage: Hashable, Identifiable {
         case .forwarding: return "Notification forwarding"
         case .widgets: return "Smart island and widgets"
         case .order: return "Device display order"
-        case .widgetGuide: return "桌面小组件"
+        case .widgetGuide: return "Home Screen widgets"
         case .islandGuide: return "Lock screen and smart island"
         case .preferences: return "Appearance and Preferences"
         case .accessibility: return "Language and Accessibility"
@@ -444,11 +444,11 @@ enum SimHelpSettingsPage: Hashable, Identifiable {
         case .diagnostics: return "Check connection"
         case .localCheck: return "local connection check"
         case .cloudCheck: return "Cloud connection self-test"
-        case .permissions: return "系统权限"
-        case .logs: return "详细日志与技术信息"
+        case .permissions: return "System permissions"
+        case .logs: return "Detailed logs and technical information"
         case .feedback: return "Submit feedback"
         case .feedbackPreview: return "Upload content range"
-        case .guide: return "使用指南"
+        case .guide: return "User guide"
         case .networkGuide: return "Connection preparation and troubleshooting"
         case .about: return "About SimHelp"
         }
@@ -532,7 +532,7 @@ private struct SimHelpSettingsHomeContent: View, Equatable {
                     busy: snapshot.pureLocalBusy, blockedByCall: snapshot.callBusy) { current in
                     requestedPureLocalMode = !current
                 }
-                NavigationLink("了解纯本地模式", value: SimHelpSettingsPage.local)
+                NavigationLink("About local-only mode", value: SimHelpSettingsPage.local)
                     .font(.footnote)
                 if let error = snapshot.pureLocalError { Text(error).font(.footnote).foregroundStyle(.red) }
             }
@@ -549,12 +549,12 @@ private struct SimHelpSettingsHomeContent: View, Equatable {
                         .padding(.vertical, 6)
                     }
                 } else {
-                    link(.add, "iphone.badge.plus", detail: "Connect your Android phone or U30 Air")
+                    link(.add, "iphone.badge.plus", detail: "Connect your Android phone")
                 }
             }
             Section {
                 link(.connections, "antenna.radiowaves.left.and.right", detail: snapshot.modeTitle)
-                link(.calls, "phone", detail: "Incoming call通知、SMS与转发")
+                link(.calls, "phone", detail: "Incoming calls, SMS, and forwarding")
                 link(.widgets, "rectangle.on.rectangle", detail: "Desktop and lock screen display")
                 link(.preferences, "paintpalette")
             }
@@ -654,7 +654,7 @@ struct SimHelpSettingsView: View {
         .confirmationDialog("Forgot this device?",
             isPresented: Binding(get: { deletingDevice != nil }, set: { if !$0 { deletingDevice = nil } }),
             titleVisibility: .visible, presenting: deletingDevice) { device in
-            Button("忘记 \(device.deviceName)", role: .destructive) {
+            Button("Forget \(device.deviceName)", role: .destructive) {
                 deviceDeletionInProgress = true
                 Task {
                     defer { deviceDeletionInProgress = false }
@@ -727,9 +727,9 @@ struct SimHelpSettingsView: View {
         case .local:
             Section { pureLocalControl }
             Section("After opening") {
-                Label("仅通过 VoWLAN、蓝牙或 VPN 直连", systemImage: "checkmark.shield")
+                Label("Connect directly over VoWLAN, Bluetooth, or VPN", systemImage: "checkmark.shield")
                 Label("Block SimHelp Cloud Notifications, Relay and Feedback Uploads", systemImage: "cloud.slash")
-                Text("本地链路不可用时不会回退到 Relay。GitHub 版本检查不受影响，Android第三方通知转发仍由其独立设置控制。")
+                Text("When the local connection is unavailable, SimHelp will not fall back to a relay. Android notification forwarding uses its own settings.")
                 Text("When Android is offline, it cannot be confirmed that the cross-terminal policy has been synchronized. Please check the Android status after reconnecting.")
             }
         case .connections:
@@ -762,9 +762,9 @@ struct SimHelpSettingsView: View {
             Section {
                 Text("First open the one-time pairing window in Android SimHelp, and then select the connection method.")
                 link(.pairAuto, "wifi", detail: "Same Wi-Fi or Android hotspot")
-                link(.pairManual, "network", detail: "手动 IP、Tailscale 或其他 VPN")
+                link(.pairManual, "network", detail: "Manual IP, Tailscale, or another VPN")
                 link(.bluetoothPair, "wave.3.right", detail: "Check security codes on both ends")
-                link(.pairDomain, "lock.shield", detail: "试验性 · 需要可信 TLS 证书")
+                link(.pairDomain, "lock.shield", detail: "Experimental | Requires a trusted TLS certificate")
             }
         case .device(let id): deviceSections(id)
         case .deviceInfo(let id): deviceInformation(id)
@@ -810,7 +810,7 @@ struct SimHelpSettingsView: View {
             Section {
                 link(.background, "moon")
                 link(.permissions, "hand.raised")
-                link(.forwarding, "paperplane", detail: "Android向第三方发送通知")
+                link(.forwarding, "paperplane", detail: "Send Android notifications to a third-party service")
             }
         case .background: backgroundSection
         case .widgets:
@@ -822,7 +822,7 @@ struct SimHelpSettingsView: View {
             }
         case .order:
             if model.liveActivityOrderedAgents.isEmpty {
-                Section { Text("配对设备后可以调整显示顺序。").foregroundStyle(.secondary); link(.add, "plus.circle") }
+                Section { Text("Pair a device to change its display order.").foregroundStyle(.secondary); link(.add, "plus.circle") }
             } else { deviceOrderSection }
         case .preferences:
             Section {
@@ -839,7 +839,7 @@ struct SimHelpSettingsView: View {
             Section {
                 link(.localCheck, "wifi")
                 link(.bluetoothStatus, "wave.3.right")
-                link(.cloudCheck, "cloud", detail: pureLocalEnabled ? "纯本地模式下不可运行" : nil)
+                link(.cloudCheck, "cloud", detail: pureLocalEnabled ? "Unavailable in local-only mode" : nil)
             }
         case .localCheck:
             Section {
@@ -858,7 +858,7 @@ struct SimHelpSettingsView: View {
         case .cloudCheck:
             cloudSelfTestSection
             if selfTestPhase == .completed, selfTestReport?.allPassed == false {
-                Section("接下来") {
+                Section("Next") {
                     link(.relay, "cloud")
                     link(.permissions, "hand.raised")
                     link(.logs, "doc.text.magnifyingglass")
@@ -869,12 +869,12 @@ struct SimHelpSettingsView: View {
             feedbackSection
             Section { link(.feedbackPreview, "hand.raised") }
         case .feedbackPreview:
-            Section("手动上传的范围") {
-                Text("上传应用与系统版本、设备型号、连接状态、诊断记录及可读取的Android日志。")
+            Section("What a manual upload includes") {
+                Text("Uploads include the app and system versions, device model, connection status, diagnostic records, and available Android logs.")
                 Text("Call audio will not be recorded or uploaded. Don't paste passwords, verification codes, pairing keys, or other personal information in descriptions and notes.")
                 Text("Log processing and original TXT export are different processes; please check the content of the original export before sharing.")
             }
-            Section("你的文字") {
+            Section("Your message") {
                 Text(feedbackDescription.isEmpty ? "Description not filled in" : feedbackDescription).textSelection(.enabled)
                 Text(feedbackRemark.isEmpty ? "Remarks not filled in" : feedbackRemark).textSelection(.enabled)
             }
@@ -889,11 +889,11 @@ struct SimHelpSettingsView: View {
                 link(.widgetGuide, "rectangle.on.rectangle")
             }
         case .networkGuide:
-            guideSection("LAN and hotspot", steps: ["两台设备连接同一 Wi-Fi，或让 iPhone 连接Android热点。", "Android opens a one-time pairing window; when automatic discovery is unavailable, Android's IP and current pairing port are used.", "Pair authentication and audio preparation are separate steps. After the gateway has been authenticated, actual calls still need to be tested."])
-            guideSection("Tailscale 与其他 VPN", steps: ["Both ends join the same tunnel and allow mutual access.", "Fill in the Android address within the VPN, not the iPhone address. The pairing port and control and audio ports must all be accessible.", "Tailscale's 100.64/10 has built-in support, no need to open SimHelp cloud calling."])
+            guideSection("LAN and hotspot", steps: ["Connect both devices to the same Wi-Fi, or connect your iPhone to the Android hotspot.", "Android opens a one-time pairing window; when automatic discovery is unavailable, Android's IP and current pairing port are used.", "Pair authentication and audio preparation are separate steps. After the gateway has been authenticated, actual calls still need to be tested."])
+            guideSection("Tailscale and other VPNs", steps: ["Both ends join the same tunnel and allow mutual access.", "Fill in the Android address within the VPN, not the iPhone address. The pairing port and control and audio ports must all be accessible.", "Tailscale's 100.64/10 has built-in support, no need to open SimHelp cloud calling."])
             Section { link(.pairManual, "network"); link(.localCheck, "stethoscope") }
         case .widgetGuide:
-            guideSection("Add widget", steps: ["Long press an empty space on the home screen and select Edit → Add Widget.", "Search for SimHelp, select a size and add it.", "Large size shows up to 5 recent calls and text messages per column; medium size shows summary by space.", "设备与模式按钮可在小组件内Switch；记录入口打开对应内容。"])
+            guideSection("Add widget", steps: ["Long press an empty space on the home screen and select Edit → Add Widget.", "Search for SimHelp, select a size and add it.", "Large size shows up to 5 recent calls and text messages per column; medium size shows summary by space.", "Switch devices and modes in the widget. Tap a record to open its details."])
             Section { Text("The widget displays the recently synchronized information, and the update frequency is scheduled by the system. Pairing data and unread tags require opening the app for synchronization."); link(.order, "arrow.up.arrow.down") }
         case .islandGuide:
             guideSection("Smart island and lock screen", steps: ["Display the device status after turning on \"Show Smart Island\".", "The system will limit the duration of real-time activities, and expiration does not mean that the device is offline.", "Returning to the SimHelp frontend resumes presentation; incoming PushKit/CallKit links are independent of live activity."])
@@ -901,10 +901,10 @@ struct SimHelpSettingsView: View {
         case .accessibility:
             Section {
                 Picker("language", selection: $settings.language) {
-                    ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
+                    ForEach([AppLanguage.en]) { Text($0.title).tag($0) }
                 }
             }
-            guideSection("跟随 iPhone 设置", steps: ["在系统设置 → 辅助功能中调整文字大小、减少动态效果或减少透明度。", "SimHelp's lists and forms follow the system text size, and important states use both text and icons.", "The slider also supports VoiceOver on/off operations without the need for precise dragging."])
+            guideSection("Follow iPhone settings", steps: ["Adjust text size, Reduce Motion, and Reduce Transparency in iPhone Settings > Accessibility.", "SimHelp's lists and forms follow the system text size, and important states use both text and icons.", "The slider also supports VoiceOver on/off operations without the need for precise dragging."])
         default: EmptyView()
         }
     }
@@ -933,7 +933,7 @@ struct SimHelpSettingsView: View {
                 NavigationLink(value: SimHelpSettingsPage.device(device.id)) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(device.deviceName)
-                        Text(device.isCurrent ? "Current设备" : "Pairing saved").font(.caption).foregroundStyle(.secondary)
+                        Text(device.isCurrent ? "Current device" : "Pairing saved").font(.caption).foregroundStyle(.secondary)
                     }.padding(.vertical, 4)
                 }
             }
@@ -964,15 +964,15 @@ struct SimHelpSettingsView: View {
 
     @ViewBuilder
     private func deviceInformation(_ id: String) -> some View {
-        Section("Device identity") { Text("身份 …\(id.suffix(8))").font(.body.monospaced()).textSelection(.enabled) }
+        Section("Device identity") { Text("Identity ...\(id.suffix(8))").font(.body.monospaced()).textSelection(.enabled) }
         if let record = VoWLANPairingRecordStore.records().first(where: { $0.agentID == id }) {
             Section {
-                LabeledContent("本机记录", value: String(record.id.prefix(8)))
+                LabeledContent("Local records", value: String(record.id.prefix(8)))
                 LabeledContent("Endpoint saved", value: "\(record.endpoints.count)")
                 ForEach(Array(record.endpoints.enumerated()), id: \.offset) { _, endpoint in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(endpoint.host).textSelection(.enabled)
-                        Text("控制 \(endpoint.controlPort) · 音频 \(endpoint.pcmPort) · \(endpoint.tls == true ? "TLS" : "私网直连")")
+                        Text("Control \(endpoint.controlPort) | Audio \(endpoint.pcmPort) · \(endpoint.tls == true ? "TLS" : "Private network connection")")
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -984,7 +984,7 @@ struct SimHelpSettingsView: View {
     private var relaySections: some View {
         Group {
             Section {
-                LabeledContent("Cloud call", value: pureLocalEnabled ? "纯本地已阻止" : runtimePolicy.startsCloud ? "Current mode enabled" : "Current未使用")
+                LabeledContent("Cloud call", value: pureLocalEnabled ? "Blocked by local-only mode" : runtimePolicy.startsCloud ? "Current mode enabled" : "Not in use")
                 TextField("https://relay.example.com", text: $relayURL)
                     .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                     .accessibilityIdentifier("settings.relayURL")
@@ -1001,7 +1001,7 @@ struct SimHelpSettingsView: View {
     private var permissionSections: some View {
         Group {
             Section {
-                LabeledContent("通知权限", value: notificationPermission)
+                LabeledContent("Notification permissions", value: notificationPermission)
                 Text("Please check the local network and Bluetooth permissions in the system settings. iOS does not provide a unified query interface, and failure to connect does not necessarily mean that permission is denied.")
                 Button("Open SimHelp System Settings", systemImage: "gearshape") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
@@ -1044,7 +1044,7 @@ struct SimHelpSettingsView: View {
     private func saveRelay() {
         guard !pureLocalEnabled, !updateCallBusy, !relaySaving else { return }
         guard let value = SimHelpSettingsPolicy.validRelayURL(relayURL) else {
-            message = "请输入完整的 http:// 或 https:// 地址，不包含账号、密码、查询参数或片段。"
+            message = "Enter a complete http:// or https:// address without a username, password, query, or fragment."
             return
         }
         relaySaving = true
@@ -1066,9 +1066,9 @@ struct SimHelpSettingsView: View {
         let value = await UNUserNotificationCenter.current().notificationSettings()
         switch value.authorizationStatus {
         case .authorized: notificationPermission = "allowed"
-        case .provisional, .ephemeral: notificationPermission = "临时允许"
-        case .denied: notificationPermission = "未允许"
-        case .notDetermined: notificationPermission = "尚未请求"
+        case .provisional, .ephemeral: notificationPermission = "Provisionally allowed"
+        case .denied: notificationPermission = "Not allowed"
+        case .notDetermined: notificationPermission = "Not requested"
         @unknown default: notificationPermission = "Please confirm in system settings"
         }
     }
@@ -1149,7 +1149,7 @@ struct SimHelpSettingsView: View {
             Text("private network")
         } footer: {
             Text("Built-in support for 10/8, 172.16/12, 192.168/16, 169.254/16 and 100.64/10 (Tailscale)."
-                + "公网地址始终不会被视为私有网段。")
+                + "Public IP addresses are never treated as private network addresses.")
         }
     }
 
@@ -1157,7 +1157,7 @@ struct SimHelpSettingsView: View {
         Section("Bluetooth connection") {
             LabeledContent("VoBLE", value: voBLEStatus)
             link(.bluetoothPair, "wave.3.right")
-            Button("重新扫描蓝牙 Agent", systemImage: "arrow.clockwise") {
+            Button("Rescan for Bluetooth agents", systemImage: "arrow.clockwise") {
                 model.vobleHub.radio.rescan()
             }
             .disabled(!runtimePolicy.startsBluetooth)
@@ -1170,9 +1170,9 @@ struct SimHelpSettingsView: View {
             LabeledContent("Certification", value: diagnostics.peerAuthenticated ? "pass" : "Not completed")
             LabeledContent("PCM", value: diagnostics.pcmReady ? "Running" : "To be started")
             LabeledContent("coding", value: diagnostics.codec)
-            LabeledContent("发送队列", value: "\(diagnostics.queuedFrames) / 8 帧")
-            LabeledContent("丢帧", value: "\(diagnostics.droppedFrames)")
-            LabeledContent("抖动缓冲", value: "\(diagnostics.jitterFrames) 帧")
+            LabeledContent("Send queue", value: "\(diagnostics.queuedFrames) / 8 frames")
+            LabeledContent("Dropped frames", value: "\(diagnostics.droppedFrames)")
+            LabeledContent("Jitter buffer", value: "\(diagnostics.jitterFrames) frames")
             LabeledContent("recent errors", value: diagnostics.lastError.rawValue)
             Text("Diagnostics do not display numbers, keys, nonces, authentication tags, or audio content.")
                 .font(.footnote)
@@ -1218,7 +1218,7 @@ struct SimHelpSettingsView: View {
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel(LiveActivityAgentOrder.isPinned(agent.id)
-                        ? "取消置顶 \(agent.deviceName)" : "置顶 \(agent.deviceName)")
+                        ? "Unpin \(agent.deviceName)" : "Pin \(agent.deviceName)")
                     Button {
                         model.moveLiveActivityAgent(agent.id, by: -1)
                     } label: {
@@ -1226,7 +1226,7 @@ struct SimHelpSettingsView: View {
                     }
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel("上移 \(agent.deviceName)")
+                    .accessibilityLabel("Move up \(agent.deviceName)")
                     Button {
                         model.moveLiveActivityAgent(agent.id, by: 1)
                     } label: {
@@ -1234,7 +1234,7 @@ struct SimHelpSettingsView: View {
                     }
                     .buttonStyle(.borderless)
                     .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel("下移 \(agent.deviceName)")
+                    .accessibilityLabel("Move down \(agent.deviceName)")
                 }
             }
         } header: {
@@ -1276,7 +1276,7 @@ struct SimHelpSettingsView: View {
                     }
                 }
                 if selfTestPhase == .completed {
-                    Text(report.allPassed ? "Cloud模式自检通过" : "The self-test failed, please follow the failed steps to repair and try again.")
+                    Text(report.allPassed ? "Cloud mode checks passed" : "The self-test failed, please follow the failed steps to repair and try again.")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(report.allPassed ? .green : .orange)
                     Button {
@@ -1293,7 +1293,7 @@ struct SimHelpSettingsView: View {
         } footer: {
             Text(pureLocalEnabled
                 ? "Pure local mode is turned on and access to Relay is prohibited; after it is turned off, manual self-test can be performed."
-                : "依次验证本机 Push 凭据、Relay 身份、设备注册、Agent 记录、150 秒心跳和命令路由；失败步骤会给出具体卡点，不会拨号或发送SMS。")
+                : "Checks push credentials, relay identity, device registration, agent records, heartbeat freshness, and command routing. Failures identify the affected step. This check does not place calls or send SMS.")
         }
     }
 
@@ -1406,7 +1406,7 @@ struct SimHelpSettingsView: View {
                 cloudSignalingEnabled = cloud
                 model.setCloudSignalingEnabled(cloud)
                 model.setConnectionMode(SimHelpConnectionMode(rawValue: raw) ?? .automatic)
-            } catch { pureLocalError = "本地退出尚未Done：\(error.localizedDescription)" }
+            } catch { pureLocalError = "Local sign-out is incomplete: \(error.localizedDescription)" }
         }
     }
 
@@ -1466,7 +1466,7 @@ struct SimHelpSettingsView: View {
             .map(String.init)
             .filter { NetworkRoutePreferences.parse($0) == nil }
         guard invalid.isEmpty else {
-            networkPrefixError = "网段格式无效：\(invalid.joined(separator: "、"))"
+            networkPrefixError = "Invalid network range: \(invalid.joined(separator: "、"))"
             return
         }
         NetworkRoutePreferences.save(networkPrefixesText)
@@ -1483,7 +1483,7 @@ struct SimHelpSettingsView: View {
         case .connecting, .connected: return "Connecting"
         case .authenticating: return "Authenticating"
         case .ready: return "Certified"
-        case .failed(let message): return "失败：\(message)"
+        case .failed(let message): return "Failed: \(message)"
         }
     }
 
@@ -1530,7 +1530,7 @@ enum NotificationForwardingChannel: String, CaseIterable, Codable, Identifiable,
         case .discord: return "Discord"
         case .slack: return "Slack"
         case .wecom: return "Enterprise WeChat"
-        case .feishu: return "飞书自定义机器人"
+        case .feishu: return "Lark custom bot"
         case .telegram: return "Telegram Bot"
         case .qq: return "QQ Official Bot"
         case .webhook: return "Universal Webhook"
@@ -1555,11 +1555,11 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
     var includeNumber = true
     var template = """
     {event}
-    设备：{device}
-    号码：{number}
-    发件人：{sender}
-    内容：{content}
-    时间：{time}
+    Device: {device}
+    Number: {number}
+    Sender: {sender}
+    Content: {content}
+    Time: {time}
     """
     var missedTemplate: String? = nil
 
@@ -1578,7 +1578,7 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
         }
         switch channel {
         case .bark:
-            if !value.isEmpty && parts?.scheme?.lowercased() != "https" { return "Bark 地址需要 HTTPS。" }
+            if !value.isEmpty && parts?.scheme?.lowercased() != "https" { return "The Bark URL must use HTTPS." }
             let pathKey = parts?.path.split(separator: "/").last.map(String.init) ?? ""
             if (deviceKey ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                value.isEmpty || pathKey.isEmpty || pathKey == "push" { return "Please fill in the Bark Device Key." }
@@ -1624,7 +1624,7 @@ struct NotificationForwardingView: View {
     var body: some View {
         Form {
             Section {
-                Toggle("启用通知转发", isOn: $config.enabled)
+                Toggle("Enable notification forwarding", isOn: $config.enabled)
                 Text("The configuration is sent to Android with the next pairing. Android sends webhooks directly, without relying on Relay, APNs, or whether the iPhone is running.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -1698,9 +1698,9 @@ private struct NotificationForwardingEditor: View {
                             Text(channel.title).tag(channel)
                         }
                     }
-                    Toggle("启用", isOn: $destination.enabled)
+                    Toggle("Enable", isOn: $destination.enabled)
                 }
-                Section("连接") {
+                Section("Connection") {
                     TextField("Webhook URL", text: $destination.webhookURL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -1734,7 +1734,7 @@ private struct NotificationForwardingEditor: View {
                     Toggle("Contains numbers", isOn: $destination.includeNumber)
                 }
                 Section {
-                    NavigationLink("消息模板") {
+                    NavigationLink("Message template") {
                         Form {
                 Section {
                     TextEditor(text: $destination.template)
@@ -1756,7 +1756,7 @@ private struct NotificationForwardingEditor: View {
                 } header: {
                     Text("Missed call format")
                 }
-                        }.navigationTitle("消息模板")
+                        }.navigationTitle("Message template")
                     }
                 }
 
@@ -1765,7 +1765,7 @@ private struct NotificationForwardingEditor: View {
             .navigationTitle("Forward target")
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled()
-            .confirmationDialog("放弃本次编辑？", isPresented: $confirmingDiscard, titleVisibility: .visible) {
+            .confirmationDialog("Discard these changes?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
                 Button("Give up editing", role: .destructive) { dismiss() }
                 Button("Continue editing", role: .cancel) {}
             }
@@ -1881,7 +1881,7 @@ final class FeedbackUploader {
         var startupMilliseconds = 0
         for line in relevant {
             // Trace lines are formatted as "[APP] ... AUDIO Calls音频启动".
-            guard line.contains("AUDIO Calls音频启动") else { continue }
+            guard line.contains("AUDIO Starting call audio") else { continue }
             if let phase = Self.value(after: "phase=", in: line), !phase.isEmpty,
                !stages.contains(phase) { stages.append(phase) }
             let phase = Self.value(after: "phase=", in: line) ?? ""

@@ -678,7 +678,7 @@ extension WatchCallSession: WCSessionDelegate {
         if activationState == .activated {
 			let token = pendingWatchToken ?? pushRegistry.pushToken(for: .voIP)
 #if DEBUG
-			print("[SimHelp Watch WC] Activate Done; token=\(token == nil ?"无" : "有") error=\(error?.localizedDescription ?? "无")")
+			print("[SimHelp Watch WC] Activate Done; token=\(token == nil ?"None" : "Available") error=\(error?.localizedDescription ?? "None")")
 #endif
 			if let token { sendWatchToken(token) }
             if !session.receivedApplicationContext.isEmpty { receiveMirror(session.receivedApplicationContext) }

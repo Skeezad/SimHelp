@@ -396,7 +396,7 @@ struct SimHelpLiveActivityWidget: Widget {
                 agentRowContent(agent, compact: compact)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(agent.name), \(agent.isCurrent ? "Currentdevice" : "Switch到此device")")
+            .accessibilityLabel("\(agent.name), \(agent.isCurrent ? "Currentdevice" : "Switch to this device")")
         } else {
             agentRowContent(agent, compact: compact)
         }

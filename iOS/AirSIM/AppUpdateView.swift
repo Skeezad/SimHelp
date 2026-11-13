@@ -13,14 +13,14 @@ enum AppReleaseNotes {
     // Bundled: showing installed-version notes never needs GitHub, Relay or pairing.
     // Keep this summary in sync with the candidate's source and docs when publishing.
     static let items = [
-        "Supports connecting U30Air running compatible SimHelp devices to use call and text messaging functions on iPhone.",
+        "Connect your Android phone to make calls and send messages from your iPhone.",
         "Desktop and lock screen widgets display device status; supported desktop sizes provide device and connection mode switching, summaries of recent calls and text messages.",
-        "小组件支持后台Switch，显示设备上报的电量；Refresh由系统调度，无有效采样时显示Unknown。",
+        "Widgets show the battery level reported by the device. iOS schedules refreshes; Unknown appears when no valid reading is available.",
         "Experimental TLS public network domain name pairing and direct connection: Complete the first pairing through a self-built HTTPS/TLS portal, or add a public network portal for paired devices.",
         "The bottom labels and widget titles of recent calls and text messages display the number of missed calls/unreads, and the corresponding records are also marked with eye-catching marks.",
         "When the outgoing call is completed, the waiting tone and timing will be stopped according to the calling identity; network fluctuations will not automatically repeat the dialing."
     ]
-    static let limitations = "U30Air 需运行兼容设备端。运营商早期媒体仅在临时候选中Done单次试听，尚未正式开放。TLS 公网功能为试验性，需要可入站的自建网关、有效证书及独立音频转发；不自动穿透 NAT，也不新增后台推送。小组件Refresh由系统调度，模式Switch不代表已连接。GitHub 发布不代表 TestFlight 已可更新。"
+    static let limitations = "The Android phone must run a compatible bridge app. Public TLS connections are experimental and require a reachable gateway, a valid certificate, and separate audio forwarding. NAT traversal is not automatic. iOS schedules widget refreshes; switching modes does not confirm a connection."
 }
 
 enum AppUpdateChannel {
@@ -28,7 +28,7 @@ enum AppUpdateChannel {
         Bundle.main.appStoreReceiptURL?.lastPathComponent == "sandboxReceipt"
             && Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision") == nil
     }
-    static var title: String { isTestFlight ? "TestFlight" : "自签／侧载或其他安装渠道" }
+    static var title: String { isTestFlight ? "TestFlight" : "Sideloaded or self-signed installation" }
 }
 
 struct AppUpdateSheet: View {
@@ -52,7 +52,7 @@ struct AppUpdateSheet: View {
                 List {
                     Section { Text(result.message) }
                     if let candidate = result.candidate {
-                        Section("公开版本 \(candidate.version)（\(candidate.build)）") {
+                        Section("Available version \(candidate.version)（\(candidate.build)）") {
                             Text(candidate.notes.isEmpty ? "Please check the release page for update instructions." : candidate.notes)
                                 .textSelection(.enabled)
                             Link("View the GitHub release notes", destination: candidate.page)
@@ -66,11 +66,11 @@ struct AppUpdateSheet: View {
                         }
                     }
                 }
-                .navigationTitle("应用更新")
+                .navigationTitle("App updates")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("知道了") {
+                        Button("Got it") {
                             if let candidate = result.candidate { updates.acknowledgeUpdate(candidate) }
                             dismiss()
                         }
@@ -97,17 +97,17 @@ private enum NewFeatureCatalog {
     static let pages: [NewFeaturePage] = [
         NewFeaturePage(
             id: 0,
-            kicker: "U30Air 支持",
-            title: "Connect U30Air,\\nUse your phone and text messages with you",
-            body: "Connect a U30Air running a SimHelp-compatible device to make, receive calls, and send and receive text messages on your iPhone. Please update the device first and complete pairing.",
+            kicker: "Android phone support",
+            title: "Connect your Android phone,\nCalls and messages on your iPhone",
+            body: "Pair your iPhone with an Android phone running SimHelp. Make and receive calls, and send and receive SMS through the SIM in your Android phone.",
             symbol: "phone.connection.fill",
             accent: .cyan,
             demo: .u30Air
         ),
         NewFeaturePage(
             id: 1,
-            kicker: "桌面与锁屏小组件",
-            title: "不用打开 App，\n常用信息一眼可见",
+            kicker: "Home and Lock Screen widgets",
+            title: "See essential information\nwithout opening the app",
             body: "Check the device status, battery level, recent calls and text messages; the supported desktop sizes can directly switch devices and connection modes. Refresh is scheduled by the system, and the power consumption is subject to effective reporting by the device.",
             symbol: "rectangle.grid.2x2.fill",
             accent: .green,
@@ -116,7 +116,7 @@ private enum NewFeatureCatalog {
         NewFeaturePage(
             id: 2,
             kicker: "TLS Public Network · Experimental",
-            title: "Use your own domain name,\\nYou can also pair and connect directly when you are outside.",
+            title: "Connect through your\nown secure gateway",
             body: "Complete the first pairing through a self-built HTTPS/TLS gateway, or add a public network entrance to an existing device. Requires inbound network, valid certificate and independent audio forwarding; usage tutorial included in configuration page.",
             symbol: "lock.shield.fill",
             accent: .blue,
@@ -125,8 +125,8 @@ private enum NewFeatureCatalog {
         NewFeaturePage(
             id: 3,
             kicker: "Unread text messages · Missed calls",
-            title: "Those that were not read and those that were not answered are clearly marked\\n",
-            body: "The bottom labels and widgets display unread/missed numbers, and corresponding text messages and call records are also marked. Open the record and you can find messages and calls that you have not yet viewed.",
+            title: "Keep track of missed calls\nand unread messages",
+            body: "Tab badges and widgets show unread messages and missed calls. Open Messages or Recents to review them.",
             symbol: "app.badge.fill",
             accent: .orange,
             demo: .unreadBadges
@@ -171,12 +171,12 @@ struct NewFeatureOnboardingView: View {
                     Text("SimHelp")
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(.white)
-                    Text("版本 \(version)")
+                    Text("Version \(version)")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.55))
                 }
                 Spacer()
-                Button("Sure") { onConfirm() }
+                Button("Done") { onConfirm() }
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 18)
@@ -342,7 +342,7 @@ private enum FeatureDemoHTML {
     <rect x="20" y="51" width="104" height="122" rx="25" fill="#172A3B" stroke="#42738C"/>
     <rect x="45" y="69" width="54" height="9" rx="4" fill="#304D63"/>
     <circle class="pulse" cx="72" cy="109" r="8" fill="#55DBF6"/>
-    <text x="72" y="149" text-anchor="middle" fill="white" font-size="16" font-weight="700">U30Air</text>
+    <text x="72" y="149" text-anchor="middle" fill="white" font-size="16" font-weight="700">Android</text>
     <path class="route" d="M132 109H224" stroke="#55DBF6" stroke-width="2"/>
     <rect x="151" y="91" width="54" height="35" rx="17" fill="#13394A"/>
     <path d="M170 108l6 6 12-13" fill="none" stroke="#55DBF6" stroke-width="3" stroke-linecap="round"/>
@@ -353,7 +353,7 @@ private enum FeatureDemoHTML {
     <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">Calls</text></g>
     <g class="reveal delayed"><rect x="247" y="129" width="79" height="37" rx="12" fill="#233D57"/>
     <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">SMS</text></g>
-    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">连接示意 · 需兼容设备端</text>
+    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">Connect to your Android phone</text>
     """
 
     private static let widgetSummary = """
@@ -367,16 +367,16 @@ private enum FeatureDemoHTML {
     <rect x="296" y="47" width="2" height="4" rx="1" fill="#2AC466"/>
     <text x="270" y="73" fill="#152238" font-size="12">82%</text>
     <path d="M33 91H327" stroke="#D8E1EA"/>
-    <text x="33" y="112" fill="#64748B" font-size="10">设备</text>
+    <text x="33" y="112" fill="#64748B" font-size="10">Device</text>
     <text x="33" y="132" fill="#0064CC" font-size="14" font-weight="600">Galaxy ↻</text>
-    <text x="195" y="112" fill="#64748B" font-size="10">连接模式</text>
+    <text x="195" y="112" fill="#64748B" font-size="10">Connection mode</text>
     <text class="mode-a" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">VoWLAN ↻</text>
-    <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">自动 ↻</text>
-    <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">RecentsCalls</text>
+    <text class="mode-b" x="195" y="132" fill="#0064CC" font-size="14" font-weight="600">Automatic</text>
+    <text x="33" y="158" fill="#152238" font-size="11" font-weight="600">Recent calls</text>
     <text x="33" y="180" fill="#64748B" font-size="11">138 •••• 6028</text>
-    <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">RecentsSMS</text>
-    <text x="195" y="180" fill="#64748B" font-size="11">我已经到家了。</text>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · Refresh由系统调度</text>
+    <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">Recent messages</text>
+    <text x="195" y="180" fill="#64748B" font-size="11">I have arrived home.</text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Sample data | iOS schedules refreshes</text>
     """
 
     private static let publicTLS = """
@@ -388,29 +388,29 @@ private enum FeatureDemoHTML {
     <path class="route" d="M101 130H134M226 130H259" stroke="#64B6FF" stroke-width="2"/>
     <rect x="139" y="91" width="82" height="78" rx="18" fill="#163D66" stroke="#4D9FE8"/>
     <text x="180" y="123" text-anchor="middle" fill="#A6D7FF" font-size="15" font-weight="700">TLS</text>
-    <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">自建网关</text>
+    <text x="180" y="146" text-anchor="middle" fill="#D8EBFF" font-size="12">Self-hosted gateway</text>
     <rect x="264" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
     <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">Android</text>
-    <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">首次配对 · 控制 · 音频</text>
-    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">试验性 · 需自行部署可入站网关</text>
+    <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">Initial pairing | Control | Audio</text>
+    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">Experimental | Requires your own reachable gateway</text>
     """
 
     private static let unreadBadges = """
     <rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
     <rect x="33" y="33" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse" cx="47" cy="59" r="4" fill="#FF625A"/>
-    <text x="61" y="54" fill="white" font-size="14" font-weight="600">未接Incoming call</text>
+    <text x="61" y="54" fill="white" font-size="14" font-weight="600">Missed calls</text>
     <text x="61" y="74" fill="#B8C6DA" font-size="11">138 •••• 6028</text>
     <rect x="33" y="94" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse delayed" cx="47" cy="120" r="4" fill="#FF625A"/>
-    <text x="61" y="115" fill="white" font-size="14" font-weight="600">未读SMS</text>
-    <text x="61" y="135" fill="#B8C6DA" font-size="11">我已经到家了。</text>
+    <text x="61" y="115" fill="white" font-size="14" font-weight="600">Unread messages</text>
+    <text x="61" y="135" fill="#B8C6DA" font-size="11">I have arrived home.</text>
     <text x="98" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">Recents</text>
     <g class="pulse"><rect x="115" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="125" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">2</text></g>
     <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">SMS</text>
     <g class="pulse delayed"><rect x="261" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="271" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text></g>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">示意数据 · 数字角标与记录标记</text>
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Sample data | Badges and unread records</text>
     """
 }

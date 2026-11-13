@@ -6,6 +6,8 @@
 	<string>$(AIRSIM_WIDGET_APP_GROUP)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array><string>en</string></array>
 	<key>CFBundleDisplayName</key>
 	<string>SimHelp</string>
 	<key>CFBundleExecutable</key>

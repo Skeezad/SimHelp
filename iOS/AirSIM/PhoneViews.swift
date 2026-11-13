@@ -179,8 +179,8 @@ struct DialPadLayoutMetrics {
     let contactHeight: CGFloat
 
     var keypadWidth: CGFloat { keySize * 3 + keySpacing * 2 }
-    var digitFontSize: CGFloat { min(31, max(23, keySize * 0.34)) }
-    var letterFontSize: CGFloat { min(10, max(8, keySize * 0.115)) }
+    var digitFontSize: CGFloat { min(42, max(28, keySize * 0.49)) }
+    var letterFontSize: CGFloat { min(11, max(9, keySize * 0.13)) }
     var callIconSize: CGFloat { min(30, max(23, keySize * 0.33)) }
     var deleteIconSize: CGFloat { min(24, max(19, keySize * 0.27)) }
 
@@ -247,14 +247,13 @@ struct DialPadView: View {
                 )
                 let pairedAgents = model.pairedAndroidAgents
                 let currentAgent = pairedAgents.first(where: \.isCurrent)
-                let agentSection = DialPadAgentSection.make(mode: ConnectionModePreference.selected(),
-                    hasCurrent: currentAgent != nil, pairedCount: pairedAgents.count)
 
-                ScrollView {
+                VStack(spacing: 0) {
                     layout {
+                        if !twoColumns { Spacer(minLength: 12) }
                         VStack(spacing: metrics.sectionSpacing) {
                             VStack(spacing: 2) {
-                                Text(model.numberInput.isEmpty ? L10n.t("Enter number") : model.numberInput)
+                                Text(model.numberInput)
                                     .font(
                                         .system(
                                             size: metrics.numberFontSize,
@@ -291,74 +290,30 @@ struct DialPadView: View {
                                 }
                             }
 
-                            if agentSection == .current, let currentAgent {
-                                DialPadCurrentAgentCard(
-                                    agent: currentAgent,
-                                    agentCount: pairedAgents.count,
-                                    cloudModeEnabled: CloudModePreference.isEnabled(),
-                                    simSlots: model.simSlots(for: currentAgent.id),
-                                    selectedSIMSlotID: model.selectedSIMSlotID(for: currentAgent.id),
-                                    selectSIMSlot: { slot in
-                                        model.selectSIMSlot(slot.id, for: currentAgent.id)
-                                    }
-                                ) {
-                                    pairedAgentListPresentation = PairedAgentListPresentation()
-                                }
-                            } else if agentSection == .bluetooth {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "wave.3.right")
-                                        .foregroundStyle(model.voble.state == .ready ? .green : .orange)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("VoBLE Bluetooth mode")
-                                            .font(.subheadline.weight(.semibold))
-                                        Text(
-                                            model.voble.state == .ready
-                                                ? "Authenticated · The call does not go through Relay"
-                                                : "Waiting for Android Bluetooth Agent"
-                                        )
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    }
-                                    Spacer()
-                                    Text(model.voble.state == .ready ? "online" : "Connecting")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(model.voble.state == .ready ? .green : .orange)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    .thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            } else if agentSection == .selection {
+                            HStack(spacing: 12) {
                                 Button {
                                     pairedAgentListPresentation = PairedAgentListPresentation()
                                 } label: {
-                                    HStack(spacing: 10) {
-                                        Image(
-                                            systemName: ConnectionModePreference.selected() == .bluetooth
-                                                ? "wave.3.right" : "smartphone"
-                                        )
-                                        .foregroundStyle(.secondary)
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Pairing Android Agent · \(pairedAgents.count)")
-                                                .font(.subheadline.weight(.semibold))
-                                            Text(pairedAgents.count > 1 ? "Please select a dialing device" : "Select the device and check the dial-up link")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                        }
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(.tertiary)
-                                    }
-                                    .padding(12)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        .thinMaterial,
-                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    Label(currentAgent?.deviceName ?? "Choose Android phone", systemImage: "chevron.down")
+                                        .font(.caption)
+                                        .lineLimit(1)
                                 }
-                                .buttonStyle(.plain)
                                 .accessibilityIdentifier("dial-pad-device-selector")
+                                if let currentAgent, model.simSlots(for: currentAgent.id).count > 1 {
+                                    Menu {
+                                        ForEach(model.simSlots(for: currentAgent.id)) { slot in
+                                            Button(slot.displayName) {
+                                                model.selectSIMSlot(slot.id, for: currentAgent.id)
+                                            }
+                                        }
+                                    } label: {
+                                        Label("SIM", systemImage: "simcard")
+                                            .font(.caption)
+                                    }
+                                    .accessibilityLabel("Choose SIM card")
+                                }
                             }
+                            .foregroundStyle(.secondary)
 
                         }
                         .frame(maxWidth: twoColumns ? 420 : 520)
@@ -371,12 +326,13 @@ struct DialPadView: View {
                     .frame(maxWidth: twoColumns ? 1000 : 520)
                     .padding(.horizontal, 16)
                     .padding(.vertical, metrics.verticalPadding)
-                    .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .scrollDisabled(true)
                 .scrollIndicators(.hidden)
             }
-            .background(PhoneBackdrop())
+            .background(Color.black.ignoresSafeArea())
+            .preferredColorScheme(.dark)
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $pairedAgentListPresentation) { _ in
                 PairedAndroidAgentsView(
@@ -427,7 +383,7 @@ struct DialPadView: View {
             }
             .buttonStyle(.plain)
             .disabled(model.numberInput.isEmpty)
-            .opacity(model.numberInput.isEmpty ? 0.4 : 1)
+            .opacity(model.numberInput.isEmpty ? 0 : 1)
             .accessibilityLabel(L10n.t("Clear number"))
             .accessibilityIdentifier("dialpad.clear")
             Button {
@@ -448,7 +404,7 @@ struct DialPadView: View {
                     || model.isBusy
                     || !model.canStartOutgoingCommand
             )
-            .opacity(model.numberInput.isEmpty || !model.canStartOutgoingCommand ? 0.4 : 1)
+            .opacity(model.isBusy ? 0.5 : 1)
 
             Image(systemName: "delete.left")
                 .font(.system(size: metrics.deleteIconSize))
@@ -457,7 +413,7 @@ struct DialPadView: View {
                 .contentShape(Rectangle())
                 .gesture(deleteGesture)
                 .allowsHitTesting(!model.numberInput.isEmpty)
-                .opacity(model.numberInput.isEmpty ? 0.4 : 1)
+                .opacity(model.numberInput.isEmpty ? 0 : 1)
                 .accessibilityLabel(L10n.t("delete"))
                 .accessibilityHint(L10n.t("Tap to delete one digit, long press to delete continuously"))
                 .accessibilityAddTraits(.isButton)
@@ -526,12 +482,12 @@ struct DialPadView: View {
         } label: {
             VStack(spacing: 0) {
                 Text(digit)
-                    .font(.system(size: metrics.digitFontSize, weight: .regular, design: .rounded))
+                    .font(.system(size: metrics.digitFontSize, weight: .regular, design: .default))
                 Text(letters)
                     .font(.system(size: metrics.letterFontSize, weight: .semibold))
                     .tracking(1.4)
             }
-            .foregroundStyle(.primary)
+            .foregroundStyle(.white)
             .frame(width: metrics.keySize, height: metrics.keySize)
             .dialKeySurface()
             .contentShape(Circle())
@@ -1307,7 +1263,7 @@ private struct SMSAccountPicker: View {
                     .font(.caption)
                 }
                 .disabled(slots.count < 2)
-                .accessibilityLabel("Sending line, \(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android默认SMS卡")")
+                .accessibilityLabel("Sending line, \(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android default SMS SIM")")
                 .accessibilityIdentifier("sms.simSelector")
             } else {
                 Label("Android default SMS card", systemImage: "simcard").font(.caption).foregroundStyle(.secondary)

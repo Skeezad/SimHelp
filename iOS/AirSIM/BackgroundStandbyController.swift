@@ -707,7 +707,7 @@ final class IncomingCallNotifier {
             if let error {
                 print("[SimHelp APNs] Notification authorization failed: \(error.localizedDescription)")
             } else {
-                print("[SimHelp APNs] Notification Granted Status: \(granted ?"already 允许" : "Not allowed")")
+                print("[SimHelp APNs] Notification Granted Status: \(granted ?"Allowed" : "Not allowed")")
             }
 #endif
             Task { @MainActor in

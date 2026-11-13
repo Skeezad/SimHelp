@@ -467,7 +467,7 @@ struct RemoteDirectGuideView: View {
         cert = /certs/phone.example.com/fullchain.pem
         key = /certs/phone.example.com/privkey.pem
 
-        [airsim-control]
+        [simhelp-control]
         accept = 0.0.0.0:443
         connect = 192.168.1.50:7592
         TIMEOUTidle = 120
@@ -483,7 +483,7 @@ struct RemoteDirectGuideView: View {
 
         # Temporary: replace 45945 with the current pairing port.
         # Disable this entry after pairing.
-        [airsim-pairing]
+        [simhelp-pairing]
         accept = 0.0.0.0:9443
         connect = 192.168.1.50:45945
         TIMEOUTidle = 15

@@ -151,7 +151,7 @@ final class WatchCallCoordinator: NSObject, WCSessionDelegate {
         error: Error?
     ) {
 #if DEBUG
-		print("[SimHelp iPhone WC] Activation completed; state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "无") error=\(error?.localizedDescription ?? "无")")
+		print("[SimHelp iPhone WC] Activation completed; state=\(activationState.rawValue) context=\(session.receivedApplicationContext["event"] as? String ?? "None") error=\(error?.localizedDescription ?? "None")")
 #endif
 		guard activationState == .activated else { return }
 		let context = session.receivedApplicationContext

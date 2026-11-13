@@ -39,10 +39,10 @@ enum PhoneTab: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .dial: return "circle.grid.3x3.fill"
-        case .recents: return "clock"
-        case .messages: return "bubble.left.and.bubble.right"
-        case .contacts: return "person.crop.rectangle"
-        case .settings: return "slider.horizontal.3"
+        case .recents: return "clock.fill"
+        case .messages: return "message.fill"
+        case .contacts: return "person.crop.circle.fill"
+        case .settings: return "gearshape.fill"
         }
     }
 
@@ -50,7 +50,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
         switch self {
         case .dial: return "Keypad"
         case .recents: return "Recents"
-        case .contacts: return "Contact person"
+        case .contacts: return "Contacts"
         default: return rawValue
         }
     }

@@ -339,7 +339,7 @@ struct SMSMessage: Codable, Equatable, Sendable, Identifiable {
 
     var simDeliveryLabel: String {
         let line = simSlot?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return "\(isOutgoing ? " via " : "接收于") \(line.isEmpty ? "SIM Unknown" : line)"
+        return "\(isOutgoing ? " via " : "Received at") \(line.isEmpty ? "SIM Unknown" : line)"
     }
 
     /// new 版 Agent 用 delivery_id 对齐 APNs  and 本地同步; 旧版仍回退到content指纹. 

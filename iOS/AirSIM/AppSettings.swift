@@ -73,7 +73,7 @@ final class AppSettings: ObservableObject {
     init() {
         let defaults = UserDefaults.standard
         appearance = AppAppearance(rawValue: defaults.string(forKey: L10n.appearanceKey) ?? "") ?? .system
-        language = AppLanguage(rawValue: defaults.string(forKey: L10n.languageKey) ?? "") ?? .system
+        language = .en
     }
 }
 
@@ -82,11 +82,7 @@ enum L10n {
     static let appearanceKey = "airsim.appearance"
     static let languageKey = "airsim.language"
 
-    static var effectiveLanguage: AppLanguage {
-        let saved = AppLanguage(rawValue: UserDefaults.standard.string(forKey: languageKey) ?? "") ?? .system
-        if saved != .system { return saved }
-        return .en
-    }
+    static var effectiveLanguage: AppLanguage { .en }
 
     static func t(_ key: String) -> String {
         guard effectiveLanguage == .en else { return key }
