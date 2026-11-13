@@ -183,6 +183,7 @@ public final class PairingServer implements Closeable {
                     byte[] secret = PairingCrypto.decodeBase64URL(vowlanSecret);
                     try {
                         String agentID = AndroidAgentIdentity.agentID(context);
+                        response.put("gateway_host", peer.getLocalAddress().getHostAddress());
                         response.put("control_port", ports.controlPort()).put("pcm_port", ports.pcmPort());
                         response.put("route_proof", DirectGatewayRoutes.proof(secret, created.id(),
                                 claim.getString("client_public_key"), agentID, ports.controlPort(), ports.pcmPort()));
