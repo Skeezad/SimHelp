@@ -35,6 +35,9 @@ jobs:
           test -d "$APP"
           mkdir -p dist/Payload
           cp -R "$APP" dist/Payload/SimHelp.app
+          # isideload rewrites the iOS bundle identifier; remove the optional
+          # Watch app so its companion identifier cannot become stale.
+          rm -rf dist/Payload/SimHelp.app/Watch
           /usr/bin/ditto -c -k --sequesterRsrc --keepParent dist/Payload dist/SimHelp-iPhone-unsigned.ipa
 
       - name: Upload iOS artifact
