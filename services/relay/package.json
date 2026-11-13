@@ -1,5 +1,5 @@
 {
-  "name": "airsim-push-relay-worker",
+  "name": "simhelp-relay-worker",
   "version": "0.2.1",
   "license": "PolyForm-Noncommercial-1.0.0",
   "private": true,

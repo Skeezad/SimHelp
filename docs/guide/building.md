@@ -55,3 +55,9 @@ python scripts/audit_ios_english.py
 ```
 
 Additional component tests remain alongside their sources. Some historical tests assert earlier wording or deployment assumptions; treat the current app build and device behavior as separate validation steps.
+
+## Optional service tests
+
+Run relay unit tests with `node --test services/relay/test/*.test.mjs`. The historical-router compatibility case requires an earlier Git object and is explicitly skipped if that baseline is not present in the source snapshot.
+
+Run gateway-agent tests on Linux; its modem, process, and filesystem code uses Linux system calls. The installer component can also be tested from its own Go module directory.

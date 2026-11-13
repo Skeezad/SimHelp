@@ -26,9 +26,19 @@ test("separate Apple device objects never share a same-named Android queue", asy
   assert.deepEqual((await apple2.pull("same-agent")).commands,[]);
 });
 
-test("actual pre-routing Relay rejects v2 clients without executing v1 actions", async () => {
+test("actual pre-routing Relay rejects v2 clients without executing v1 actions", async (t) => {
   // Read-only compatibility fixture: import the real baseline router, not a guessed mock.
-  const source=execFileSync("git",["show","04253964092aeef5f2ddfe34e59bfb15d8d828fd:services/relay/src/index.mjs"],{encoding:"utf8"})
+  const baseline = "04253964092aeef5f2ddfe34e59bfb15d8d828fd";
+  try {
+    execFileSync("git", ["cat-file", "-e", `${baseline}^{commit}`], {stdio: "ignore"});
+  } catch {
+    t.skip("Historical compatibility baseline is not included in this source snapshot");
+    return;
+  }
+  const baselinePath = execFileSync("git", ["ls-tree", "-r", "--name-only", baseline], {encoding: "utf8"})
+    .split("\n").find(path => path.endsWith("/src/index.mjs"));
+  assert.ok(baselinePath, "baseline relay fixture must exist");
+  const source=execFileSync("git",["show",`${baseline}:${baselinePath}`],{encoding:"utf8"})
     .replaceAll(/from "(\.\/[^"\n]+)"/g,(_,path)=>`from "${new URL(path,new URL("../src/index.mjs",import.meta.url)).href}"`);
   const old=(await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)).default;
   let actions=0;
