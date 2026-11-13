@@ -878,7 +878,7 @@ struct AirSIMSettingsView: View {
                 Text(feedbackDescription.isEmpty ? "Description not filled in" : feedbackDescription).textSelection(.enabled)
                 Text(feedbackRemark.isEmpty ? "Remarks not filled in" : feedbackRemark).textSelection(.enabled)
             }
-            Section { Text("Submit only if you click "Upload Feedback"; fail as a draft. This page only shows the upload range, not a full preview of what the server actually receives.").font(.footnote) }
+            Section { Text("Submit only if you click \"Upload Feedback\"; fail as a draft. This page only shows the upload range, not a full preview of what the server actually receives.").font(.footnote) }
         case .about: aboutSection
         case .guide:
             Section {
@@ -896,7 +896,7 @@ struct AirSIMSettingsView: View {
             guideSection("Add widget", steps: ["Long press an empty space on the home screen and select Edit → Add Widget.", "Search for SimHelp, select a size and add it.", "Large size shows up to 5 recent calls and text messages per column; medium size shows summary by space.", "The device and mode buttons can be switched within the widget; the recording entrance opens the corresponding content."])
             Section { Text("The widget displays the recently synchronized information, and the update frequency is scheduled by the system. Pairing data and unread tags require opening the app for synchronization."); link(.order, "arrow.up.arrow.down") }
         case .islandGuide:
-            guideSection("Smart island and lock screen", steps: ["Display the device status after turning on "Show Smart Island".", "The system will limit the duration of real-time activities, and expiration does not mean that the device is offline.", "Returning to the SimHelp foreground resumes presentation; incoming PushKit/CallKit links are independent of real-time activity."])
+            guideSection("Smart island and lock screen", steps: ["Display the device status after turning on \"Show Smart Island\".", "The system will limit the duration of real-time activities, and expiration does not mean that the device is offline.", "Returning to the SimHelp foreground resumes presentation; incoming PushKit/CallKit links are independent of real-time activity."])
             Section { Text("Don't treat background keepalives or live activities as a guarantee that you'll receive a call after force-quitting the app.") }
         case .accessibility:
             Section {
@@ -1553,12 +1553,15 @@ struct NotificationForwardingDestination: Codable, Identifiable, Equatable, Send
     var sendMissedCall = true
     var includeBody = true
     var includeNumber = true
-    var template = """{event}
+    var template = 
+    """
+    {event}
     Device: {device}
     Number: {number}
     Sender: {sender}
     Content: {content}
-    Time: {time}"""
+    Time: {time}
+    """
     var missedTemplate: String? = nil
 
 

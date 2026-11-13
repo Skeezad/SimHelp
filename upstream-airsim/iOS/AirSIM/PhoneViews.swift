@@ -1307,7 +1307,7 @@ private struct SMSAccountPicker: View {
                     .font(.caption)
                 }
                 .disabled(slots.count < 2)
-                .accessibilityLabel("Send line, \(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ??"Android default SMS card")")
+                .accessibilityLabel("Send line, \(slots.first(where: { $0.id == model.selectedSMSSlotID(for: agentID, recipient: recipient) })?.label ?? "Android default SMS card")")
                 .accessibilityIdentifier("sms.simSelector")
             } else {
                 Label("Android default SMS card", systemImage: "simcard").font(.caption).foregroundStyle(.secondary)

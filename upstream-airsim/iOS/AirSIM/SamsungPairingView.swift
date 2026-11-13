@@ -52,7 +52,7 @@ struct SamsungPairingView: View {
                     Label("Let Android and this machine connect to the same Wi-Fi", systemImage: "wifi")
                     Label("You can also connect the machine to Android mobile hotspots", systemImage: "personalhotspot")
                 }
-                Label("Click "Start One-time Pairing" in the Android App", systemImage: "key")
+                Label("Click \"Start One-time Pairing\" in the Android App", systemImage: "key")
             }
 
             Section("Pairing method") {
@@ -367,7 +367,7 @@ struct RemoteDirectGuideView: View {
                     portRow("Call Control · HTTPS", external: "443", target: "Android actual control port, usually 7592")
                     portRow("Audio · TCP TLS", external: "17593", target: "Android actual PCM port, usually 7593")
                     if firstPairing {
-                        Text("Click "Start One-time Pairing" on Android, and then change the backend port for temporary pairing forwarding to the port displayed in the window. The new window may change the port, please update simultaneously.")
+                        Text("Click \"Start One-time Pairing\" on Android, and then change the backend port for temporary pairing forwarding to the port displayed in the window. The new window may change the port, please update simultaneously.")
                             .font(.subheadline)
                     }
                     DisclosureGroup("View gateway configuration examples") {
@@ -395,8 +395,8 @@ struct RemoteDirectGuideView: View {
 
                 Section(firstPairing ? "3 · Encrypted pairing on iPhone" : "3 · Verify and save the domain name") {
                     Text(firstPairing
-                        ? "Return to the pairing page, select "Public Domain Name", fill in the domain name, HTTPS pairing port, HTTPS control port, TLS audio port and Android six-digit verification code, and then click "Connect and Encrypted Pairing"."
-                        : "Return to "Self-created domain name direct connection", select the paired Android and turn on the enable switch, fill in the domain name, HTTPS control port and TLS audio port, and click "Verify and Save".")
+                        ? "Return to the pairing page, select \"Public Domain Name\", fill in the domain name, HTTPS pairing port, HTTPS control port, TLS audio port and Android six-digit verification code, and then click \"Connect and Encrypted Pairing\"."
+                        : "Return to \"Self-created domain name direct connection\", select the paired Android and turn on the enable switch, fill in the domain name, HTTPS control port and TLS audio port, and click \"Verify and Save\".")
                     Label("Fill in the domain name phone.example.com", systemImage: "text.cursor")
                     Text("Without https://, a path, or a port. The domain route is saved only after the certificate and this Android device identity are authenticated.")
                         .font(.subheadline).foregroundStyle(.secondary)
@@ -415,7 +415,7 @@ struct RemoteDirectGuideView: View {
 
                 Section("Encountered a problem") {
                     DisclosureGroup("Pairing successful, but control portal verification failed") {
-                        Text("The pairing key is retained. Check whether the certificate, domain name resolution and control port are forwarded to the same Android, and then select the device in "Self-created domain name direct connection" to try again without deleting the device first.")
+                        Text("The pairing key is retained. Check whether the certificate, domain name resolution and control port are forwarded to the same Android, and then select the device in \"Self-created domain name direct connection\" to try again without deleting the device first.")
                     }
                     DisclosureGroup("Can be controlled, but there is no sound during calls") {
                         Text("Checks that the audio port uses raw TCP TLS forwarding, is passed, and that the Android PCM service is started. HTTP web proxy and regular Cloudflare web proxy are not replacements for PCM forwarding.")

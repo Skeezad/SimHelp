@@ -310,7 +310,8 @@ private enum FeatureDemoHTML {
         case .publicTLS: illustration = publicTLS
         case .unreadBadges: illustration = unreadBadges
         }
-        return """
+        return 
+    """
         <!doctype html><html><head>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
@@ -335,10 +336,13 @@ private enum FeatureDemoHTML {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 220" aria-hidden="true">
         \(illustration)
         </svg></body></html>
-        """
+        
+    """
     }
 
-    private static let u30Air = """<rect x="20" y="51" width="104" height="122" rx="25" fill="#172A3B" stroke="#42738C"/>
+    private static let u30Air = 
+    """
+    <rect x="20" y="51" width="104" height="122" rx="25" fill="#172A3B" stroke="#42738C"/>
     <rect x="45" y="69" width="54" height="9" rx="4" fill="#304D63"/>
     <circle class="pulse" cx="72" cy="109" r="8" fill="#55DBF6"/>
     <text x="72" y="149" text-anchor="middle" fill="white" font-size="16" font-weight="700">U30Air</text>
@@ -352,9 +356,12 @@ private enum FeatureDemoHTML {
     <text x="286" y="107" text-anchor="middle" fill="#69DFF5" font-size="14">Call</text></g>
     <g class="reveal delayed"><rect x="247" y="129" width="79" height="37" rx="12" fill="#233D57"/>
     <text x="286" y="153" text-anchor="middle" fill="#A9D3FF" font-size="14">SMS</text></g>
-    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">Connection instructions · Must be compatible with the device</text>"""
+    <text x="125" y="211" text-anchor="middle" fill="#B5C5D8" font-size="11">Connection instructions · Must be compatible with the device</text>
+    """
 
-    private static let widgetSummary = """<rect x="14" y="18" width="332" height="182" rx="28" fill="#F4F8FC"/>
+    private static let widgetSummary = 
+    """
+    <rect x="14" y="18" width="332" height="182" rx="28" fill="#F4F8FC"/>
     <rect x="32" y="35" width="42" height="42" rx="13" fill="#DCEEFF"/>
     <path d="M43 46q-4 12 17 22l6-7-8-5-4 4-6-7 3-4z" fill="#008BEE"/>
     <text x="85" y="53" fill="#152238" font-size="17" font-weight="700">Galaxy</text>
@@ -373,9 +380,12 @@ private enum FeatureDemoHTML {
     <text x="33" y="180" fill="#64748B" font-size="11">138 •••• 6028</text>
     <text x="195" y="158" fill="#152238" font-size="11" font-weight="600">Recent text messages</text>
     <text x="195" y="180" fill="#64748B" font-size="11">I'm home. </text>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Indicates data · Refresh is scheduled by the system</text>"""
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Indicates data · Refresh is scheduled by the system</text>
+    """
 
-    private static let publicTLS = """<rect x="26" y="18" width="308" height="44" rx="15" fill="#193453" stroke="#4278AA"/>
+    private static let publicTLS = 
+    """
+    <rect x="26" y="18" width="308" height="44" rx="15" fill="#193453" stroke="#4278AA"/>
     <path d="M45 37v-5a5 5 0 0 1 10 0v5M43 37h14v12H43z" fill="none" stroke="#74BDFF" stroke-width="2"/>
     <text x="69" y="45" fill="#D8EBFF" font-size="15">https://phone.example.com</text>
     <rect x="18" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
@@ -387,9 +397,12 @@ private enum FeatureDemoHTML {
     <rect x="264" y="101" width="78" height="58" rx="16" fill="#182A40" stroke="#42627F"/>
     <text x="303" y="135" text-anchor="middle" fill="white" font-size="15">Android</text>
     <text x="180" y="191" text-anchor="middle" fill="#9DCFFF" font-size="12">First time pairing · Control · Audio</text>
-    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">Experimental · You need to deploy your own inbound gateway</text>"""
+    <text x="180" y="214" text-anchor="middle" fill="#B5C5D8" font-size="10">Experimental · You need to deploy your own inbound gateway</text>
+    """
 
-    private static let unreadBadges = """<rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
+    private static let unreadBadges = 
+    """
+    <rect x="18" y="16" width="324" height="184" rx="25" fill="#182233" stroke="#3B485D"/>
     <rect x="33" y="33" width="294" height="52" rx="13" fill="#243148"/>
     <circle class="pulse" cx="47" cy="59" r="4" fill="#FF625A"/>
     <text x="61" y="54" fill="white" font-size="14" font-weight="600">Missed calls</text>
@@ -404,5 +417,6 @@ private enum FeatureDemoHTML {
     <text x="244" y="182" text-anchor="middle" fill="#A5CFFF" font-size="14">SMS</text>
     <g class="pulse delayed"><rect x="261" y="159" width="20" height="20" rx="10" fill="#FF453A"/>
     <text x="271" y="173" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text></g>
-    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Schematic data · Numerical markers and record marks</text>"""
+    <text x="180" y="216" text-anchor="middle" fill="#B5C5D8" font-size="10">Schematic data · Numerical markers and record marks</text>
+    """
 }

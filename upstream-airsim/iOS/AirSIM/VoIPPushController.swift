@@ -1326,10 +1326,10 @@ final class VoIPPushController: NSObject {
         }
         var configDetail = [
             "Checking method = manual self-test (without changing the connection mode)",
-            "device=\(readiness.deviceIDHint ??"Generated")",
+            "device=\(readiness.deviceIDHint ?? "Generated")",
             "APNs=\(readiness.environment)",
             "PushKit=\(readiness.voIPTokenReady ? "ready" : "Missing")",
-            "NotificationToken=\(readiness.alertTokenReady?"ready" : "Missing")",
+            "NotificationToken=\(readiness.alertTokenReady ? "ready" : "Missing")",
         ].joined(separator: "\n")
         if let host = URL(string: registration.relayURL)?.host {
             configDetail += "\nRelay=\(host)"
@@ -1397,7 +1397,7 @@ final class VoIPPushController: NSObject {
             return "  - \(name) · \(kind) · \(online) · \(routing)"
         }.joined(separator: "\n")
         report.update(.agentDirectory, state: .passed,
-            detail: "Registered \(status.agents.count) station\n\(directory)\nactive=\(status.activeAgentID ??"none")")
+            detail: "Registered \(status.agents.count) station\n\(directory)\nactive=\(status.activeAgentID ?? "none")")
         onUpdate(report)
 
         report.update(.agentHeartbeat, state: .running, detail: "Check the last 150 seconds of heartbeats and versions")
@@ -1407,14 +1407,14 @@ final class VoIPPushController: NSObject {
                 "  - \($0.deviceName ?? $0.agentID) · \($0.cloudOnline ? "online" : "Exceed90Second")"
             }.joined(separator: "\n")
             report.fail(.agentHeartbeat,
-                detail: "No valid heartbeat within 90 seconds \nRelay record: \n\(known)\nactive=\(status.activeAgentID ??"none")")
+                detail: "No valid heartbeat within 90 seconds \nRelay record: \n\(known)\nactive=\(status.activeAgentID ?? "none")")
             onUpdate(report)
             return report
         }
         let version = status.agentVersion?.isEmpty == false ? status.agentVersion! : "Unknown version"
         let cellular = status.cellularState?.isEmpty == false ? "· Cellular \(status.cellularState!)" : ""
         report.update(.agentHeartbeat, state: .passed,
-            detail: "Agent \(version) Online \(cellular) · active=\(status.activeAgentID ??"none")")
+            detail: "Agent \(version) Online \(cellular) · active=\(status.activeAgentID ?? "none")")
         onUpdate(report)
 
         report.update(.commandRouting, state: .running, detail: "Check the Agent's command_routing_version")
