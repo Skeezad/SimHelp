@@ -1,11 +1,11 @@
-# CmST0us/AirSIM 云端媒体优化评审
+# CmST0us/SimHelp 云端媒体优化评审
 
 日期：2026-11-03（Asia/Shanghai）。本轮为源码比较与定向自动化验证，不合并代码、不部署、不安装、不发起真实电话。
 
 ## 比较范围
 
 - 当前工作树：`VoBLE`，`1f353767faaf26d764f2e359b962e5104d8b693c`，已包含于主项目 `main` 的 `71006f4`；两者程序代码相同，main 另保留 README 删除赞助区块的修改。
-- Fork：[`CmST0us/AirSIM`](https://github.com/CmST0us/AirSIM)，main `aafb2036e40bcebf6452531f4020ef6fe3931da9`。
+- Fork：[`CmST0us/SimHelp`](https://github.com/CmST0us/SimHelp)，main `aafb2036e40bcebf6452531f4020ef6fe3931da9`。
 - 共同祖先：`454a2bb`（2026-10-12）。从该祖先起当前 VoBLE 独有 224 个提交，fork 独有 126 个提交。这不是基于当前版本的一组小补丁。
 - 只读引用：`review-cmst0us/main`；审阅副本在 `/tmp/airsim-cmst0us-aafb203-review`，未加入生产构建。
 - 使用现有 VoBLE 工作树；原主目录的未提交修改仍保存在原保留分支，没有切换或覆盖它。
@@ -14,7 +14,7 @@
 
 值得吸收，但不建议整分支 merge，也不建议直接 cherry-pick 整个 WebRTC 提交。最有价值的是媒体/控制生命周期分离、可归因的卡顿统计、成熟的编解码与抖动处理，以及验证这些行为的测试夹具。
 
-Fork 已从 v1 演进到 v2：iOS libwebrtc + 模块 Pion + 原生 Opus helper + ECS control/PostgreSQL/TURN。其优化主要服务于 EG25/RM500。相对共同祖先，`android/`、`android-standalone/`、旧 `push-relay-worker/` 没有对应改动；不能把模块测试结果当成三星 Standalone 的性能验证。
+Fork 已从 v1 演进到 v2：iOS libwebrtc + 模块 Pion + 原生 Opus helper + ECS control/PostgreSQL/TURN。其优化主要服务于 EG25/RM500。相对共同祖先，`android/`、`apps/android/standalone/`、旧 `services/relay/` 没有对应改动；不能把模块测试结果当成三星 Standalone 的性能验证。
 
 ## 当前项目已有的能力
 
@@ -27,7 +27,7 @@ Fork 已从 v1 演进到 v2：iOS libwebrtc + 模块 Pion + 原生 Opus helper +
 
 不能把 fork 的“80 ms 缓冲、12 帧上限、自动重连”当作本项目完全缺失的新功能。另有一个文档偏差：`docs/cloud-pcm-resilience.md` 写目标最多 10 帧，实际 iOS `CloudPCMAdaptiveJitterBuffer` 目标最高 12 帧，Android 最高 10 帧；后续应按代码及测量统一说明。
 
-源码：`iOS/AirSIM/IPhoneCloudCallSession.swift`、`CloudPCMAudioQueue.java`、`CloudPCMMediaPump.java`、`StandaloneCloudMediaManager.java`。
+源码：`apps/ios/SimHelp/IPhoneCloudCallSession.swift`、`CloudPCMAudioQueue.java`、`CloudPCMMediaPump.java`、`StandaloneCloudMediaManager.java`。
 
 ## 值得移植的方向与边界
 
@@ -43,12 +43,12 @@ Fork 已从 v1 演进到 v2：iOS libwebrtc + 模块 Pion + 原生 Opus helper +
 
 Fork 关键源码：
 
-- [媒体统计与独立生命周期](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/module/airsim-agent/internal/cloud/bridge.go)
-- [模块抖动缓冲与时钟](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/module/airsim-agent/internal/cloud/jitter.go)
-- [iOS 媒体协调器](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/iOS/AirSIM/CloudV2/V2MediaCoordinator.swift)
-- [iOS 通话归属与恢复](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/iOS/AirSIM/CloudV2/CloudV2Model.swift)
-- [WebRTC 接入](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/iOS/AirSIM/CloudV2/V2WebRTC.swift)
-- [Opus 配置](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/module/rm500/audio/src/opus_codec.c)
+- [媒体统计与独立生命周期](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/services/gateway/airsim-agent/internal/cloud/bridge.go)
+- [模块抖动缓冲与时钟](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/services/gateway/airsim-agent/internal/cloud/jitter.go)
+- [iOS 媒体协调器](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/apps/ios/SimHelp/CloudV2/V2MediaCoordinator.swift)
+- [iOS 通话归属与恢复](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/apps/ios/SimHelp/CloudV2/CloudV2Model.swift)
+- [WebRTC 接入](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/apps/ios/SimHelp/CloudV2/V2WebRTC.swift)
+- [Opus 配置](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/services/gateway/rm500/audio/src/opus_codec.c)
 
 ## 当前代码中具体需要关注的位置
 
@@ -108,7 +108,7 @@ go test ./internal/cloud \
 
 14 个顶层用例通过（40.116 秒，不含下载/编译），含 TURN UDP/TCP 回环双向数据、控制断线媒体保持、新会话替换旧会话、首个失败原因、统计、序号回绕、FEC 选择和缓冲回落。这里的 FEC 测试验证取下一包交给 decoder 的决策，不是对真实运营商声音的音质评分；未运行本轮 iOS 实机/全量 fork 测试，未对麦克风或真实电话做操作。
 
-Fork 自述的实机依据是 EG25 与 iPad mini 约一分钟双向来电，报告入站丢包约 2.9%、iPad 缓冲约 205 ms，以及模块调度停顿。它同时列出去电、长通话、锁屏、USB、控制断线恢复及实时调度后复测等未验收项。属于对方报告，未由本轮重现，不能推广为三星/U30Air或全网络环境已验证。见 [WebRTC 音频说明](https://github.com/CmST0us/AirSIM/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/docs/WEBRTC_AUDIO.md)。
+Fork 自述的实机依据是 EG25 与 iPad mini 约一分钟双向来电，报告入站丢包约 2.9%、iPad 缓冲约 205 ms，以及模块调度停顿。它同时列出去电、长通话、锁屏、USB、控制断线恢复及实时调度后复测等未验收项。属于对方报告，未由本轮重现，不能推广为三星/U30Air或全网络环境已验证。见 [WebRTC 音频说明](https://github.com/CmST0us/SimHelp/blob/aafb2036e40bcebf6452531f4020ef6fe3931da9/docs/WEBRTC_AUDIO.md)。
 
 后续最低测试矩阵：相同设备/路由/蜂窝条件下记录首音时间、每分钟欠载/裁剪、发送与播放间隔 p95/p99、排队时长；合成 1/3/5% 随机丢包及突发丢包、50/100/200 ms 抖动；CPU 压力、Wi-Fi/蜂窝/VPN 换网；分别中断控制和媒体；两端静音、蓝牙耳机、CallKit 后台与用户主动挂断；连续 30 分钟以上通话；U30Air 的早期媒体→接通双向另行验收。真实拨号仍由用户进行。
 

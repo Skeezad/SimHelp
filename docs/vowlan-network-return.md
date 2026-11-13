@@ -40,7 +40,7 @@ iOS 被系统挂起时不能保证立刻执行路径回调；必须在获得后�
 ## 本地验证记录（2026-10-15）
 
 - iOS 全套 130 项测试通过；Release 无签名归档成功，生成 build 85 完整及侧载 IPA。
-- `./android-standalone/test.sh` 通过，包含共享 Android、同 IP 新网络恢复、NSD 旧回调隔离、短信兼容及 PCM 集成回归。
+- `./apps/android/standalone/test.sh` 通过，包含共享 Android、同 IP 新网络恢复、NSD 旧回调隔离、短信兼容及 PCM 集成回归。
 - Standalone 与 AVF Bridge 的 build 85 Release APK 已构建，证书延续既有签名；实际 APK 的版本、`ACCESS_NETWORK_STATE` 与 Shizuku 集成检查通过。
 - unsigned IPA 打包集成测试通过，包内版本均为 85、实时活动扩展保留；完整包保留 Watch，侧载包移除 Watch，无签名／provisioning 或 macOS 杂项元数据。两种 IPA 都需要自行重签。
-- 安装包位于忽略目录 `iOS/build/candidate85/`，未安装到手机、未提交推送、未发布或上传 TestFlight。上述真机步骤尚未执行。
+- 安装包位于忽略目录 `apps/ios/build/candidate85/`，未安装到手机、未提交推送、未发布或上传 TestFlight。上述真机步骤尚未执行。

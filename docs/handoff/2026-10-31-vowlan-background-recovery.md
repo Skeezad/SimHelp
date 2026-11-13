@@ -52,7 +52,7 @@ Validation on iOS 27 Simulator:
   chain test (`B terminal`); simulator logs also reported overload. This alone
   does not prove that the timeout was environmental.
 - The unchanged failing test then passed three consecutive isolated runs.
-- A second full `AirSIMTests` run passed all 378 tests, including pure-local /
+- A second full `SimHelpTests` run passed all 378 tests, including pure-local /
   Relay egress and PR #18 cancellation/handoff tests (`TEST EXECUTE SUCCEEDED`).
 - All five added regression tests passed. `git diff --check` passed.
 - Local logs: `/tmp/airsim-background-recovery-tests.log`,

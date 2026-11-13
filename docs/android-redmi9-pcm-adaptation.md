@@ -26,15 +26,15 @@
 - 纯 JVM：机型范围、端口格式选择、无法支持的编码 / 44.1k profile 拒绝、转换输出时长、任意分包连续性、立体声相等、正负满幅、静音、非完整样本及输出容量边界。
 - 使用 Android 边界测试桩执行真实 `streamCallAudio` 初始化路径：验证 Redmi 9 下行 source 仍为 3 / 8k、绑定通话输入、AudioTrack 请求 48k stereo；READY 写入失败和 Rx 缺失 / 拒绝时释放所有录放资源。
 - 核心状态测试验证系统采集静音、下行错误路由和 Redmi 9 未确认路由不会显示双向正常。
-- 完整命令：`sh android-standalone/test.sh`。这些测试只处理合成 PCM，不等于实机声音验收。
+- 完整命令：`sh apps/android/standalone/test.sh`。这些测试只处理合成 PCM，不等于实机声音验收。
 
 实际结果：完整 Standalone 回归通过；最终核心测试重新通过，检测策略 43 项断言通过；桥单元 71 项断言、Redmi profile / 合成 PCM 转换 15 项断言及真实初始化路径测试通过。另覆盖“8k mono 输出缓冲查询不被支持，但 48k stereo 可用”的情形，避免在选择原生格式之前就失败。
 
-最终开发包：`android-standalone/build/redmi9/AirSIM-Standalone-Redmi9-127-debug.apk`，包名 `com.airsim.phonecontrol.standalone`，版本 `0.9.8.21-redmi9-debug (127)`，SHA-256 `f911e2c700c893e3969283bbf6214d10d814c31eac403fbb8e532e2513d27bab`。使用临时 manifest 递增测试 build，仓库正式发布版本未改动；已核对最终编译字节码包含原生格式查询修正。
+最终开发包：`apps/android/standalone/build/redmi9/SimHelp-Standalone-Redmi9-127-debug.apk`，包名 `com.simhelp.phonecontrol.standalone`，版本 `0.9.8.21-redmi9-debug (127)`，SHA-256 `f911e2c700c893e3969283bbf6214d10d814c31eac403fbb8e532e2513d27bab`。使用临时 manifest 递增测试 build，仓库正式发布版本未改动；已核对最终编译字节码包含原生格式查询修正。
 
 ## Debug 安装与实机验收
 
-手机现有正式包与本机 Debug 证书不同，不能 `install -r` 覆盖。需要原正式签名，或用户明确允许卸载原应用（会清除 AirSIM 配对 / 设置 / 本地缓存）后安装 Debug；不能静默卸载、伪造同证书或宣称保留数据。
+手机现有正式包与本机 Debug 证书不同，不能 `install -r` 覆盖。需要原正式签名，或用户明确允许卸载原应用（会清除 SimHelp 配对 / 设置 / 本地缓存）后安装 Debug；不能静默卸载、伪造同证书或宣称保留数据。
 
 安装后，用户授权所选 Root / Shizuku 通道，先观察 PCM 进程至少 60 秒稳定且不再交替重启，再进行本地 VoWLAN 配对与手动通话：
 
@@ -47,7 +47,7 @@
 
 用户随后明确允许卸载正式版、安装 Debug 并重新配对。卸载成功后，前两次安装被 MIUI 返回 `INSTALL_FAILED_USER_RESTRICTED`；用户确认继续，2026-11-04 00:01 已通过 `adb install --no-incremental` 安装成功。核对设备版本为 `0.9.8.21-redmi9-debug (127)`，启动 Status ok，MainActivity 和 Agent / VoWLAN / VoBLE 前台服务在运行。
 
-首次启动仍需重新授权：观测到 `root_bridge_unavailable IOException`，随后用户授予 Shizuku 权限。检查窗口仍有旧版 Root supervisor 残留，首页为“等待音频桥检测”，尚未确认新版特权服务接管或 PCM 稳定。下一步需在 Root 管理器允许新版 AirSIM，再在设置中点击“Root 授权 / 重试”，观察旧 supervisor 迁移退出，然后重新配对、由用户手动通话验收。此次未替用户拨号、接听或录音，不能把安装成功称为音频修复已验收。
+首次启动仍需重新授权：观测到 `root_bridge_unavailable IOException`，随后用户授予 Shizuku 权限。检查窗口仍有旧版 Root supervisor 残留，首页为“等待音频桥检测”，尚未确认新版特权服务接管或 PCM 稳定。下一步需在 Root 管理器允许新版 SimHelp，再在设置中点击“Root 授权 / 重试”，观察旧 supervisor 迁移退出，然后重新配对、由用户手动通话验收。此次未替用户拨号、接听或录音，不能把安装成功称为音频修复已验收。
 
 ## Android 官方依据
 
@@ -59,12 +59,12 @@
 
 Root 在 Debug 127 授权后已成功启动 PCM，并清除旧 supervisor；随后切换仅 Shizuku 时 Root 正常停止。Shizuku 用户服务启动超时的处理详见 [权限通道生命周期记录](android-root-pcm-lifecycle.md)。
 
-Debug 128 已覆盖安装且启动成功，保留 127 数据。安装包为 `android-standalone/build/redmi9-128/AirSIM-Standalone-Redmi9-128-debug.apk`，SHA-256 `81b96be2800737af826604ff4c1920a8a73ca1d4916c97481371ccfaf7830780`。新增权限通道状态刷新与绑定超时处理；Shizuku 底层服务启动和实际双向可听仍未通过验收。此前“待安装”记录由本节替代，不能把安装完成当作音频兼容性验收完成。
+Debug 128 已覆盖安装且启动成功，保留 127 数据。安装包为 `apps/android/standalone/build/redmi9-128/SimHelp-Standalone-Redmi9-128-debug.apk`，SHA-256 `81b96be2800737af826604ff4c1920a8a73ca1d4916c97481371ccfaf7830780`。新增权限通道状态刷新与绑定超时处理；Shizuku 底层服务启动和实际双向可听仍未通过验收。此前“待安装”记录由本节替代，不能把安装完成当作音频兼容性验收完成。
 
 
 ## 2026-11-04 Shizuku 启动根因与 Debug 129
 
-本机 Shizuku `13.6.0.r1086.2650830c` 的用户服务启动器在构造 AirSIM 服务之前崩溃：
+本机 Shizuku `13.6.0.r1086.2650830c` 的用户服务启动器在构造 SimHelp 服务之前崩溃：
 
 ```text
 ShizukuServiceStarter: unable to start service ...ShizukuBridgeUserService
@@ -73,18 +73,18 @@ Caused by: java.lang.NullPointerException:
   at android.app.LoadedApk.makeApplication(LoadedApk.java:1395)
 ```
 
-通过同一手机、同一 AirSIM APK 的限时启动探针验证：13.6.0 出现该异常；官方 13.5.4 能执行到服务构造 `created uid=0`。探针使用未注册的诊断 token，不连接真实会话、不启动音频端点、不拨号。该结果与 [Shizuku #1198](https://github.com/RikkaApps/Shizuku/issues/1198) 的上游加载问题一致；不是 PCM 初始化失败，也不能用改采样率修复这个启动器异常。
+通过同一手机、同一 SimHelp APK 的限时启动探针验证：13.6.0 出现该异常；官方 13.5.4 能执行到服务构造 `created uid=0`。探针使用未注册的诊断 token，不连接真实会话、不启动音频端点、不拨号。该结果与 [Shizuku #1198](https://github.com/RikkaApps/Shizuku/issues/1198) 的上游加载问题一致；不是 PCM 初始化失败，也不能用改采样率修复这个启动器异常。
 
-用户明确授权后，官方 `13.5.4.r1049.0e53409` 通过 `adb install -r -d --no-incremental` 降级成功，无需卸载。官方 APK 来自 [v13.5.4 Release](https://github.com/RikkaApps/Shizuku/releases/tag/v13.5.4)，签名 SHA-256 与原安装一致：`268b5590e868fb08bae7e0ac413564cd1ff88f5ccff74af9dbd0dc918e30db30`。重启 Shizuku 后，实际客户端绑定成功并启动 PCM。AirSIM 保持仅 Shizuku，没有切换为 Root 通道（Shizuku 自身以 UID 0 运行）。
+用户明确授权后，官方 `13.5.4.r1049.0e53409` 通过 `adb install -r -d --no-incremental` 降级成功，无需卸载。官方 APK 来自 [v13.5.4 Release](https://github.com/RikkaApps/Shizuku/releases/tag/v13.5.4)，签名 SHA-256 与原安装一致：`268b5590e868fb08bae7e0ac413564cd1ff88f5ccff74af9dbd0dc918e30db30`。重启 Shizuku 后，实际客户端绑定成功并启动 PCM。SimHelp 保持仅 Shizuku，没有切换为 Root 通道（Shizuku 自身以 UID 0 运行）。
 
-随后 Debug **129** 覆盖安装成功，版本 `0.9.8.21-redmi9-debug`，保留应用数据。安装包 `android-standalone/build/redmi9-129/AirSIM-Standalone-Redmi9-129-debug.apk`，SHA-256 `9761756cc0459f3bf1f6c74aebed825ab3dc21213a20dd61ba4ac84581201896`。
+随后 Debug **129** 覆盖安装成功，版本 `0.9.8.21-redmi9-debug`，保留应用数据。安装包 `apps/android/standalone/build/redmi9-129/SimHelp-Standalone-Redmi9-129-debug.apk`，SHA-256 `9761756cc0459f3bf1f6c74aebed825ab3dc21213a20dd61ba4ac84581201896`。
 
 - 首页能单独报告“Shizuku 用户服务未启动 · 尚未进入音频检测”。检测到 MTK + 13.6.0 时提示上游已知风险，不将版本匹配或超时当作该设备音频硬件不兼容的证明。
 - 真实服务连接后使用实时 PCM 检测报告，不再显示旧的启动失败。
 - 保留前述 Redmi 9 的 Telephony Rx 绑定、48 kHz 双声道 Tx 格式转换、错误路由终止及帧/路由诊断。
 - 实机已观察 `shizuku_user_service_connected`、`bridge_listening`、`capability_query=ok`、`tx_route=telephony`、`rx_route=present`、`tx_format=conversion`。空闲 `pcm_initialized=false` 正常；不为测试进程状态主动打开录音。
 
-完整 `sh android-standalone/test.sh` 通过；检测策略 51 项、绑定期限 12 项、Redmi 格式/转换 15 项断言及桥初始化/释放回归通过。`git diff --check` 通过。未发布 Release、未提交或推送。
+完整 `sh apps/android/standalone/test.sh` 通过；检测策略 51 项、绑定期限 12 项、Redmi 格式/转换 15 项断言及桥初始化/释放回归通过。`git diff --check` 通过。未发布 Release、未提交或推送。
 
 **后续用户验收：** 用户在 Debug 129 + 官方 Shizuku 13.5.4 上完成手动通话并反馈“都有声音了”，确认本机 iPhone 与蜂窝对端双向可听。此结果不扩展到所有 MTK ROM；来电、拒接、挂断恢复与连续重拨仍需分别验证。
 

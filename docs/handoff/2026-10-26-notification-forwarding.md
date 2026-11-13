@@ -1,4 +1,4 @@
-# AirSIM Handoff：通知转发、CallKit/VoWLAN 与 Relay 降级
+# SimHelp Handoff：通知转发、CallKit/VoWLAN 与 Relay 降级
 
 交接日期：2026-10-26（Asia/Shanghai）。本文是本地工作区快照，不是发布、真机或生产验收回执。
 
@@ -6,8 +6,8 @@
 
 当前主线已包含通知转发第一版、Bark V2、飞书响应校验、来电去重修复和 CallKit/云端链路多项修复。
 
-- **分支**：`VoBLE` 与远端 `main`、`AirSIM-ZTE` 均位于 `a60962a`（本文提交前）。
-- **应用版本**：Android `0.9.8.12 (117)`，iOS/Watch/Live Activity `0.9.8 (141)`。
+- **分支**：`VoBLE` 与远端 `main`、`SimHelp-ZTE` 均位于 `a60962a`（本文提交前）。
+- **应用版本**：Android `0.9.8.12 (117)`，apps/ios/Watch/Live Activity `0.9.8 (141)`。
 - **发布状态**：`v0.9.8.12` 已发布；TestFlight 141 曾上传并 processing，接手时需重新查询 Apple 实际状态。
 - **未发布**：本轮通知转发、Bark/飞书修复、Relay APNs 解耦仍在工作区，未形成新的 Release/TestFlight。
 - **最大外部阻塞**：Cloudflare Durable Objects 免费额度已耗尽，Worker 仍会记录 `Exceeded allowed volume of requests in Durable Objects free tier`。这会阻断 Relay 注册、媒体、心跳和部分命令；APNs 路径已做降级，但不能保证云端通话完整可用。
@@ -16,20 +16,20 @@
 
 | 项目 | 快照 |
 | --- | --- |
-| VoBLE worktree | `/Users/kyle/.codex/worktrees/voble/AirSIM` |
-| main worktree | `/Users/kyle/codex project/AirSIM` |
-| 远端 | `origin/VoBLE`、`origin/main`、`origin/AirSIM-ZTE` |
+| VoBLE worktree | `/Users/kyle/.codex/worktrees/voble/SimHelp` |
+| main worktree | `/Users/kyle/codex project/SimHelp` |
+| 远端 | `origin/VoBLE`、`origin/main`、`origin/SimHelp-ZTE` |
 | 共同 HEAD | `a60962a`（`关键合并 flag`） |
 | main 未跟踪文件 | `dist/`、`docs/assets/`、`video/`、部署指南 docx 等；不要清理 |
 | main stash | `stash@{0}: On main: pre-main-sync 2026-10-26` |
 | 本地 main | 已快进到 `a60962a`，未跟踪文件保留 |
 
-`AirSIM ZTE` 因 Git 不允许空格，实际分支名为 `AirSIM-ZTE`。
+`SimHelp ZTE` 因 Git 不允许空格，实际分支名为 `SimHelp-ZTE`。
 
 接手先运行：
 
 ```sh
-cd /Users/kyle/.codex/worktrees/voble/AirSIM
+cd /Users/kyle/.codex/worktrees/voble/SimHelp
 git status -sb
 git branch -vv
 git rev-list --left-right --count origin/main...origin/VoBLE
@@ -198,16 +198,16 @@ Exceeded allowed volume of requests in Durable Objects free tier
 
 ## 8. 关键文件
 
-- [AirSIMSetupView.swift](../../iOS/AirSIM/AirSIMSetupView.swift)：通知转发配置模型与 UI（本轮追加在文件末尾）
-- [VoIPPushController.swift](../../iOS/AirSIM/VoIPPushController.swift)：注册包、自检、Relay 健康重试
-- [SamsungPairingClient.swift](../../iOS/AirSIM/SamsungPairingClient.swift)：配对配置传递
-- [ForwardingConfigStore.java](../../android/phone-control-app/src/com/airsim/phonecontrol/ForwardingConfigStore.java)
-- [NotificationForwarder.java](../../android/phone-control-app/src/com/airsim/phonecontrol/NotificationForwarder.java)
-- [WireJson.java](../../android/phone-control-app/src/com/airsim/phonecontrol/WireJson.java)
-- [AirSIMInCallService.java](../../android/phone-control-app/src/com/airsim/phonecontrol/AirSIMInCallService.java)
-- [StandaloneAgentGateway.java](../../android/phone-control-app/src/com/airsim/phonecontrol/StandaloneAgentGateway.java)
-- [push-relay-worker/src/index.mjs](../../push-relay-worker/src/index.mjs)
-- [status-store.mjs](../../push-relay-worker/src/status-store.mjs)
+- [SimHelpSetupView.swift](../../apps/ios/SimHelp/SimHelpSetupView.swift)：通知转发配置模型与 UI（本轮追加在文件末尾）
+- [VoIPPushController.swift](../../apps/ios/SimHelp/VoIPPushController.swift)：注册包、自检、Relay 健康重试
+- [SamsungPairingClient.swift](../../apps/ios/SimHelp/SamsungPairingClient.swift)：配对配置传递
+- [ForwardingConfigStore.java](../../phone-control/src/com/simhelp/phonecontrol/ForwardingConfigStore.java)
+- [NotificationForwarder.java](../../phone-control/src/com/simhelp/phonecontrol/NotificationForwarder.java)
+- [WireJson.java](../../phone-control/src/com/simhelp/phonecontrol/WireJson.java)
+- [SimHelpInCallService.java](../../phone-control/src/com/simhelp/phonecontrol/SimHelpInCallService.java)
+- [StandaloneAgentGateway.java](../../phone-control/src/com/simhelp/phonecontrol/StandaloneAgentGateway.java)
+- [services/relay/src/index.mjs](../../services/relay/src/index.mjs)
+- [status-store.mjs](../../services/relay/src/status-store.mjs)
 - [cloud-pcm-resilience.md](../cloud-pcm-resilience.md)
 
 ## 9. 下一步

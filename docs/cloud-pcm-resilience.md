@@ -39,4 +39,4 @@ iPhone 提交 `ending` 后立即关闭通话展示、铃声和 Watch 通话提�
 
 未完成实际通话验收前，不以本文声明真机问题已解决。发布与部署必须分别获得用户授权；本次应用发布不部署 Relay。
 
-2026-10-14 本地验证：iOS 110 项测试通过；Android Standalone 全套测试、合成 PCM 阻塞/超时测试、旧 Java API 定向扫描与 `NewApi` lint 通过（不代表完整 lint 无其他历史告警）。Release 构建已保留数据覆盖安装到 iPhone Air 主 AirSIM `0.9.7 (81)`（sandbox／开发推送签名）和 Redmi Standalone `0.9.7.1 (81)`，均启动成功。用户完成本轮云端真机通话并反馈「不再重现，声音更稳」；这是本轮人工验收结果，不代表所有弱网条件或运营商场景都已覆盖。随后用户授权提交、推送并发布 Apps v0.9.7.1，production TestFlight 构建另行通过 Xcode 上传，不把 sandbox 实测当作 production 推送验收。
+2026-10-14 本地验证：iOS 110 项测试通过；Android Standalone 全套测试、合成 PCM 阻塞/超时测试、旧 Java API 定向扫描与 `NewApi` lint 通过（不代表完整 lint 无其他历史告警）。Release 构建已保留数据覆盖安装到 iPhone Air 主 SimHelp `0.9.7 (81)`（sandbox／开发推送签名）和 Redmi Standalone `0.9.7.1 (81)`，均启动成功。用户完成本轮云端真机通话并反馈「不再重现，声音更稳」；这是本轮人工验收结果，不代表所有弱网条件或运营商场景都已覆盖。随后用户授权提交、推送并发布 Apps v0.9.7.1，production TestFlight 构建另行通过 Xcode 上传，不把 sandbox 实测当作 production 推送验收。

@@ -41,14 +41,14 @@ def spans(s):
 
 
 errors=[]
-for p in (ROOT/'iOS').rglob('*.swift'):
+for p in (ROOT/'apps/ios').rglob('*.swift'):
  if 'Tests' in str(p): continue
  s=p.read_text(encoding='utf8')
  for a,b,_ in spans(s):
   if CJK.search(s[a:b]): errors.append(str(p.relative_to(ROOT))+': '+ascii(s[a:b][:100]))
 if errors: raise SystemExit('\n'.join(errors))
 import plistlib
-for p in (ROOT/'iOS').rglob('Info.plist'):
+for p in (ROOT/'apps/ios').rglob('Info.plist'):
  info=plistlib.loads(p.read_bytes())
  for key,value in info.items():
   if key.endswith('UsageDescription') and CJK.search(str(value)):raise SystemExit(str(p)+': '+key)

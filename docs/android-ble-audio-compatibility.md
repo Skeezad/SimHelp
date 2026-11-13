@@ -12,7 +12,7 @@
 
 1. [Bouncy Castle X25519（固定 1.84）](https://github.com/bcgit/bc-java/blob/r1rv84/core/src/main/java/org/bouncycastle/crypto/params/X25519PrivateKeyParameters.java)：采用打包的 lightweight X25519，不注册或替换系统 Provider。继续使用现有 32 字节原始密钥、HKDF、SAS 与 AES-GCM 格式，保留旧配对。拒绝全零共享秘密。
 2. [Google VR180 GATT server](https://github.com/google/vr180/blob/master/java/com/google/vr180/communication/bluetooth/gatt/BluetoothGattServerHelper.java)：参考以 `onServiceAdded` 作为异步操作完成边界；不是将其他示例原样复制进项目。
-3. [scrcpy AudioDirectCapture](https://github.com/Genymobile/scrcpy/blob/master/server/src/main/java/com/genymobile/scrcpy/audio/AudioDirectCapture.java)、[音频来源](https://github.com/Genymobile/scrcpy/blob/master/server/src/main/java/com/genymobile/scrcpy/audio/AudioSource.java)：参考采集初始化检查、来源区分和失败处理。普通播放采集不等同于双向蜂窝音频注入；没有照搬麦克风／REMOTE_SUBMIX 回退，也没有将 scrcpy 的设备兼容性当作 AirSIM 适配结论。
+3. [scrcpy AudioDirectCapture](https://github.com/Genymobile/scrcpy/blob/master/server/src/main/java/com/genymobile/scrcpy/audio/AudioDirectCapture.java)、[音频来源](https://github.com/Genymobile/scrcpy/blob/master/server/src/main/java/com/genymobile/scrcpy/audio/AudioSource.java)：参考采集初始化检查、来源区分和失败处理。普通播放采集不等同于双向蜂窝音频注入；没有照搬麦克风／REMOTE_SUBMIX 回退，也没有将 scrcpy 的设备兼容性当作 SimHelp 适配结论。
 4. [Android 服务注册说明](https://developer.android.com/reference/android/bluetooth/BluetoothGattServer#addService(android.bluetooth.BluetoothGattService))、[Apple 服务失效回调](https://developer.apple.com/documentation/corebluetooth/cbperipheraldelegate/peripheral(_:didmodifyservices:))、[Android XDH 支持版本](https://developer.android.com/reference/java/security/KeyPairGenerator)。
 
 ## 行为变化
@@ -35,7 +35,7 @@
 ## 本次验证（2026-10-16）
 
 - iOS 模拟器完整测试：148 项通过，0 失败、0 跳过，包括服务失效后重新认证、同 UUID 的旧订阅错误隔离。早期模拟器测试服务异常后重试成功，以最终结果为准。
-- `sh android-standalone/test.sh` 完整通过：包括无系统 XDH 的真实配对代码、GATT 异步生命周期、PCM 证据与隐私、Watchdog、静音生命周期，以及原生 PCM 的 55 项检查。
+- `sh apps/android/standalone/test.sh` 完整通过：包括无系统 XDH 的真实配对代码、GATT 异步生命周期、PCM 证据与隐私、Watchdog、静音生命周期，以及原生 PCM 的 55 项检查。
 - Standalone Debug APK：0.9.7.1（87），最低 API 29，签名验证通过，包含 X25519 依赖和许可。它是测试候选包，不是已公开发布的正式版。
 - iOS 签名 Release 构建：0.9.7（87），深度签名检查通过；本机开发签名／sandbox 推送配置，不代表 TestFlight 已上传。
 - `git diff --check` 通过。没有接入受影响安卓机型，未执行这些机型的真实拨号、声学静音或双向音质验收。

@@ -20,8 +20,8 @@ jobs:
         run: |
           set -euo pipefail
           xcodebuild \
-            -project iOS/AirSIM.xcodeproj \
-            -scheme AirSIM \
+            -project apps/ios/SimHelp.xcodeproj \
+            -scheme SimHelp \
             -sdk iphoneos \
             -configuration Release \
             -derivedDataPath build/derived \
@@ -35,7 +35,7 @@ jobs:
       - name: Package IPA
         run: |
           set -euo pipefail
-          APP="build/derived/Build/Products/Release-iphoneos/AirSIM.app"
+          APP="build/derived/Build/Products/Release-iphoneos/SimHelp.app"
           test -d "$APP"
           mkdir -p build/ipa/Payload
           cp -R "$APP" build/ipa/Payload/SimHelp.app

@@ -1,6 +1,6 @@
 # VoBLE 与 main 集成记录（2026-11-04）
 
-用户明确要求把 VoBLE 尚未提交的改动检查、整理后一起合入 main。未修改 `/Users/kyle/codex project/AirSIM` 中另一个分支的未提交工作。
+用户明确要求把 VoBLE 尚未提交的改动检查、整理后一起合入 main。未修改 `/Users/kyle/codex project/SimHelp` 中另一个分支的未提交工作。
 
 ## 来源与保留范围
 
@@ -14,7 +14,7 @@
 
 ## 集成处理
 
-- 唯一文本冲突位于 `AirSIMTests.swift` 末尾；保留设置／通知转发测试及 PR #29 的短信、挂断测试。
+- 唯一文本冲突位于 `SimHelpTests.swift` 末尾；保留设置／通知转发测试及 PR #29 的短信、挂断测试。
 - 保留 Android 接通前音频 GET 路由，以及 PR #29 的 POST resolve、history/ack 路由，不互相覆盖。
 - PR #29 新增的端点冷却检查五处、推送注册退避检查一处使用了 Date `<=` / `>=`。改为等价的数值时间戳比较，保留相等边界和原有退避时间，避免再次导入 162 崩溃所涉及的运行时符号。
 - 配置模板只有占位值；扫描变更文件未发现实际 PEM 私钥或常见 GitHub/AWS token。自托管私有配置、生成配置、数据目录与依赖目录不纳入提交。

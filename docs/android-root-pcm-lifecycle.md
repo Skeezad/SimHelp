@@ -32,7 +32,7 @@ Redmi 9 的只读进程与日志检查发现两个 `RootBridgeMain` 服务同时
 
 - Root 生命周期与选择策略：精确旧 helper 识别、其他用户 / 应用排除、新协议 helper 不被迁移、进程启动时间与 PID 复用、重复启动、Root-only、Auto 回退与迟到结果。
 - 直接测试 `ShizukuBridgeUserService` 的所有权与关闭：第二个 supervisor 无法进入 PCM 清理 / 启动；关闭只结束自己的子进程一次；释放后允许新 owner；迟到退出回调不能复活旧桥。使用模拟 OS socket / 进程，不进行电话或录音。
-- 完整 `sh android-standalone/test.sh` 包括原有音频、权限、短信、纯本地模式及 Standalone APK 编译；保留已有弃用 API 警告。
+- 完整 `sh apps/android/standalone/test.sh` 包括原有音频、权限、短信、纯本地模式及 Standalone APK 编译；保留已有弃用 API 警告。
 
 实际结果：完整 Standalone 回归通过；Root 识别 / 选择策略 26 项断言通过；最终补充的所有权和排队重启竞态共 9 项断言通过。最后再次构建 Standalone Debug APK 通过，`git diff --check` 通过。测试包不是正式签名发布包，未覆盖手机中的 Release 安装。
 
@@ -49,15 +49,15 @@ Redmi 9 的只读进程与日志检查发现两个 `RootBridgeMain` 服务同时
 
 Debug 127 已按用户授权卸载原正式包后安装。实机日志确认 Root 授权后成功启动 PCM，两个旧 Root supervisor 被迁移清除。用户随后选择仅 Shizuku，Root 正常退出，PCM 退出记录为 `restart=false`；此时不应继续显示 Root 已连接，也不需要两个权限通道同时在线。
 
-Shizuku 主服务在线（v13、UID 0），但其 AirSIM 用户服务在 30 秒内未启动，未收到连接回调。原界面因没有等待期限而一直显示正在启动。当前没有足够证据认定其底层启动失败原因。
+Shizuku 主服务在线（v13、UID 0），但其 SimHelp 用户服务在 30 秒内未启动，未收到连接回调。原界面因没有等待期限而一直显示正在启动。当前没有足够证据认定其底层启动失败原因。
 
 Debug 128 增加 35 秒绑定期限、明确失败提示和手动重试；超时不循环创建服务。移除用户服务时同时清除 Shizuku SDK 的客户端连接缓存，避免重试复用旧回调；通道切换、旧定时器、迟到连接通过尝试编号与通道代数隔离。首页权限通道按实际 Root / Shizuku 连接显示，设置页持续刷新。
 
-完整 `sh android-standalone/test.sh` 通过，新增绑定期限测试 12 项断言通过，`git diff --check` 通过。Debug 128 已通过 `adb install -r --no-incremental` 覆盖 127，保留数据；核对版本 `0.9.8.21-redmi9-debug (128)`，冷启动成功。实机新进程记录 `shizuku_user_service_bind_timeout`，证明等待期限生效，但 Shizuku 用户服务仍未启动。此次保留用户选择的仅 Shizuku，没有擅自更改为 Root。
+完整 `sh apps/android/standalone/test.sh` 通过，新增绑定期限测试 12 项断言通过，`git diff --check` 通过。Debug 128 已通过 `adb install -r --no-incremental` 覆盖 127，保留数据；核对版本 `0.9.8.21-redmi9-debug (128)`，冷启动成功。实机新进程记录 `shizuku_user_service_bind_timeout`，证明等待期限生效，但 Shizuku 用户服务仍未启动。此次保留用户选择的仅 Shizuku，没有擅自更改为 Root。
 
 建议此机暂用已成功启动的仅 Root；尚需用户手动验证 MTK 双向通话。此次未拨号、接听或录音，未发布 Release。
 
 
 ## 后续根因确认
 
-2026-11-04 已证实本机 Shizuku 13.6.0 的 `LoadedApk.makeApplication` 空指针发生在 AirSIM 服务构造之前。按用户授权原位降级官方 13.5.4 并重启后，实际 Shizuku 连接及 PCM 启动成功；无需切换 Root。Debug 129 已覆盖安装。此前“底层原因未明 / Shizuku 仍未启动”的记录由本次结果更新，详见 [Redmi 9 实机记录](android-redmi9-pcm-adaptation.md#2026-11-04-shizuku-启动根因与-debug-129)。双向通话仍需人工验收。
+2026-11-04 已证实本机 Shizuku 13.6.0 的 `LoadedApk.makeApplication` 空指针发生在 SimHelp 服务构造之前。按用户授权原位降级官方 13.5.4 并重启后，实际 Shizuku 连接及 PCM 启动成功；无需切换 Root。Debug 129 已覆盖安装。此前“底层原因未明 / Shizuku 仍未启动”的记录由本次结果更新，详见 [Redmi 9 实机记录](android-redmi9-pcm-adaptation.md#2026-11-04-shizuku-启动根因与-debug-129)。双向通话仍需人工验收。

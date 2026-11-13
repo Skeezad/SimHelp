@@ -40,7 +40,7 @@ Duo 模拟器应用启动和测试执行已恢复，当前实现通过 **10 项�
 
 本轮实际修复：通话显示时，Duo 原生导航容器仍参与点击判定，导致接听按钮可见但不可点击。现在隐藏底层 TabView 的显示、点击和辅助功能访问，并将通话层置顶；保留导航状态，不更改媒体或通话状态机。修复前该断言失败，修复后接听／挂断和通话键盘检查通过。
 
-测试证据存于本机 `~/Library/Caches/AirSIM/DuoValidation/`：
+测试证据存于本机 `~/Library/Caches/SimHelp/DuoValidation/`：
 
 - `duo-targeted.xcresult`：首轮结果，包含 4 项通过的布局／短信交互测试及后续已修复的 UI 失败。
 - `duo-ui-final.xcresult`：5 项核心 UI 测试，0 失败。
@@ -74,28 +74,28 @@ Duo 模拟器应用启动和测试执行已恢复，当前实现通过 **10 项�
 
 Xcode 自动选择了两个 iOS 27.2 构建：24B8117 的支持设备列表不包含 Duo；24B91016s 支持 Duo。已尝试通过 `simctl runtime delete` 清理本次新增的 24B8117，首次提示 MobileAsset 未回收，按工具建议重新扫描并删除记录后，磁盘空间仍未恢复。
 
-用户另行授权移除旧 iOS 27.0，保留设备数据及 watchOS 27.0。删除同样出现 `SimDiskImageError code=30`，运行时注册记录移除但 MobileAsset 未回收，不能宣称已释放约 8 GB。另清理了此前 AirSIM 构建的可再生中间缓存，保留安装包、归档及当前测试产物。
+用户另行授权移除旧 iOS 27.0，保留设备数据及 watchOS 27.0。删除同样出现 `SimDiskImageError code=30`，运行时注册记录移除但 MobileAsset 未回收，不能宣称已释放约 8 GB。另清理了此前 SimHelp 构建的可再生中间缓存，保留安装包、归档及当前测试产物。
 
 已完成 Xcode 27.2 的 `build-for-testing`（`TEST BUILD SUCCEEDED`）；尝试在原 iOS 27.0 模拟器运行定向回归时，测试启动阶段停滞，尚未进入测试用例，已停止该轮并重启模拟器服务。不能把构建通过或该轮启动等待记为测试通过。后续优先在新运行时继续。
 
 ### Duo 运行验证记录（2026-11-02）
 
-- 新建 `AirSIM-Duo-UI`，设备 ID `73968C4F-F842-42EA-B025-FE93DC266FCF`。
+- 新建 `SimHelp-Duo-UI`，设备 ID `73968C4F-F842-42EA-B025-FE93DC266FCF`。
 - 设备 MobileInstallation 日志确认 `com.example.airsim`（build 152）安装成功；工具的长时间等待不能据此认定安装失败。
-- 首次初始化和一次干净重启均报告 `Data Migration Failed`；未取得可交互的 AirSIM 截图，折叠／展开、拨号清空、短信草稿的 Duo 回归仍未通过验收。
+- 首次初始化和一次干净重启均报告 `Data Migration Failed`；未取得可交互的 SimHelp 截图，折叠／展开、拨号清空、短信草稿的 Duo 回归仍未通过验收。
 - 未找到明确的 ENOSPC 或应用崩溃证据，不能断言磁盘不足就是初始化失败的原因。
 - 最后磁盘余量约 2 GB；已关闭该测试模拟器并停止挂起请求。下一步先保存其他工作、重启 Mac 并恢复足够运行空间，再对同一测试设备继续验证；无需重新配对真实设备。
 
 ### Mac 重启后复查（2026-11-02）
 
 - 用户完成重启后，磁盘可用空间恢复至约 37 GiB；Xcode 27.2 与 Duo 专用运行时仍为 Ready。旧 iOS 27.0 注册记录重新出现，未继续删除运行时或设备数据。
-- 原 `AirSIM-Duo-UI` 再次报告 `Data Migration Failed`。另建空白测试设备 `AirSIM-Duo-Clean-Verify`（`C8A196D1-3DE2-4D56-960F-E244DCC39B53`），保留原测试设备。
-- 空白设备在安装 AirSIM 之前也出现迁移失败。系统日志包含 `Reporting migration failure due to migration progress window incident`，以及 WebBookmarks 迁移监视器异常；不能据此判定 AirSIM 启动失败。
-- 等待系统后续启动后，Device Hub 能显示主屏幕及折叠／展开控制，AirSIM build 152 安装日志确认成功。仍需验证应用能正常启动及实际交互，主屏幕可见不等于完成适配验收。
-- 重启清理了此前 `/tmp` 中的构建和诊断文件。本轮产物改存本机 `~/Library/Caches/AirSIM/DuoValidation/`，包含系统迁移日志、进程采样、截图与重新构建日志；旧轮结果仅保留本文的已记录结论。
+- 原 `SimHelp-Duo-UI` 再次报告 `Data Migration Failed`。另建空白测试设备 `SimHelp-Duo-Clean-Verify`（`C8A196D1-3DE2-4D56-960F-E244DCC39B53`），保留原测试设备。
+- 空白设备在安装 SimHelp 之前也出现迁移失败。系统日志包含 `Reporting migration failure due to migration progress window incident`，以及 WebBookmarks 迁移监视器异常；不能据此判定 SimHelp 启动失败。
+- 等待系统后续启动后，Device Hub 能显示主屏幕及折叠／展开控制，SimHelp build 152 安装日志确认成功。仍需验证应用能正常启动及实际交互，主屏幕可见不等于完成适配验收。
+- 重启清理了此前 `/tmp` 中的构建和诊断文件。本轮产物改存本机 `~/Library/Caches/SimHelp/DuoValidation/`，包含系统迁移日志、进程采样、截图与重新构建日志；旧轮结果仅保留本文的已记录结论。
 
-- 空白 Duo 的 AirSIM 启动请求最终返回 `NSPOSIXErrorDomain Code=3`：`Application launch ... did not return a process handle nor launch error`。未进入应用交互验收。
-- 已关闭该 Duo 并进行运行时对照：已有 iPhone 18 Pro Max（iOS 27.0）约 20 秒完成启动，`bootstatus` 明确返回 `Finished`。此结果仅说明普通设备的系统启动成功，不能替代 Duo 折叠或 AirSIM 应用测试。
+- 空白 Duo 的 SimHelp 启动请求最终返回 `NSPOSIXErrorDomain Code=3`：`Application launch ... did not return a process handle nor launch error`。未进入应用交互验收。
+- 已关闭该 Duo 并进行运行时对照：已有 iPhone 18 Pro Max（iOS 27.0）约 20 秒完成启动，`bootstatus` 明确返回 `Finished`。此结果仅说明普通设备的系统启动成功，不能替代 Duo 折叠或 SimHelp 应用测试。
 
 - 重启后的全新 arm64 `build-for-testing` 再次通过（`TEST BUILD SUCCEEDED`），产物位于上述持久缓存的 `DerivedData/Build/Products/`。构建通过不代表交互回归通过。
 
@@ -104,7 +104,7 @@ Xcode 自动选择了两个 iOS 27.2 构建：24B8117 的支持设备列表不�
 
 ### 启动恢复与 Duo 交互复测（2026-11-02 上午）
 
-- 在 `AirSIM-Duo-Clean-Verify` 上重新安装构建并启动，系统“设置”和 AirSIM 均返回有效进程，实际页面可操作；再次停止／启动 AirSIM 也成功。没有删除原设备或用户数据。
+- 在 `SimHelp-Duo-Clean-Verify` 上重新安装构建并启动，系统“设置”和 SimHelp 均返回有效进程，实际页面可操作；再次停止／启动 SimHelp 也成功。没有删除原设备或用户数据。
 - `bootstatus` 仍报告迁移失败，但没有阻止本次应用交互与 XCTest。此前启动故障与这条诊断的因果关系未证实，不用修改 App 业务逻辑来隐藏系统诊断。
 - 用户停止其他模拟器操作后，使用真实屏幕键盘输入 `123`，验证展开 → 折叠 → 展开、旋转及半展开，短信草稿保持；折叠会收起键盘，重新点击输入框可继续输入。
 - 拨号输入 `123` 后折叠仍保留，继续点击数字可追加；展开来电页展示联系人与接听／拒接双栏，折叠恢复纵向布局。
@@ -114,4 +114,4 @@ Xcode 自动选择了两个 iOS 27.2 构建：24B8117 的支持设备列表不�
 - 后续诊断确认麦克风弹窗并非通话按钮失败的唯一原因：Duo 原生导航容器在通话覆盖层下仍参与命中测试。`RootView` 现在在通话期间保持 TabView 的状态，但隐藏其显示、点击和辅助功能访问，通话层明确置顶；不改变接听／挂断或媒体业务逻辑。
 - Duo 的返回按钮位于系统侧边工具栏，测试改为优先定位系统 `BackButton`，旧系统仍使用导航栏返回按钮。没有为通过测试而移除返回或可点击性断言。
 
-- 最终再次关闭并启动同一 Duo：`bootstatus` 仍在约 7 秒返回 `Data Migration Failed`，随后 AirSIM 启动返回有效 PID 77026，Device Hub 显示应用页面。恢复的是可用的安装／启动／测试路径，并未消除 Apple 运行时迁移告警。默认外观已恢复浅色、字号恢复 Large。
+- 最终再次关闭并启动同一 Duo：`bootstatus` 仍在约 7 秒返回 `Data Migration Failed`，随后 SimHelp 启动返回有效 PID 77026，Device Hub 显示应用页面。恢复的是可用的安装／启动／测试路径，并未消除 Apple 运行时迁移告警。默认外观已恢复浅色、字号恢复 Large。

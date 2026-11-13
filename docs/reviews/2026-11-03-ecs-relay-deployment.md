@@ -8,8 +8,8 @@
 - 系统：Alibaba Cloud Linux 3 / x86_64，约 2 GiB 内存、40 GiB 系统盘。
 - 公网入口：`https://118.178.109.247`，用户选择直接使用 IP；原计划域名 `airsim-ecs.remotepilot.site` 未配置。
 - 旧服务：`airsim-push.remotepilot.site`，保持原样。
-- 源码基线：VoBLE `1f35376`；七个 `push-relay-worker/src/*.mjs` 已逐一比对 SHA-256，与本机现有业务代码完全一致。
-- 新增适配层：`push-relay-worker/self-hosted/`；此项源码与文档尚未提交/推送。
+- 源码基线：VoBLE `1f35376`；七个 `services/relay/src/*.mjs` 已逐一比对 SHA-256，与本机现有业务代码完全一致。
+- 新增适配层：`services/relay/self-hosted/`；此项源码与文档尚未提交/推送。
 - 运行目录：`/opt/airsim-relay/current -> releases/20261103-2`。
 - 业务运行包 SHA-256（不含后续独立 IP 入口配置）：`9ed7a0d41c3dbcf768b30e849e6e191ceed942e8f5580bd59b42ac729427462e`。
 - 固定运行时：workerd `1.20261103.1`、Node `v22.23.4`；安装前校验官方包摘要。
@@ -20,11 +20,11 @@
 
 以下服务及计时器均已启用并实际处于 active：
 
-- `airsim-relay.service`：仅监听 `127.0.0.1:8787` 与维护端口 `127.0.0.1:8789`。
-- `airsim-apns.service`：仅监听 `127.0.0.1:8790`。
-- `airsim-relay-prune.timer`：UTC 04:17 执行既有 30 天设备清理策略。
-- `airsim-relay-https.service`：Nginx 独立入口；TCP 443 提供 HTTPS/WSS，TCP 80 仅提供 ACME 验证，其他路径 404。
-- `airsim-relay-cert-renew.timer`：每 6 小时检查短期 IP 证书续期（加 0–15 分钟随机延迟），成功后平滑重载 Nginx。
+- `simhelp-relay.service`：仅监听 `127.0.0.1:8787` 与维护端口 `127.0.0.1:8789`。
+- `simhelp-apns.service`：仅监听 `127.0.0.1:8790`。
+- `simhelp-relay-prune.timer`：UTC 04:17 执行既有 30 天设备清理策略。
+- `simhelp-relay-https.service`：Nginx 独立入口；TCP 443 提供 HTTPS/WSS，TCP 80 仅提供 ACME 验证，其他路径 404。
+- `simhelp-relay-cert-renew.timer`：每 6 小时检查短期 IP 证书续期（加 0–15 分钟随机延迟），成功后平滑重载 Nginx。
 
 已向安全组 `sg-bp1gixcvkyfkg57plf5g` 增加 TCP 80/443 公网入站规则，系统防火墙也已放行；既有其他规则保持原样。维护及 APNs 内部端口未向公网开放。Nginx 默认访问日志关闭，所有临时文件路径限定在独立可写目录。
 
@@ -32,7 +32,7 @@
 
 服务使用 `airsim-relay` 非登录用户。配置和运行时生成的秘密文件为 0600，数据目录为 0700。现有 SSH 和宝塔面板保留。
 
-APNs `.p8` 已从本机匹配 Key ID 的既有文件配置；私钥通过 OpenSSL 解析检查。独立 Dashboard token 已生成，保存在 ECS 的 `/etc/airsim-relay/config.json` 和本机 `~/Library/Application Support/AirSIM/relay-ecs/config.json`，没有打印、提交或放入源码包。
+APNs `.p8` 已从本机匹配 Key ID 的既有文件配置；私钥通过 OpenSSL 解析检查。独立 Dashboard token 已生成，保存在 ECS 的 `/etc/airsim-relay/config.json` 和本机 `~/Library/Application Support/SimHelp/relay-ecs/config.json`，没有打印、提交或放入源码包。
 
 ## 验证证据
 
@@ -52,4 +52,4 @@ APNs `.p8` 已从本机匹配 Key ID 的既有文件配置；私钥通过 OpenSS
 2. **用户真机验收**：尚未切换任何 iPhone、三星或 U30Air；需验证新 Relay 注册/心跳、锁屏 PushKit/CallKit、来去电双向音频、短信、Live Activity、手动反馈、网络切换，以及切回 Cloudflare。合成 PCM 测试不代表实际通话质量已验收。
 3. **可用性/备份**：当前是单实例，不具备 Cloudflare 全球平台的 HA；workerd localDisk 格式为上游实验性接口，运行时升级前需备份与恢复演练。尚未配置异地备份、流量/磁盘告警或证书续期失败通知。
 
-下一位执行者先核实以上状态，不要将 `healthz=200` 或合成链路通过解释为真机验收完成。配置所有相关端为同一个 Relay 后再进行真实测试，不能混用两套独立状态库。详细安装与切换方法见 [self-hosted README](../../push-relay-worker/self-hosted/README.md)。
+下一位执行者先核实以上状态，不要将 `healthz=200` 或合成链路通过解释为真机验收完成。配置所有相关端为同一个 Relay 后再进行真实测试，不能混用两套独立状态库。详细安装与切换方法见 [self-hosted README](../../services/relay/self-hosted/README.md)。

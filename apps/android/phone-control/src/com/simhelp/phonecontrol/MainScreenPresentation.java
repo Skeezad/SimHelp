@@ -1,0 +1,165 @@
+package com.simhelp.phonecontrol;
+
+public final class MainScreenPresentation {
+    private MainScreenPresentation() {}
+
+    public static String connectionModeTitle(
+            boolean vowlanReady,
+            boolean cloudEnabled,
+            boolean relayConfigured,
+            String lastError) {
+        if (vowlanReady) return "VoWLAN mode";
+        if (cloudEnabled && relayConfigured && lastError != null && !lastError.isBlank()) {
+            return "Cloud link abnormality";
+        }
+        if (cloudEnabled && relayConfigured) return "Cloud model";
+        if (cloudEnabled) return "The cloud has not been configured yet";
+        return "VoWLAN not connected";
+    }
+
+    public static String connectionModeDetail(
+            boolean vowlanReady,
+            boolean cloudEnabled,
+            boolean relayConfigured,
+            String lastError) {
+        if (vowlanReady) return "Samsung LAN control and PCM are ready; calls take priority over VoWLAN";
+        if (cloudEnabled && relayConfigured && lastError != null && !lastError.isBlank()) {
+            return "Relay/Agent recent errors:" + lastError;
+        }
+        if (cloudEnabled && relayConfigured) return "Cloud Relay has been configured, waiting for Agent heartbeat verification";
+        if (cloudEnabled) return "The cloud is on, but Relay or device registration is incomplete";
+        return "Please connect to the same Wi-Fi / Samsung hotspot, or enable and configure Cloud Relay";
+    }
+
+    public static String formatPairingCode(String code) {
+        if (code == null) return "--- ---";
+        String digits = code.replaceAll("[^0-9]", "");
+        if (digits.length() != 6) return "--- ---";
+        return digits.substring(0, 3) + " " + digits.substring(3);
+    }
+
+    public static String voBLEAuthenticationStatus(
+            boolean credentialStored, boolean authenticated, String pairingCode) {
+        if (authenticated) return "Authenticated and connected";
+        if (!"--- ---".equals(formatPairingCode(pairingCode))) return "Please check the security code at both ends";
+        if (credentialStored) return "Authentication credentials saved · Waiting for iPhone to connect";
+        return "Wait for iPhone to initiate pairing for the first time";
+    }
+
+    public static String voBLEPairingCode(String pairingCode) {
+        String formatted = formatPairingCode(pairingCode);
+        return "--- ---".equals(formatted) ? "Wait for iPhone to initiate pairing" : formatted;
+    }
+
+    public static String recentLogLines(String log, String filter, int maximum) {
+        if (log == null || log.isBlank() || maximum <= 0) return "No Debug log yet";
+        String category = filter == null ? "" : filter.trim();
+        String[] lines = log.split("\\R");
+        StringBuilder visible = new StringBuilder();
+        int count = 0;
+        for (int index = lines.length - 1; index >= 0 && count < maximum; index--) {
+            String line = lines[index].trim();
+            if (line.isEmpty()) continue;
+            if (!category.isEmpty() && !"all".equals(category)
+                    && !line.toLowerCase(java.util.Locale.ROOT)
+                    .contains(category.toLowerCase(java.util.Locale.ROOT))) continue;
+            if (visible.length() > 0) visible.append('\n');
+            visible.append(line);
+            count++;
+        }
+        return visible.length() == 0 ? "There are no logs in this category yet" : visible.toString();
+    }
+
+    public static String recentMatchingLogLines(String log, int maximum, String... keywords) {
+        if (log == null || log.isBlank() || maximum <= 0) return "No related logs yet";
+        String[] lines = log.split("\\R");
+        StringBuilder visible = new StringBuilder();
+        int count = 0;
+        for (int index = lines.length - 1; index >= 0 && count < maximum; index--) {
+            String line = lines[index].trim();
+            if (line.isEmpty() || !matchesAny(line, keywords)) continue;
+            if (visible.length() > 0) visible.append('\n');
+            visible.append(line);
+            count++;
+        }
+        return visible.length() == 0 ? "No related logs yet" : visible.toString();
+    }
+
+    public static String latestContaining(String log, String keyword) {
+        if (log == null || log.isBlank() || keyword == null || keyword.isBlank()) return "";
+        String[] lines = log.split("\\R");
+        for (int index = lines.length - 1; index >= 0; index--) {
+            if (lines[index].contains(keyword)) return lines[index].trim();
+        }
+        return "";
+    }
+
+    private static boolean matchesAny(String line, String... keywords) {
+        if (keywords == null || keywords.length == 0) return true;
+        String lower = line.toLowerCase(java.util.Locale.ROOT);
+        for (String keyword : keywords) {
+            if (keyword != null && !keyword.isBlank()
+                    && lower.contains(keyword.toLowerCase(java.util.Locale.ROOT))) return true;
+        }
+        return false;
+    }
+
+    public static String activitySummary(String line) {
+        if (line == null || line.isBlank()) return "No event content";
+        String value = line.toLowerCase(java.util.Locale.ROOT);
+        if (value.contains("pairing_completed")) return "VoWLAN pairing completed";
+        if (value.contains("pairing_started")) return "Waiting for iPhone to pair";
+        if (value.contains("watchdog_created")) return "Agent daemon service has been started";
+        if (value.contains("watchdog_configuration_available")) return "Linux Agent configuration loaded";
+        if (value.contains("application_started")) return "Application service has been started";
+        if (value.contains("shizuku_user_service_connected")) return "Shizuku PCM bridge connected";
+        if (value.contains("shizuku_binder_received")) return "Shizuku connection";
+        if (value.contains("shizuku_permission_granted")) return "Shizuku permission granted";
+        if (value.contains("vowlan_service_created")) return "VoWLAN service is started";
+        if (value.contains("vowlan_service_start_requested")) return "VoWLAN service starting";
+        if (value.contains("vowlan_ready")) return "VoWLAN LAN service is ready";
+        if (value.contains("vowlan_state") && value.contains("paired=true")
+                && value.contains("agent_ready=true") && value.contains("pcm_ready=true")) {
+            return "VoWLAN health check passed";
+        }
+        if (value.contains("http_request_finished") && value.contains("status=200")
+                && value.contains("/api/android/status")) {
+            return "Linux Agent status interface returns HTTP 200";
+        }
+        if (value.contains("telecom_call_added")) return "The system call has been connected";
+        if (value.contains("telecom_call_removed")) return "System call has ended";
+        if (value.contains("command_result") && value.contains("success=true")) {
+            return "Android command executed successfully";
+        }
+        String event = eventBody(line).split("\\s+", 2)[0];
+        if (event.isBlank()) return "No event content";
+        return event;
+    }
+
+    public static String logMetadata(String line) {
+        if (line == null) return "";
+        String[] fields = line.trim().split("\\s+", 4);
+        if (fields.length >= 3 && isLogLevel(fields[1]) && fields[2].startsWith("[")) {
+            return fields[0] + " · " + fields[1] + " · " + fields[2];
+        }
+        return "original record";
+    }
+
+    public static String eventBody(String line) {
+        if (line == null) return "";
+        String value = line.trim();
+        String[] fields = value.split("\\s+", 4);
+        if (fields.length == 4 && isLogLevel(fields[1]) && fields[2].startsWith("[")) {
+            return fields[3];
+        }
+        return value;
+    }
+
+    public static boolean isErrorLog(String line) {
+        return line != null && line.matches("(?s)^\\S+ ERROR \\[.*");
+    }
+
+    private static boolean isLogLevel(String value) {
+        return "DEBUG".equals(value) || "INFO".equals(value) || "ERROR".equals(value);
+    }
+}

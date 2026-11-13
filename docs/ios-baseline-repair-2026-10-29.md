@@ -12,7 +12,7 @@
 | 云端自检失败清空目录 | 同一优化保留最近一次有效观察。测试改为要求失败返回 nil、显示探测错误、保留目标；不将缓存当作新的探测成功。 |
 | VoWLAN 铃声 | 已提交的 CallKit 路径会抑制重复 App 铃声。将回退铃声测试与模拟器原生 CallKit 异步回调隔离，仍验证主设备响铃、其他设备不抢铃、接听后停止。 |
 | 双设备结束事件超时 | 用例依赖共享模式、CallKit 和默认历史数据，且此前云端用例误入真实发送路径。隔离模式、控制器及临时历史目录，保留真实鉴权 HTTP、A 通话中 B 来电、结束回执和目标不串线断言。 |
-| 短信导航 | 截图显示按钮及会话行正常，但进程内 SwiftUI 可访问性枚举为空。迁到 `AirSIMUITests`，由系统 UI 自动化点击真实控件；不使用私有可访问性 API。 |
+| 短信导航 | 截图显示按钮及会话行正常，但进程内 SwiftUI 可访问性枚举为空。迁到 `SimHelpUITests`，由系统 UI 自动化点击真实控件；不使用私有可访问性 API。 |
 
 ## UI 测试隔离
 
@@ -22,9 +22,9 @@ UI 测试覆盖：三轮设置/短信标签切换、打开并取消新短信、�
 
 ## 已完成验证
 
-- iOS 27.0 模拟器 `AirSIM-Relay-Policy-Repro`：云端 5 项、铃声回退、双设备链路定向验证通过。
+- iOS 27.0 模拟器 `SimHelp-Relay-Policy-Repro`：云端 5 项、铃声回退、双设备链路定向验证通过。
 - 新短信 XCUITest：三轮往返通过，0 失败。
-- `./android-standalone/test.sh`、`sh android/phone-control-app/test-pure-local.sh`、AVF `go test ./...` 通过。
+- `./apps/android/standalone/test.sh`、`sh apps/android/phone-control/test-pure-local.sh`、AVF `go test ./...` 通过。
 - `Release / generic iOS / CODE_SIGNING_ALLOWED=NO` 构建通过；正式二进制中未发现 `AIRSIM_UI_FIXTURE`、`SMSNavigationFixture` 或合成短信标识。
 - 串行全量 iOS 验证通过：354 个单元测试、1 个 UI 测试，均为 0 失败；`xcodebuild` 返回 0 和 `TEST SUCCEEDED`。包含纯本地基础协议/策略的 9 项测试，不代表纯本地功能已经完成。
 - 首次组合运行的单元测试宿主在启动阶段收到终止信号，未执行用例，不能算通过；结束遗留测试运行后，以 `-parallel-testing-enabled NO` 完整重跑得到以上结果。结果包：`/tmp/airsim-baseline-repaired-serial.xcresult`。
@@ -32,12 +32,12 @@ UI 测试覆盖：三轮设置/短信标签切换、打开并取消新短信、�
 关键命令：
 
 ```sh
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'platform=iOS Simulator,id=9E3C93A6-0972-4AFE-952B-AFC414F598AC' \
   -derivedDataPath /tmp/airsim-pure-local-derived -parallel-testing-enabled NO \
   CODE_SIGNING_ALLOWED=NO test
 
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM -configuration Release \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp -configuration Release \
   -destination 'generic/platform=iOS' -derivedDataPath /tmp/airsim-baseline-release \
   CODE_SIGNING_ALLOWED=NO build
 ```

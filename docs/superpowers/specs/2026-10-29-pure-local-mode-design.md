@@ -1,4 +1,4 @@
-# AirSIM 纯本地模式设计
+# SimHelp 纯本地模式设计
 
 日期：2026-10-29（Asia/Shanghai）
 
@@ -11,7 +11,7 @@
 - 恢复用户理解的“之前本地模式”，复用现有 `localDual`，不建立新的媒体传输栈。
 - iOS 设置页最顶部提供“滑动开启纯本地模式”；退出使用按钮与确认弹窗。
 - 本地双通道：同一 Android 优先 VoWLAN，建立通话前可以选择 VoBLE；通话建立后锁定链路。
-- Tailscale 使用 Android 的 VPN 地址直连，不访问、探测或验证 AirSIM Relay；仍验证配对设备身份、请求签名、防重放及控制/PCM 端口。
+- Tailscale 使用 Android 的 VPN 地址直连，不访问、探测或验证 SimHelp Relay；仍验证配对设备身份、请求签名、防重放及控制/PCM 端口。
 - 两端停止 Relay 注册、心跳、命令、媒体、推送同步及反馈上传。本地失败不得自动回退云端。
 - 保留本地配对、电话、短信、CallKit、本地日志导出以及 DHCP 换址后的认证重连。
 - 重启保持设置；两端确认后才显示已生效。退出后恢复此前配置，不清除配对记录。
@@ -19,22 +19,22 @@
 
 ## 2. 目标边界与非目标
 
-“零 Relay 请求”指受控 AirSIM 客户端与 Agent 在策略生效后，不再发起任何到配置 Relay、内置备用 Relay 或重定向 Relay 的 HTTP/WebSocket 请求。不是简单清空 URL，也不是仅关闭音频中继。适用于本地直连、自动重连、前后台切换、启动恢复、手动操作及错误重试。
+“零 Relay 请求”指受控 SimHelp 客户端与 Agent 在策略生效后，不再发起任何到配置 Relay、内置备用 Relay 或重定向 Relay 的 HTTP/WebSocket 请求。不是简单清空 URL，也不是仅关闭音频中继。适用于本地直连、自动重连、前后台切换、启动恢复、手动操作及错误重试。
 
 已经发送的网络字节不能撤回；切换期间必须取消在途任务、断开连接并使旧回调失效。“已生效”以本机排空完成及 Android/必要 Agent 确认为界，不能把点击滑块瞬间描述为两端断网完成。
 
-该功能不是设备防火墙，不承诺操作系统、其他 App、运营商电话/SMS、Apple 服务及 VPN 软件不联网。Tailscale 自身可能通过控制平面或 DERP；它不属于 AirSIM Relay，不能因此宣称完全无第三方服务器。严格无互联网场景使用本地 Wi-Fi、热点或蓝牙。
+该功能不是设备防火墙，不承诺操作系统、其他 App、运营商电话/SMS、Apple 服务及 VPN 软件不联网。Tailscale 自身可能通过控制平面或 DERP；它不属于 SimHelp Relay，不能因此宣称完全无第三方服务器。严格无互联网场景使用本地 Wi-Fi、热点或蓝牙。
 
 不改 Relay 后端协议或部署 Worker，不修改 Tailscale/ACL，不实现 RCS，不新增假音频保活，不承诺 App 被强退后始终能接听。不自动发布、安装、上传 TestFlight 或推送代码。
 
-设计者选择：GitHub 更新检查属于独立功能，不因“零 AirSIM Relay”自动改写其偏好；本次不扩展成所有外网零请求。界面不能使用“完全断网”等超出范围的文案。
+设计者选择：GitHub 更新检查属于独立功能，不因“零 SimHelp Relay”自动改写其偏好；本次不扩展成所有外网零请求。界面不能使用“完全断网”等超出范围的文案。
 
 ## 3. 现有结构与落点
 
 ### iOS
 
 - `ConnectionModePreference.swift`：已有 `vowlan`、`bluetooth`、`cloud`、`automatic`、`localDual`；`CloudSignalingPreference` 与媒体模式独立。因此仅选择 `localDual` 不能作为全应用零 Relay 的证明。
-- `AirSIMSetupView.swift`：设置页 `Form` 最前放入口，现有运行模式区域随后；纯本地期间云端通知和云端/自动模式控制禁用并解释原因。
+- `SimHelpSetupView.swift`：设置页 `Form` 最前放入口，现有运行模式区域随后；纯本地期间云端通知和云端/自动模式控制禁用并解释原因。
 - `AppModel.swift`：集中协调进入/退出，保存一次进入前快照，复用已有本地双通道启动与通话链路锁。
 - `VoIPPushController.swift`、`BackgroundStandbyController.swift` 及所有 Relay 请求入口：统一读取最高优先级联网策略；覆盖注册、token 更新、命令、状态查询、诊断、自检、媒体、通知转发、Watch/Live Activity 云端同步和反馈上传。
 - `VoWLANController.swift` 及本地设备目录：复用已配对身份与候选端点验证，不能把 Relay 在线状态作为直连前提。
@@ -45,7 +45,7 @@
 - `StandaloneAgentService.java`、`StandaloneCloudMediaManager.java` 及 Relay 客户端：进入时停止注册/心跳/事件上传/命令拉取/媒体连接，取消重试与在途任务；本地 VoWLAN、VoBLE、Telecom、短信服务继续运行。
 - `PairingServer.java`、`StandaloneAgentGateway.java`、VoWLAN/VoBLE 已认证控制通道：承载模式协商与查询。首次本地配对无需云端凭据或 APNs token。
 - `FeedbackUploader.java`：纯本地期间在读取/准备上传前拒绝，界面保留导出，不通过隐藏手动入口绕过策略。
-- AVF Go Agent（`module/module-agent`，现有 `push.go` 等）必须纳入完整性判断。若 Android 正在使用 AVF，只有 AVF 也确认关闭其云端任务，才能显示两端已生效；不能只停止 Android 而让虚拟 Linux 继续上传。
+- AVF Go Agent（`services/gateway/module-agent`，现有 `push.go` 等）必须纳入完整性判断。若 Android 正在使用 AVF，只有 AVF 也确认关闭其云端任务，才能显示两端已生效；不能只停止 Android 而让虚拟 Linux 继续上传。
 
 具体类型名、控制路由和文件拆分留给实施计划，避免在设计阶段假装已存在 API。应优先复用已认证控制协议，而不是新增未认证管理端口。
 
@@ -53,7 +53,7 @@
 
 | 状态 | 用户看到的内容 | 必须满足的条件 |
 | --- | --- | --- |
-| 未开启 | 滑动开启纯本地；仅使用 VoWLAN／蓝牙，不连接 AirSIM Relay | 原模式保持 |
+| 未开启 | 滑动开启纯本地；仅使用 VoWLAN／蓝牙，不连接 SimHelp Relay | 原模式保持 |
 | 本机切换中 | 正在停止云端连接 | 先持久化禁用策略，取消旧任务；禁止新 Relay 请求 |
 | 等待 Android | 本机已开启 · 等待 Android 同步 | 本机已排空；Android 未确认或不可达 |
 | 不兼容 | 本机已开启 · Android/Agent 需升级 | 旧端不支持确认协议，不能谎报全链路生效 |
@@ -123,7 +123,7 @@ Android 显示该模式影响整机云端功能；其他已配对 iPhone 的普�
 
 ### 真机
 
-记录 iPhone 与 Android/AVF 两端对所有 AirSIM Relay 地址的实际请求，而不是以 Dashboard 离线代替。明确切换排空时间及测量窗口。分别测试前台、锁屏、系统回收、用户强退，不把其中一种结果推广到其他状态。
+记录 iPhone 与 Android/AVF 两端对所有 SimHelp Relay 地址的实际请求，而不是以 Dashboard 离线代替。明确切换排空时间及测量窗口。分别测试前台、锁屏、系统回收、用户强退，不把其中一种结果推广到其他状态。
 
 覆盖三星热点、普通 LAN、Tailscale；断网/重连/DHCP 换址；拨出、接听、拒绝、挂断、双向音频及短信。用户手动切换模式、重启两端、关闭蓝牙和 VPN 后不能出现云端回退。
 
@@ -134,7 +134,7 @@ Android 显示该模式影响整机云端功能；其他已配对 iPhone 的普�
 1. 活动通话时阻止模式切换，避免中途挂断。
 2. Android 整机级禁用，但 iPhone 完成状态只对应当前绑定 Android；其他客户端不能自动解除。
 3. 对端离线时退出保持待同步，不提前恢复本机云端。
-4. GitHub 更新偏好不受“零 AirSIM Relay”影响。
+4. GitHub 更新偏好不受“零 SimHelp Relay”影响。
 5. AVF 必须参与确认；旧 Agent 明确显示需要升级，不宣称已关闭其云端。
 6. 换绑不自动恢复旧 Android，快照按设备保留；退出只处理当前绑定设备。
 7. Android 本机退出优先，iPhone 保持本机禁止 Relay并提示不一致，不自动重新开启对端。

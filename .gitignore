@@ -2,16 +2,16 @@
 /.wrangler/
 .idea/
 .vscode/
-android/phone-control-app/build/
-android/phone-audio-bridge/build/
-android-standalone/build/
+apps/android/phone-control/build/
+apps/android/audio-bridge/build/
+apps/android/standalone/build/
 *.log
 *.xcuserstate
 **/xcuserdata/
 **/.build/
 **/DerivedData/
 **/build-device/
-iOS/build/
+apps/ios/build/
 *.ipa
 *.apk
 *.aab
@@ -22,13 +22,20 @@ iOS/build/
 *.pem
 *.key
 *.db
-push-relay-worker/node_modules/
-push-relay-worker/.wrangler/
-push-relay-worker/wrangler.toml
-push-relay-worker/.dev.vars*
-push-relay-worker/.env*
-module/module-agent/*.bin
-module/module-agent/*.tar.gz
+services/relay/node_modules/
+services/relay/.wrangler/
+services/relay/wrangler.toml
+services/relay/.dev.vars*
+services/relay/.env*
+services/gateway/module-agent/*.bin
+services/gateway/module-agent/*.tar.gz
 
 # Local distribution output; upload selected artifacts to Releases, never Git.
 /release-assets/
+
+# Local tools, keys, logs, and compiled artifacts
+/.local/
+/dist/
+/build/
+**/build/
+__pycache__/

@@ -53,7 +53,7 @@ connect = 192.168.1.50:7593
 TIMEOUTidle = 120
 ```
 
-三个服务均使用 TCP TLS 转发。临时配对服务透传 `/pair/v1/info` 和 `/pair/v1/claim`，保留原有六位码、加密注册、窗口有效期与失败次数限制。控制连接里的 HTTP 方法、路径、正文及 `X-AirSIM-VoWLAN-*` 头原样到达安卓；音频连接里的 `AIRSIMVWL1` 认证握手和后续 PCM 字节同样原样转发。无需在 NAS 保存或配置 AirSIM 配对密钥。NAS 是受信任的 TLS 终止点，能接触解密后的控制和音频流。
+三个服务均使用 TCP TLS 转发。临时配对服务透传 `/pair/v1/info` 和 `/pair/v1/claim`，保留原有六位码、加密注册、窗口有效期与失败次数限制。控制连接里的 HTTP 方法、路径、正文及 `X-SimHelp-VoWLAN-*` 头原样到达安卓；音频连接里的 `AIRSIMVWL1` 认证握手和后续 PCM 字节同样原样转发。无需在 NAS 保存或配置 SimHelp 配对密钥。NAS 是受信任的 TLS 终止点，能接触解密后的控制和音频流。
 
 示例使用 IPv4 监听；IPv6 部署应按 NAS 的 stunnel 版本配置 IPv6 监听地址，并验证对应防火墙规则。证书续期后按 NAS 的服务管理方式重新加载 stunnel。可使用 nginx stream / HAProxy 等提供等效的两路 TCP TLS 转发；只有常见的 HTTP 网页反向代理不能承载 PCM 音频。普通 Cloudflare 网页代理也不提供此原始 PCM TCP 转发；使用 DNS-only 解析或明确支持原始 TCP TLS 的服务。
 
@@ -68,7 +68,7 @@ TIMEOUTidle = 120
 ## 首次在公网域名配对
 
 1. 按上例配置控制与音频入口，并检查公网 DNS、端口放行和有效证书。TLS 网关必须能够从受信任的私网访问安卓；此功能不会自动建立 NAT 穿透。
-2. 安卓 AirSIM 点击「开始一次性配对」。将网关临时配对服务的后端端口改为安卓当前显示的随机端口，重新加载网关。新窗口端口可能变化，需同步更新；不要把验证码写进配置。
+2. 安卓 SimHelp 点击「开始一次性配对」。将网关临时配对服务的后端端口改为安卓当前显示的随机端口，重新加载网关。新窗口端口可能变化，需同步更新；不要把验证码写进配置。
 3. iPhone 打开「设置 → 安卓连接 → 配对安卓手机 → 公网域名」。填写 `phone.example.com`、HTTPS 配对端口 `9443`、HTTPS 控制端口 `8443`、TLS 音频端口 `17593` 和安卓本次六位码。若路由器将公网 `443` 映射到 NAS `8443`，控制端口应填写 `443`。
 4. 域名不带 `https://`、路径、用户名或端口；国际化域名先转换为 ASCII / Punycode。三个字段填写的是网关对外端口，不是安卓私网端口。
 5. 点击「连接并加密配对」。iOS 先完成 HTTPS 证书验证和现有加密注册，再校验安卓返回的设备身份及内部端口签名；外部端口映射不会绕过签名。接着用该设备独立密钥验证 HTTPS `/v1/health` 的 nonce 绑定签名，通过后保存域名路由。
@@ -102,8 +102,8 @@ TIMEOUTidle = 120
 
 自动化回归覆盖旧路由解码、TLS 地址与端口边界、局域网/远程记录共存及删除、同设备有限次回退、控制身份验证、TLS 失败不保存、修改时保持设备绑定、通话保护、迟到验证取消，以及 iPhone / Watch 的 TLS 媒体参数。
 
-构建与 XCTest 按 `iOS/README.md` 执行。发布前还需用实际 NAS、软路由、安卓、iPhone 和 Watch 验证：首次私网配对及首次 HTTPS 域名配对；公网 IPv4/IPv6；证书过期/不匹配；双向音频与短信；回到局域网；DDNS 地址更新；安卓重启端口变化；网关断开；通话中切网；关闭配置和删除设备后的重启；后台与锁屏行为。模拟器与协议测试不能代替这些实机结果。
+构建与 XCTest 按 `apps/ios/README.md` 执行。发布前还需用实际 NAS、软路由、安卓、iPhone 和 Watch 验证：首次私网配对及首次 HTTPS 域名配对；公网 IPv4/IPv6；证书过期/不匹配；双向音频与短信；回到局域网；DDNS 地址更新；安卓重启端口变化；网关断开；通话中切网；关闭配置和删除设备后的重启；后台与锁屏行为。模拟器与协议测试不能代替这些实机结果。
 
 TLS 客户端保留系统信任评估，参见 [Apple Network.framework TLS 配置说明](https://developer.apple.com/documentation/network/creating-an-identity-for-local-network-tls)。
 
-本实现基于 [PR #11](https://github.com/kai-wu-cortex/AirSIM/pull/11) 的 TLS 直连方案，适配当前 VoBLE 分支的取消、并发探测与纯本地机制，并增加 HTTPS 首次配对。尚未部署、安装或完成真实 NAS/公网通话验收。
+本实现基于 [PR #11](https://github.com/Skeezad/SimHelp/pull/11) 的 TLS 直连方案，适配当前 VoBLE 分支的取消、并发探测与纯本地机制，并增加 HTTPS 首次配对。尚未部署、安装或完成真实 NAS/公网通话验收。

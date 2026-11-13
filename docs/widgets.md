@@ -1,4 +1,4 @@
-# AirSIM 原生小组件
+# SimHelp 原生小组件
 
 2026-11-02，采用 [概念方案 01](design/widgets-2026-11-02/01-native.png)：白色底板、深色文字、蓝色渐变电话标识与蓝色操作入口。标准字号尽量还原原图；锁屏单色、系统外边距、深色及辅助功能大字号服从 WidgetKit 的实际布局约束。
 
@@ -14,11 +14,11 @@
 | 锁屏矩形 | 设备、更新时间、最近状态 |
 | 锁屏内联 | 设备名称和最近状态 |
 
-新版 Android 上报真实电量；旧 APK、无采样或采样过期时以「—」表示未知，不把概念图中的 82% 当作真实值。图库预览与测试截图使用示例设备和通话；主屏幕实际组件只加载 App 保存的数据。没有配对设备时提示打开 AirSIM 配对。
+新版 Android 上报真实电量；旧 APK、无采样或采样过期时以「—」表示未知，不把概念图中的 82% 当作真实值。图库预览与测试截图使用示例设备和通话；主屏幕实际组件只加载 App 保存的数据。没有配对设备时提示打开 SimHelp 配对。
 
 ## 数据与操作
 
-- `Shared/AirSIMWidgetSnapshot.swift` 定义显示快照、脱敏与 App Group 文件存储。
+- `Shared/SimHelpWidgetSnapshot.swift` 定义显示快照、脱敏与 App Group 文件存储。
 - 主 App 从已有配对目录和通话历史发布快照，状态变化立即申请刷新，状态不变时最多每分钟申请一次。WidgetKit 实际刷新时机由系统调度，不承诺实时刷新。
 - 最多保存 12 个已配对安卓设备、6 条已结束通话及 6 条已知配对设备的短信摘要。快照不包含配对密钥、网络地址或 Push token；通话号码只保留前三位和后四位。短信按用户选择展示内容摘要，最多 120 个字符，换行折叠为空格；正文中的数字不会另行脱敏。
 - 组件扩展不建立网络连接；纯本地开启时不会因添加组件访问 Relay。最近在线数据 5 分钟后通过预排时间线转为「状态待刷新」，不写回设备离线状态。
@@ -28,10 +28,10 @@
 ## 自己签名时配置
 
 1. 在自己的 Apple Developer 账号创建 App Group，例如 `group.<你的标识>.airsim.widgets`。
-2. 为 AirSIM 主 App 与 `AirSIMLiveActivityExtension` 的 App ID 开启 App Groups，并关联同一个组。重新生成或让 Xcode 自动更新两者的 provisioning profile。
+2. 为 SimHelp 主 App 与 `SimHelpLiveActivityExtension` 的 App ID 开启 App Groups，并关联同一个组。重新生成或让 Xcode 自动更新两者的 provisioning profile。
 3. 将项目构建设置 `AIRSIM_WIDGET_APP_GROUP` 在 Debug/Release 都设为该标识；不要发布默认示例 `group.com.example.airsim.widgets`。
-4. 两个 target 的 entitlements 引用同一个构建变量；两个 Info.plist 的 `AirSIMWidgetAppGroup` 也引用该变量。同时保持各自 Bundle ID 和开发团队正确。
-5. 构建、签名并覆盖安装主 App（内含扩展）；打开 App 一次，确认设备已配对，返回桌面添加 AirSIM 小组件。
+4. 两个 target 的 entitlements 引用同一个构建变量；两个 Info.plist 的 `SimHelpWidgetAppGroup` 也引用该变量。同时保持各自 Bundle ID 和开发团队正确。
+5. 构建、签名并覆盖安装主 App（内含扩展）；打开 App 一次，确认设备已配对，返回桌面添加 SimHelp 小组件。
 
 未正确配置共享组时，组件只能显示空状态，不能跨进程读取设备。App Group 内文件采用原子写入和首次解锁后可用的文件保护，不通过网络中转。Watch 不读取该快照，无需新增同组权限。
 
@@ -47,7 +47,7 @@
 - 4 项 Widget 测试与 10 项实时活动协调测试在 10:34 的运行中通过，覆盖快照有效期、文件损坏/版本兼容、号码脱敏、跳转 URL、7 种尺寸渲染，以及到期恢复和通话状态隔离。
 - 渲染检查包含 7 尺寸浅/深色与 4 桌面尺寸最大辅助字号，图片在 [implementation](design/widgets-2026-11-02/implementation/)。这些是实际 SwiftUI 视图使用示例数据渲染，不是假称真机截图。
 - 最后增加最小尺寸状态行的有限缩放，并修正 iOS 16 锁屏透明背景后，构建通过；复测遇到 Duo 测试宿主启动挂起，重启模拟器后仍未执行测试，已终止这些挂起任务。现存渲染图来自此前通过的运行，small-accessibility 中仍可见修正前的状态省略号；最终缩放效果需要补验。
-- Duo 模拟器系统图库可找到 AirSIM，实际添加到主屏幕后正确显示未配对空状态。
+- Duo 模拟器系统图库可找到 SimHelp，实际添加到主屏幕后正确显示未配对空状态。
 - 尚未进行实体 iPhone/iPad 签名安装、过夜刷新、真实后台来电、VoiceOver 操作或系统着色外观验收。超大尺寸通过视图渲染验证，未在 iPad 主屏幕验收。
 
 真机检查：添加各支持尺寸；打开 App 同步后核对设备和脱敏记录；等待缓存过期确认「状态待刷新」而非离线；点击拨号/短信应进入正确页面但不自动发送；切换深色与最大字号；纯本地开关前后观察组件不新增云端请求；锁屏来电单独验证 PushKit/CallKit 不受组件过期影响。
@@ -56,7 +56,7 @@
 
 按钮底板、电话图标底板与描边改用 `ContainerRelativeShape`，替代固定 12 pt 和按图标尺寸计算的圆角。真实组件外框仍由 WidgetKit 绘制，保留系统默认内容边距；不在扩展里再套固定半径外框。依据 apple-design 的 `widgets.md › Choosing margins and padding`：内容圆角应与组件外框协调。
 
-渲染测试使用 28 pt 示例外框提供容器环境，以便检查内外圆角；这只是测试用外框，不是生产组件的固定半径。截图中长按 App 出现的尺寸选择图标与菜单外框均由 iOS 负责，不属于 AirSIM 自绘界面。
+渲染测试使用 28 pt 示例外框提供容器环境，以便检查内外圆角；这只是测试用外框，不是生产组件的固定半径。截图中长按 App 出现的尺寸选择图标与菜单外框均由 iOS 负责，不属于 SimHelp 自绘界面。
 
 本次圆角修改构建通过、`git diff --check` 通过。定向渲染复测仍卡在 Duo 测试宿主启动阶段，已中止；未更新示例截图，圆角实际显示待模拟器恢复后或真机安装补验。
 
@@ -64,7 +64,7 @@
 
 右侧改为「最近通话」「最近短信」两行，分别显示当前设备最新通话的脱敏号码、最新短信的内容摘要；没有记录显示「暂无记录」，不混入其他设备或来源不明的旧短信。点击分别进入通话记录、短信列表。最大辅助字号保留两个带文字的页面入口。短信快照保存设备标识、内容摘要、时间和方向，不保存可能含完整正文的旧消息 ID。旧快照缺少 messages 字段仍可解码；旧短信记录没有内容摘要时显示「打开查看短信内容」，等待主 App 刷新。小组件继续标记 privacySensitive，由系统在要求隐藏敏感内容的场景进行遮盖。
 
-11:13 已恢复模拟器测试：5 项 AirSIMWidgetTests 全部通过（含旧快照兼容、设备记录隔离与全部尺寸渲染），更新了 implementation 图集。先前小尺寸最大字号和相对圆角已补验。中尺寸最大字号新增双入口后状态行再次加有限缩放，最终构建通过；该最后一行样式调整尚未重新渲染。已覆盖安装模拟器并启动。
+11:13 已恢复模拟器测试：5 项 SimHelpWidgetTests 全部通过（含旧快照兼容、设备记录隔离与全部尺寸渲染），更新了 implementation 图集。先前小尺寸最大字号和相对圆角已补验。中尺寸最大字号新增双入口后状态行再次加有限缩放，最终构建通过；该最后一行样式调整尚未重新渲染。已覆盖安装模拟器并启动。
 
 ## 大尺寸双栏记录
 
@@ -74,7 +74,7 @@
 
 桌面小、中、大、超大组件加入「设备」「模式」按钮，蓝字、左对齐、无填充。显示当前已选设备与通话模式；按钮依次循环到下一项，不是网络通断开关。中尺寸右侧继续保留最近通话和短信。锁屏配件保持查看状态和打开 App，不增加狭小交互控件。
 
-- iOS 17+ 使用 `AirSIMWidgetSwitchIntent: LiveActivityIntent` 在主 App 进程后台执行，不切换到主界面；iOS 26+ 明确设置 `supportedModes = .background`。再经 `AppModel.performWidgetControl` 调用原有 `bindAndroidAgent` / `setConnectionMode`，更新共享快照和实时活动。iOS 16 不支持交互式 Widget，显示当前值但不提供切换操作，需自行进入 App 设置。
+- iOS 17+ 使用 `SimHelpWidgetSwitchIntent: LiveActivityIntent` 在主 App 进程后台执行，不切换到主界面；iOS 26+ 明确设置 `supportedModes = .background`。再经 `AppModel.performWidgetControl` 调用原有 `bindAndroidAgent` / `setConnectionMode`，更新共享快照和实时活动。iOS 16 不支持交互式 Widget，显示当前值但不提供切换操作，需自行进入 App 设置。
 - 普通模式顺序：VoWLAN → 蓝牙 → VoWLAN+VoBLE → 云端 → 自动。纯本地开启时只在前三项循环，不改变纯本地开关；主进程按当前保护状态再次校验，不能凭旧快照恢复云端。
 - 设备按已有稳定循环顺序切换，只允许已配对设备；单设备按钮禁用。没有设备时仍显示配对引导。
 - 通话、来电、通话终止处理中禁止切换。组件显示禁用仅作提示，最终判断在主进程重新执行。
@@ -112,7 +112,7 @@ App 底部「最近／短信」标签显示全量本地历史的提醒总数；�
 - Android 从系统 ACTION_BATTERY_CHANGED sticky Intent 读取，无新权限、无常驻广播接收器。参考 [Android 电量文档](https://developer.android.com/training/monitoring-device-state/battery-monitoring)。
 - VoWLAN 的认证 `/v1/health`、VoBLE 的认证 `device_info` 增加可选 battery。蓝牙连接或回前台时刷新；前台且无通话时每 60 秒刷新一次，断开取消，不新增后台保活。
 - Standalone 的原心跳携带 battery，Worker 校验后保存到原状态记录；不新增心跳频率、KV 写入或请求通道。
-- AVF 的 Android 在认证命令长轮询中附带 X-AirSIM-Android-Battery，Go Agent 验证并短期缓存，再随已有心跳上报。绝不把虚拟 Linux 的 sysfs 电源数据当手机电量。
+- AVF 的 Android 在认证命令长轮询中附带 X-SimHelp-Android-Battery，Go Agent 验证并短期缓存，再随已有心跳上报。绝不把虚拟 Linux 的 sysfs 电源数据当手机电量。
 - iOS 只从对应已配对设备的已认证本地、蓝牙及已允许的云端状态选择最新有效采样。纯本地不选云端候选，不新增 Relay 请求；Widget 本身不联网。
 
 字段为 `battery: {percent: 82, charging: false, observed_at_ms: 1800000000000}`。异常元数据不会导致整个健康响应解码失败；缺失或过期时不借用别的设备数据。后台被 iOS 挂起时不会持续刷新蓝牙电量，回前台重新采样。

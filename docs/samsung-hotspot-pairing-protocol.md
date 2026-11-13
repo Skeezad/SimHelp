@@ -20,7 +20,7 @@ iOS creates an ephemeral X25519 key pair and derives:
 
 ```text
 shared = X25519(iOS_private, Samsung_public)
-key = HKDF-SHA256(shared, salt=UTF8(session), info=UTF8("AirSIMPair/v1:" + code), length=32)
+key = HKDF-SHA256(shared, salt=UTF8(session), info=UTF8("SimHelpPair/v1:" + code), length=32)
 sealed_registration = nonce(12) || AES-256-GCM(registration_json, key, aad=UTF8(session))
 ```
 

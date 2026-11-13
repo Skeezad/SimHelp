@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 设置顶部滑动开启纯本地；复用 VoWLAN+VoBLE，确认 Android/AVF 排空后禁止全链路 AirSIM Relay 请求，支持安全退出恢复。
+**Goal:** 设置顶部滑动开启纯本地；复用 VoWLAN+VoBLE，确认 Android/AVF 排空后禁止全链路 SimHelp Relay 请求，支持安全退出恢复。
 
 **Architecture:** 独立持久策略优先于媒体/推送偏好；双端以修订号和幂等操作同步，通过已认证本地链路协商。所有 Relay I/O 使用可取消、代际隔离的统一出口；UI 从状态机派生，不能写出虚假的两端生效。
 
@@ -32,8 +32,8 @@
 ## 文件组织与提交边界
 
 - 新建小型策略/协议/I/O gate 单元，保持既有 AppModel 与 Service 只承担接线，不做无关重构。
-- 新 Swift 文件加入 `iOS/AirSIM.xcodeproj/project.pbxproj` 对应主 App/test target；Watch 使用共享策略快照，不把 iOS-only 控制器引入 watch target。
-- Android 新类位于 `android/phone-control-app/src/com/airsim/phonecontrol/`，测试位于对应 `test/com/airsim/phonecontrol/`。Go 在 `module/module-agent/` 内分文件。
+- 新 Swift 文件加入 `apps/ios/SimHelp.xcodeproj/project.pbxproj` 对应主 App/test target；Watch 使用共享策略快照，不把 iOS-only 控制器引入 watch target。
+- Android 新类位于 `apps/android/phone-control/src/com/simhelp/phonecontrol/`，测试位于对应 `test/com/simhelp/phonecontrol/`。Go 在 `services/gateway/module-agent/` 内分文件。
 - 首次执行前保存当前 diff 清单/补丁到本任务忽略的 scratch，记录 HEAD `a68bf44` 与所有已有候选差异；共享文件以 hunks 区分任务变更，不能 `git add .`。
 
 ## 同步接口（Tasks 1–5 共同合同）
@@ -50,13 +50,13 @@
 
 ### Task 1: 纯策略、所有权与协议合同
 
-**Files:** Create `iOS/AirSIM/PureLocalModePolicy.swift`, `iOS/AirSIM/PureLocalModeProtocol.swift`, `iOS/AirSIMTests/PureLocalModeTests.swift`; create `android/phone-control-app/src/com/airsim/phonecontrol/PureLocalModePolicy.java`, `PureLocalModeProof.java`, corresponding tests and `test-pure-local.sh`; create `module/module-agent/local_mode_protocol.go`, `local_mode_protocol_test.go`.
+**Files:** Create `apps/ios/SimHelp/PureLocalModePolicy.swift`, `apps/ios/SimHelp/PureLocalModeProtocol.swift`, `apps/ios/SimHelpTests/PureLocalModeTests.swift`; create `apps/android/phone-control/src/com/simhelp/phonecontrol/PureLocalModePolicy.java`, `PureLocalModeProof.java`, corresponding tests and `test-pure-local.sh`; create `services/gateway/module-agent/local_mode_protocol.go`, `local_mode_protocol_test.go`.
 
 **Interfaces:** `PureLocalSnapshot` 保存本机进入前模式/通知和按 agent 分组的事务；`PureLocalCommand/Status` 对应上述 wire。Swift `PureLocalModePolicy.reduce(state:event:) -> State`，Java `PureLocalModePolicy.apply(State, Command, AuthenticatedPeer, boolean callActive) -> Transition`；Go 校验函数 `verifyLocalModeCommand(cmd localModeCommand, agentID string) error`。纯模型不启动网络。
 
 - [ ] 写测试：首次保存/重复保留、离线 pending、过期 ACK、换绑保留 A 快照、Android 本机退出禁止自动重入、owner 错误、revision 错误、无效签名、活动通话拒绝、快照损坏保守禁用。跨语言使用相同固定 key/消息/签名向量，不使用真密钥。
 - [ ] 运行新测试，确认因缺少行为失败；实现最小状态机、编码/验证及 Keychain adapter；私钥加载失败不能生成新身份假装原 owner。
-- [ ] 验证：`sh android/phone-control-app/test-pure-local.sh`；`cd module/module-agent && go test ./...`；XCTest `PureLocalModeTests`。Expected: 全部通过，签名向量一致，重放拒绝。
+- [ ] 验证：`sh apps/android/phone-control/test-pure-local.sh`；`cd services/gateway/module-agent && go test ./...`；XCTest `PureLocalModeTests`。Expected: 全部通过，签名向量一致，重放拒绝。
 - [ ] 仅提交本任务新增模型/测试/target 配置 hunks。
 
 ### Task 2: Android 持久策略与出口停机
@@ -68,7 +68,7 @@
 - [ ] 先写计数传输与受控阻塞 I/O 测试：禁用后请求计数为零；在途被取消、未排空不 ACK；旧服务重启/注册不能解除；禁用短信仍入本地收件箱但不入云队列；退出不补发；Android 本机退出 revision 胜过旧重试。
 - [ ] 观察 RED；实现持久策略及可取消 gate。检查所有 `openConnection`/Socket/Relay 调用，禁止自动重定向泄漏；连接在 gate 内登记后才能发送，所有 finally 释放 lease。启动从磁盘初始化后才允许网络。
 - [ ] 在 Android 页面显示当前模式和本机确认退出入口；禁用云端开关/反馈上传而非只隐藏；不停止本地网关和 Shizuku/Telecom。
-- [ ] 验证 `sh android/phone-control-app/test-pure-local.sh && ./android-standalone/test.sh`。Expected: 新测试和 #12/#13 回归均通过；提交仅此任务变更。
+- [ ] 验证 `sh apps/android/phone-control/test-pure-local.sh && ./apps/android/standalone/test.sh`。Expected: 新测试和 #12/#13 回归均通过；提交仅此任务变更。
 
 ### Task 3: 本地协商和 AVF 完整确认
 
@@ -78,11 +78,11 @@
 
 - [ ] 写测试：未认证/签名错误/重放拒绝、WLAN↔BLE 相同 owner 可退出、不同 owner 拒绝；ACK 状态被修改/nonce 不符拒绝；AVF 不在线/旧版只能 pending；首次纯本地配对无需 Relay/APNs；AVF 进程重启不恢复云任务。
 - [ ] 观察 RED；接入策略 API 与 BLE 控制命令，不污染通话 session。AVF 持久化与 gate 同样覆盖所有 Relay 请求，应用层云开关不得覆盖。
-- [ ] 验证 `./android-standalone/test.sh`，`cd module/module-agent && go test ./...` 及 `go test -race ./...`。Expected: 通过，Agent 无网络副作用；提交。
+- [ ] 验证 `./apps/android/standalone/test.sh`，`cd services/gateway/module-agent && go test ./...` 及 `go test -race ./...`。Expected: 通过，Agent 无网络副作用；提交。
 
 ### Task 4: iOS 全 Relay 出口约束与安全取消
 
-**Files:** Create `iOS/AirSIM/RelayEgressGate.swift`, `iOS/AirSIMTests/RelayEgressGateTests.swift`; modify `ConnectionModePreference.swift`, `VoIPPushController.swift`, `BackgroundStandbyController.swift`, `IPhoneCloudCallSession.swift`, `WatchCallCoordinator.swift`, `LiveActivityController.swift`, `AgentVerboseTrace.swift` 和检索发现的其他直接 Relay 发送入口。
+**Files:** Create `apps/ios/SimHelp/RelayEgressGate.swift`, `apps/ios/SimHelpTests/RelayEgressGateTests.swift`; modify `ConnectionModePreference.swift`, `VoIPPushController.swift`, `BackgroundStandbyController.swift`, `IPhoneCloudCallSession.swift`, `WatchCallCoordinator.swift`, `LiveActivityController.swift`, `AgentVerboseTrace.swift` 和检索发现的其他直接 Relay 发送入口。
 
 **Interfaces:** `RelayEgressGate.shared` 用持久策略在初始化时决定是否禁用；`send(_ request: URLRequest) async throws -> (Data, URLResponse)`、受控 WebSocket factory、`disableAndDrain() async -> Bool`、`enableAfterRestore()`，所有任务带 epoch。`CloudSignalingPreference.isEnabled` 和路由策略返回受纯本地约束的有效值，保留 raw 偏好供恢复。
 
@@ -92,9 +92,9 @@
 
 ### Task 5: iOS 两端事务协调与首次配对
 
-**Files:** Create `iOS/AirSIM/PureLocalModeController.swift`, `iOS/AirSIMTests/PureLocalModeControllerTests.swift`; modify `AirSIMAPI.swift`, `APIModels.swift`, `VoBLECentralController.swift`, `VoBLEDeviceHub.swift`, `AppModel.swift`, `SamsungPairingView.swift`, `VoBLEPairingView.swift`。
+**Files:** Create `apps/ios/SimHelp/PureLocalModeController.swift`, `apps/ios/SimHelpTests/PureLocalModeControllerTests.swift`; modify `SimHelpAPI.swift`, `APIModels.swift`, `VoBLECentralController.swift`, `VoBLEDeviceHub.swift`, `AppModel.swift`, `SamsungPairingView.swift`, `VoBLEPairingView.swift`。
 
-**Interfaces:** `@MainActor PureLocalModeController` 暴露可观察 `state`、`enter() async`、`requestExit() async`、`resynchronize() async`、`refreshPeerStatus() async`；输入本机 prefs、当前绑定身份、本地 transport、call-active predicate 与 Task 4 gate。`AirSIMAPI.localModeStatus()/setLocalMode(_:)` 验证 ACK，BLE 返回等价状态。
+**Interfaces:** `@MainActor PureLocalModeController` 暴露可观察 `state`、`enter() async`、`requestExit() async`、`resynchronize() async`、`refreshPeerStatus() async`；输入本机 prefs、当前绑定身份、本地 transport、call-active predicate 与 Task 4 gate。`SimHelpAPI.localModeStatus()/setLocalMode(_:)` 验证 ACK，BLE 返回等价状态。
 
 - [ ] 写测试：先持久化/停本机再同步；断连待确认；重启继续进入/退出；旧端需升级；换绑不拿 A 的 ACK 给 B；Android 本机退出后取消自动重入；首次未配对可开启并完成本地配对；A→B→退出不后台改 A；本地 API 失败不调用云 fallback。
 - [ ] 观察 RED；实现 coordinator，仅首次保存快照，绑定改变使当前 ACK 失效。退出必须先远端确认再解除本机 gate；权限/所有权失败保留可解释状态。
@@ -103,13 +103,13 @@
 
 ### Task 6: 设置顶部滑块及跨端集成验收
 
-**Files:** Create `iOS/AirSIM/PureLocalModeSection.swift`, `iOS/AirSIMTests/PureLocalModePresentationTests.swift`; modify `AirSIMSetupView.swift`, iOS target entries、Android测试 runner、相关 README 和设计状态；新增 `docs/pure-local-mode-verification.md`。
+**Files:** Create `apps/ios/SimHelp/PureLocalModeSection.swift`, `apps/ios/SimHelpTests/PureLocalModePresentationTests.swift`; modify `SimHelpSetupView.swift`, iOS target entries、Android测试 runner、相关 README 和设计状态；新增 `docs/pure-local-mode-verification.md`。
 
 **Interfaces:** `PureLocalModeSection(controller: PureLocalModeController, callActive: Bool)`，仅委托 coordinator 不直接写联网偏好；拖动至轨道末端触发一次，回退/取消零次；无障碍按钮走同一 action。状态文案映射来自 spec。
 
 - [ ] 写 UI 状态/交互测试：滑动完成一次、拖动中断、VoiceOver、活动通话禁用、退出确认取消、pending/不兼容/已生效/对端退出、云自检与上传入口禁用。
 - [ ] 观察 RED；实现设置 Form 最前 Section，随后保留原运行模式区和 `VoWLAN+VoBLE` 名称，不误称两个端点已在线。
-- [ ] 最终验证：`./android-standalone/test.sh`，`cd module/module-agent && go test ./...`，iOS `xcodebuild ... test` 全量，`git diff --check`；iOS generic device 与 Android release-free debug 构建验证。模拟器选择可用设备后将准确 destination 写入验证记录，不安装真机。
+- [ ] 最终验证：`./apps/android/standalone/test.sh`，`cd services/gateway/module-agent && go test ./...`，iOS `xcodebuild ... test` 全量，`git diff --check`；iOS generic device 与 Android release-free debug 构建验证。模拟器选择可用设备后将准确 destination 写入验证记录，不安装真机。
 - [ ] 按 spec 做一次全分支独立审查；重要问题以 RED→GREEN 修复，再全量测试。记录全部未覆盖设备/系统条件和既有基线失败，不把测试替代真机抓包。
 - [ ] 文档记录实际通过的命令、代码版本、请求计数测试范围、未完成的真机清单；只本地提交，不推送或发布。
 

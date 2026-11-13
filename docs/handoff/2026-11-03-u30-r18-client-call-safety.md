@@ -1,14 +1,14 @@
-# U30 Air R18 / AirSIM iOS 通话终态与拨号安全交接
+# U30 Air R18 / SimHelp iOS 通话终态与拨号安全交接
 
 > 最新实机反馈：设备终态到达后 iPhone 仍计时，验收 FAIL，R18 暂停发布。客户端终态入口缺陷复现与候选修复见 [终态入口调查](2026-11-03-r18-terminal-ingress.md)，不能将此前自动化通过解释为实机已修复。
 
 > 最新状态（2026-11-03）：用户要求取消两分钟限制后，U30Air 已在 `ce198d0` 移除同号码冷却。设备线程的 `out/r18-no-cooldown-installed-status.json` 记录 `installed=true`、`released=false`、`manual_acceptance=pending`。本线程只读核对代码、安装记录与设备线程进度，未另行操作 USB。原通话确认结束且基带空闲后，可用新的人工拨号意图立即重拨；原 operation ID 持久去重仍保留。下文涉及旧候选“保留两分钟保护/未安装”的描述属于此前阶段。客户端新增只读恢复仍未安装，early media 仍未实现。
 
-本轮仅修改 `/Users/kyle/.codex/worktrees/voble/AirSIM` 的 iOS 客户端、测试与本文档。保留既有未提交改动。没有修改 U30Air 工作树，没有真实拨号、短信、录音、设备安装、重启、Worker 部署或 Release/TestFlight 发布。R18 仍暂停发布。
+本轮仅修改 `/Users/kyle/.codex/worktrees/voble/SimHelp` 的 iOS 客户端、测试与本文档。保留既有未提交改动。没有修改 U30Air 工作树，没有真实拨号、短信、录音、设备安装、重启、Worker 部署或 Release/TestFlight 发布。R18 仍暂停发布。
 
 ## 基线与证据边界
 
-用户手机为 AirSIM 0.9.8 (158)，`docs/widgets.md` 有该 build 的安装记录。当前脏工作树不是已安装二进制的完整可复现快照：本文记录当前源码路径与本轮验证，不能证明已安装 158 的每一行源码。
+用户手机为 SimHelp 0.9.8 (158)，`docs/widgets.md` 有该 build 的安装记录。当前脏工作树不是已安装二进制的完整可复现快照：本文记录当前源码路径与本轮验证，不能证明已安装 158 的每一行源码。
 
 只读参考：U30Air `/Users/kyle/codex project/U30Air/out/openwrt-sms/docs/R18_REDIAL.md`；交接提供 HEAD `45ec46c`，固定 Agent 基线 `cc2ade3124ac34bec7d8c441f4b66a57a6dfec62`。没有与对端拒接瞬间同步的客户端/基带采样，不能把全部延迟归因于 iOS。
 
@@ -16,7 +16,7 @@
 
 - App 拨号：`AppModel.dial` → `CallKitController.startOutgoingCall` → `callKitStart`。纯本地模式直接调用后者。标准本地双通道经过 `DeviceCallActionRouter`，先锁定 Agent/通话身份，再提交一次拨号。云端只允许在发送本地拨号之前选定。
 - 通用 `OutgoingCallRouteCoordinator` 原先允许非 API 类型错误（包括超时）之后再拨云端，原测试甚至要求该行为。本轮删除此回退：一旦调用本地 `dial`，任何错误都不能触发另一路 `dial`。这是一项明确代码风险，不等于现场重复拨号来源已被抓到。
-- 旧 `AirSIMAPI.dial` 也带 operation ID；取消“同号码恰好正在拨号就当作本请求成功”的无身份恢复。后台 CallKit 与 Watch 请求保留各自原始 UUID/request ID。
+- 旧 `SimHelpAPI.dial` 也带 operation ID；取消“同号码恰好正在拨号就当作本请求成功”的无身份恢复。后台 CallKit 与 Watch 请求保留各自原始 UUID/request ID。
 - 一次 App 点击的 UUID 同时作为 CallKit UUID、本地 `operation_id` / BLE operation ID，或云端 command ID。CallKit 重复回调与并发调用在任何 await 前经过意图门禁。失败/未知结果不释放同一个 ID 的执行资格；只有新的明确点击/系统呼叫动作产生新意图。已确认终态可以释放在途门禁，晚到旧请求的 defer 不会释放新请求。
 - 旧协议 `LegacyAgentPoller` 不再先等短信状态才交付通话终态。AppModel 在历史合并/ACK 前应用终态；目录订阅也先发布通话事件再存历史。历史 await 后再次核对生命周期快照，防止操作旧快照覆盖新电话。
 - `ended_at` 或明确 `state=ended/failed` 都可表示终态；设备时钟落后于 App 的乐观状态时，同一 UUID/ID/generation 的可信终态仍可收尾。非终态旧快照仍被拒绝。不同电话的终态不能终止当前电话。
@@ -68,7 +68,7 @@ GET /api/calls/early-media?call_id=<URL encoded backend call ID>
 
 ```
 AIRSIM-EARLY-MEDIA1
-<此次 GET 的 X-AirSIM-VoWLAN-Nonce>
+<此次 GET 的 X-SimHelp-VoWLAN-Nonce>
 <agent_id>
 <call_id>
 <session_id>
@@ -122,7 +122,7 @@ binding 原文（LF 分隔，最后无 LF）：`agent_id / call_id / session_id 
 
 ## 后续授权安装：2026-11-03
 
-用户在源码修复完成后明确要求“安装到 iPhone”。已将最终 Debug-iphoneos/AirSIM.app 覆盖安装到“楷的 iPhoneair”，未卸载应用，并成功启动。devicectl 安装与启动均返回成功，设备查询显示 `com.eric3u.airsim`、版本 `0.9.8`、build `158`。本地测试包沿用 158，不能仅凭版本号区分此前安装包；本次来源为上述 final 构建日志对应的修复产物。未操作 U30Air、未发布，真实通话验收仍待用户执行。
+用户在源码修复完成后明确要求“安装到 iPhone”。已将最终 Debug-iphoneos/SimHelp.app 覆盖安装到“楷的 iPhoneair”，未卸载应用，并成功启动。devicectl 安装与启动均返回成功，设备查询显示 `com.eric3u.airsim`、版本 `0.9.8`、build `158`。本地测试包沿用 158，不能仅凭版本号区分此前安装包；本次来源为上述 final 构建日志对应的修复产物。未操作 U30Air、未发布，真实通话验收仍待用户执行。
 
 ## 后续只读操作恢复
 

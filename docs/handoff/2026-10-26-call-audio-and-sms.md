@@ -1,10 +1,10 @@
-# AirSIM Handoff：通话音频、SMS 复制/卡槽与 VoWLAN 401
+# SimHelp Handoff：通话音频、SMS 复制/卡槽与 VoWLAN 401
 
 交接日期：2026-10-26 晚（Asia/Shanghai）。本文是工作区快照，不是发布或真机验收回执。
 
 ## 1. 接手结论
 
-VoBLE 当前 HEAD 8731b75，比远端 main（cc2ade3）多 11 个提交。AirSIM-ZTE 仍停在 a60962a。
+VoBLE 当前 HEAD 8731b75，比远端 main（cc2ade3）多 11 个提交。SimHelp-ZTE 仍停在 a60962a。
 
 本轮后续完成了：
 
@@ -22,11 +22,11 @@ VoBLE 当前 HEAD 8731b75，比远端 main（cc2ade3）多 11 个提交。AirSIM
 
 | 项目 | 状态 |
 | --- | --- |
-| VoBLE worktree | /Users/kyle/.codex/worktrees/voble/AirSIM |
+| VoBLE worktree | /Users/kyle/.codex/worktrees/voble/SimHelp |
 | VoBLE HEAD | 8731b75 |
 | origin/main | cc2ade3（落后 VoBLE 11 个提交） |
-| AirSIM-ZTE | a60962a（未同步本轮） |
-| main worktree | /Users/kyle/codex project/AirSIM，有 stash 与未跟踪文件 |
+| SimHelp-ZTE | a60962a（未同步本轮） |
+| main worktree | /Users/kyle/codex project/SimHelp，有 stash 与未跟踪文件 |
 | Apps | Android 0.9.8.12 (117)，iOS 0.9.8 (141) |
 | Release | v0.9.8.12 已发布；本轮后续修复未进入新 Release/TestFlight |
 
@@ -153,16 +153,16 @@ Android 侧同时出现：
 
 ## 9. 关键文件
 
-- iOS/AirSIM/PhoneViews.swift：拨号、短信复制、验证码、SIM 卡槽显示
-- iOS/AirSIM/APIModels.swift：SMSMessage.simSlot
-- iOS/AirSIM/AppModel.swift：自动复制验证码触发
-- iOS/AirSIM/AirSIMSetupView.swift：自动复制设置
-- iOS/AirSIM/AirSIMAPI.swift：VoWLAN 401 重试
-- android/phone-control-app/src/com/airsim/phonecontrol/LocalOutputMuteController.java
-- android/phone-control-app/src/com/airsim/phonecontrol/IncomingSMSReceiver.java
-- android/phone-control-app/src/com/airsim/phonecontrol/SMSInboxScanner.java
-- android/phone-control-app/src/com/airsim/phonecontrol/WireJson.java
-- android/phone-control-app/src/com/airsim/phonecontrol/RootBridgeMain.java
+- apps/ios/SimHelp/PhoneViews.swift：拨号、短信复制、验证码、SIM 卡槽显示
+- apps/ios/SimHelp/APIModels.swift：SMSMessage.simSlot
+- apps/ios/SimHelp/AppModel.swift：自动复制验证码触发
+- apps/ios/SimHelp/SimHelpSetupView.swift：自动复制设置
+- apps/ios/SimHelp/SimHelpAPI.swift：VoWLAN 401 重试
+- apps/android/phone-control/src/com/simhelp/phonecontrol/LocalOutputMuteController.java
+- apps/android/phone-control/src/com/simhelp/phonecontrol/IncomingSMSReceiver.java
+- apps/android/phone-control/src/com/simhelp/phonecontrol/SMSInboxScanner.java
+- apps/android/phone-control/src/com/simhelp/phonecontrol/WireJson.java
+- apps/android/phone-control/src/com/simhelp/phonecontrol/RootBridgeMain.java
 
 ## 10. 下一步
 

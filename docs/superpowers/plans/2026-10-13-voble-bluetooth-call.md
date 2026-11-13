@@ -6,7 +6,7 @@
 
 **Architecture:** Keep VoWLAN, Bluetooth, Cloud, and Automatic as isolated top-level modes. Add an Android BLE foreground gateway backed by the existing Standalone/AVF PCM interface, plus an iOS Core Bluetooth control/media stack and CallKit coordinator. Version 1 ships reliable GATT audio; L2CAP and Opus remain negotiated protocol extensions outside this plan.
 
-**Tech Stack:** Swift 5, SwiftUI, CoreBluetooth, CryptoKit, CallKit, AVFAudio/AudioToolbox, Java 17, Android BluetoothGattServer, Android Keystore/JCA, existing AirSIM PCM protocol, XCTest, JVM tests, real iPhone/Samsung/Xiaomi validation.
+**Tech Stack:** Swift 5, SwiftUI, CoreBluetooth, CryptoKit, CallKit, AVFAudio/AudioToolbox, Java 17, Android BluetoothGattServer, Android Keystore/JCA, existing SimHelp PCM protocol, XCTest, JVM tests, real iPhone/Samsung/Xiaomi validation.
 
 **Spec:** `docs/superpowers/specs/2026-10-12-voble-bluetooth-call-design.md`
 
@@ -14,7 +14,7 @@
 
 - Explicit Bluetooth mode must not browse VoWLAN, query Relay, register PushKit for Bluetooth readiness, or silently fall back across modes.
 - Automatic is the only mode that may select another transport, and selection is locked for the call lifetime.
-- Bluetooth link connection is not AirSIM authentication; readiness requires the application challenge to pass.
+- Bluetooth link connection is not SimHelp authentication; readiness requires the application challenge to pass.
 - Version 1 media is G.711 mu-law, 8-kHz mono, 20-ms frames, over BLE GATT.
 - Standalone PCM is `127.0.0.1:7580`; AVF PCM is the discovered AVF-private address on port `7580`.
 - PCM starts on authenticated `start_media`, never on receipt of the first microphone frame.
@@ -35,16 +35,16 @@
 ### Task 1: Persisted Mode Selection and Lifecycle Isolation
 
 **Files:**
-- Create: `iOS/AirSIM/ConnectionModePreference.swift`
-- Modify: `iOS/AirSIM/VoIPPushController.swift`
-- Modify: `iOS/AirSIM/AirSIMSetupView.swift`
-- Modify: `iOS/AirSIM/AppModel.swift`
-- Modify: `iOS/AirSIM/BackgroundStandbyController.swift`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/ConnectionModePreference.swift`
+- Modify: `apps/ios/SimHelp/VoIPPushController.swift`
+- Modify: `apps/ios/SimHelp/SimHelpSetupView.swift`
+- Modify: `apps/ios/SimHelp/AppModel.swift`
+- Modify: `apps/ios/SimHelp/BackgroundStandbyController.swift`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
-- Produces: `AirSIMConnectionMode`, `ConnectionModePreference.selected(defaults:)`, `ConnectionModeRuntimePolicy`.
+- Produces: `SimHelpConnectionMode`, `ConnectionModePreference.selected(defaults:)`, `ConnectionModeRuntimePolicy`.
 - Consumes: existing `LocalModePreference`, `CloudModePreference`, VoWLAN browsing, PushKit registration, and background standby entry points.
 
 - [x] **Step 1: Add failing mode-policy tests**
@@ -60,7 +60,7 @@ func testExplicitBluetoothModeDisablesUnrelatedLifecycles() {
 
 func testOnlyAutomaticAllowsCrossModeSelection() {
     XCTAssertTrue(ConnectionModeRuntimePolicy(mode: .automatic).allowsCrossModeFallback)
-    for mode in [AirSIMConnectionMode.vowlan, .bluetooth, .cloud] {
+    for mode in [SimHelpConnectionMode.vowlan, .bluetooth, .cloud] {
         XCTAssertFalse(ConnectionModeRuntimePolicy(mode: mode).allowsCrossModeFallback)
     }
 }
@@ -71,9 +71,9 @@ func testOnlyAutomaticAllowsCrossModeSelection() {
 Run:
 
 ```bash
-xcodebuild test -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild test -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' \
-  -only-testing:AirSIMTests
+  -only-testing:SimHelpTests
 ```
 
 Expected: failure because `ConnectionModeRuntimePolicy` is undefined.
@@ -81,12 +81,12 @@ Expected: failure because `ConnectionModeRuntimePolicy` is undefined.
 - [x] **Step 3: Implement the mode preference and pure runtime policy**
 
 ```swift
-enum AirSIMConnectionMode: String, Codable, CaseIterable, Sendable {
+enum SimHelpConnectionMode: String, Codable, CaseIterable, Sendable {
     case vowlan, bluetooth, cloud, automatic
 }
 
 struct ConnectionModeRuntimePolicy: Equatable, Sendable {
-    let mode: AirSIMConnectionMode
+    let mode: SimHelpConnectionMode
     var startsVoWLAN: Bool { mode == .vowlan || mode == .automatic }
     var startsBluetooth: Bool { mode == .bluetooth || mode == .automatic }
     var startsCloud: Bool { mode == .cloud || mode == .automatic }
@@ -103,23 +103,23 @@ Run the command from Step 2. Expected: PASS.
 - [x] **Step 5: Commit only mode-owned paths**
 
 ```bash
-git add iOS/AirSIM/ConnectionModePreference.swift iOS/AirSIM/VoIPPushController.swift \
-  iOS/AirSIM/AirSIMSetupView.swift iOS/AirSIM/AppModel.swift \
-  iOS/AirSIM/BackgroundStandbyController.swift iOS/AirSIM.xcodeproj/project.pbxproj \
-  iOS/AirSIMTests/AirSIMTests.swift
-git commit -m "feat: add isolated AirSIM connection modes"
+git add apps/ios/SimHelp/ConnectionModePreference.swift apps/ios/SimHelp/VoIPPushController.swift \
+  apps/ios/SimHelp/SimHelpSetupView.swift apps/ios/SimHelp/AppModel.swift \
+  apps/ios/SimHelp/BackgroundStandbyController.swift apps/ios/SimHelp.xcodeproj/project.pbxproj \
+  apps/ios/SimHelpTests/SimHelpTests.swift
+git commit -m "feat: add isolated SimHelp connection modes"
 ```
 
 ### Task 2: Versioned Wire Protocol and Bounded Media Primitives
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLEProtocol.swift`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEProtocol.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEAudioQueue.java`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Modify: `android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java`
-- Modify: `android/phone-control-app/test.sh`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/VoBLEProtocol.swift`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEProtocol.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEAudioQueue.java`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Modify: `apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java`
+- Modify: `apps/android/phone-control/test.sh`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
 - Produces: `VoBLEControlEnvelope`, `VoBLEAudioPacket`, `VoBLEAudioReassembler`, Java `VoBLEProtocol.ControlEnvelope`, `AudioHeader`, and bounded queue behavior.
@@ -139,10 +139,10 @@ Assert encoded header fields, payload length, and round-trip equality. Add MTU 2
 - [x] **Step 2: Run XCTest and JVM tests and verify missing protocol types fail**
 
 ```bash
-./android/phone-control-app/test.sh
-xcodebuild test -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+./apps/android/phone-control/test.sh
+xcodebuild test -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' \
-  -only-testing:AirSIMTests
+  -only-testing:SimHelpTests
 ```
 
 - [x] **Step 3: Implement exact big-endian framing, validation, fragmentation, reassembly, and queue bounds**
@@ -156,24 +156,24 @@ Expected: PASS with identical serialized bytes in Swift and Java.
 - [x] **Step 5: Commit protocol paths**
 
 ```bash
-git add iOS/AirSIM/VoBLEProtocol.swift iOS/AirSIM.xcodeproj/project.pbxproj \
-  iOS/AirSIMTests/AirSIMTests.swift android/phone-control-app/src/com/airsim/phonecontrol/voble \
-  android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java \
-  android/phone-control-app/test.sh
+git add apps/ios/SimHelp/VoBLEProtocol.swift apps/ios/SimHelp.xcodeproj/project.pbxproj \
+  apps/ios/SimHelpTests/SimHelpTests.swift apps/android/phone-control/src/com/simhelp/phonecontrol/voble \
+  apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java \
+  apps/android/phone-control/test.sh
 git commit -m "feat: define VoBLE control and audio protocol"
 ```
 
 ### Task 3: Application Pairing, Session Authentication, and Replay Protection
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLEPairing.swift`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEPairingManager.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLECredentialStore.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEReplayWindow.java`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Modify: `android/phone-control-app/test.sh`
-- Modify: `android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/VoBLEPairing.swift`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEPairingManager.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLECredentialStore.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEReplayWindow.java`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Modify: `apps/android/phone-control/test.sh`
+- Modify: `apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
 - Produces: `VoBLEPairingStore`, `VoBLESessionAuthenticator`, `VoBLEPairingManager.begin/confirm/authenticate`, derived control/media keys.
@@ -196,27 +196,27 @@ The transcript is length-prefixed protocol version, Android identity, both publi
 - [x] **Step 5: Commit pairing paths**
 
 ```bash
-git add iOS/AirSIM/VoBLEPairing.swift iOS/AirSIM.xcodeproj/project.pbxproj \
-  iOS/AirSIMTests/AirSIMTests.swift android/phone-control-app/src/com/airsim/phonecontrol/voble \
-  android/phone-control-app/test.sh android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java
+git add apps/ios/SimHelp/VoBLEPairing.swift apps/ios/SimHelp.xcodeproj/project.pbxproj \
+  apps/ios/SimHelpTests/SimHelpTests.swift apps/android/phone-control/src/com/simhelp/phonecontrol/voble \
+  apps/android/phone-control/test.sh apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java
 git commit -m "feat: add authenticated VoBLE pairing"
 ```
 
 ### Task 4: Android BLE Foreground Gateway and Call Control
 
 **Files:**
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEGatewayService.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEGattServer.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEControlChannel.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLECallController.java`
-- Modify: `android/phone-control-app/AndroidManifest.xml`
-- Modify: `android/phone-control-app/src/com/airsim/phonecontrol/BridgeApplication.java`
-- Modify: `android/phone-control-app/src/com/airsim/phonecontrol/AirSIMInCallService.java`
-- Modify: `android/phone-control-app/test.sh`
-- Modify: `android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEGatewayService.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEGattServer.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEControlChannel.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLECallController.java`
+- Modify: `apps/android/phone-control/AndroidManifest.xml`
+- Modify: `apps/android/phone-control/src/com/simhelp/phonecontrol/BridgeApplication.java`
+- Modify: `apps/android/phone-control/src/com/simhelp/phonecontrol/SimHelpInCallService.java`
+- Modify: `apps/android/phone-control/test.sh`
+- Modify: `apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java`
 
 **Interfaces:**
-- Produces: the AirSIM BLE service, independent CCCD state, authenticated command dispatch, and call-state indications.
+- Produces: the SimHelp BLE service, independent CCCD state, authenticated command dispatch, and call-state indications.
 - Consumes: Task 2 framing, Task 3 authentication, existing `AgentClient`, `StandaloneAgentGateway`, and call repository events.
 
 - [x] **Step 1: Add pure call-controller and subscription tests**
@@ -226,7 +226,7 @@ Assert unauthenticated health cannot become ready, wrong-key dial returns authen
 - [x] **Step 2: Run JVM tests and verify failures**
 
 ```bash
-./android/phone-control-app/test.sh
+./apps/android/phone-control/test.sh
 ```
 
 - [x] **Step 3: Implement foreground service, GATT database, serialized control queue, and call-controller adapter**
@@ -236,11 +236,11 @@ Use `BLUETOOTH_ADVERTISE`, `BLUETOOTH_CONNECT`, and foreground connected-device 
 - [x] **Step 4: Run JVM tests and build both Android variants**
 
 ```bash
-./android/phone-control-app/test.sh
-./android/phone-control-app/build.sh
-AIRSIM_ANDROID_MANIFEST=android/phone-control-app/AndroidManifest-standalone.xml \
-  AIRSIM_ANDROID_OUTPUT_BASENAME=AirSIM-Standalone \
-  ./android/phone-control-app/build.sh
+./apps/android/phone-control/test.sh
+./apps/android/phone-control/build.sh
+AIRSIM_ANDROID_MANIFEST=apps/android/phone-control/AndroidManifest-standalone.xml \
+  AIRSIM_ANDROID_OUTPUT_BASENAME=SimHelp-Standalone \
+  ./apps/android/phone-control/build.sh
 ```
 
 Expected: tests PASS and both APKs sign successfully.
@@ -255,12 +255,12 @@ git commit -m "feat: add authenticated Android VoBLE gateway"
 ### Task 5: Android PCM Resolution and BLE Media Session
 
 **Files:**
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEPCMBackendResolver.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEPCMBridgeSession.java`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEMediaSession.java`
-- Modify: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEGatewayService.java`
-- Modify: `android/phone-control-app/test.sh`
-- Modify: `android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEPCMBackendResolver.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEPCMBridgeSession.java`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEMediaSession.java`
+- Modify: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEGatewayService.java`
+- Modify: `apps/android/phone-control/test.sh`
+- Modify: `apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java`
 
 **Interfaces:**
 - Produces: `resolve(RuntimeMode, avfAddress)`, `startMedia(callIdentity)`, `onUplinkPacket`, serialized downlink notifications, media statistics.
@@ -290,15 +290,15 @@ git commit -m "feat: bridge Android PCM over VoBLE"
 ### Task 6: iOS Core Bluetooth Central, Pairing UI, and Control Channel
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLECentralController.swift`
-- Create: `iOS/AirSIM/VoBLEControlChannel.swift`
-- Create: `iOS/AirSIM/VoBLEModeController.swift`
-- Create: `iOS/AirSIM/VoBLEPairingView.swift`
-- Modify: `iOS/AirSIM/Info.plist`
-- Modify: `iOS/AirSIM/AirSIMSetupView.swift`
-- Modify: `iOS/AirSIM/AppModel.swift`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/VoBLECentralController.swift`
+- Create: `apps/ios/SimHelp/VoBLEControlChannel.swift`
+- Create: `apps/ios/SimHelp/VoBLEModeController.swift`
+- Create: `apps/ios/SimHelp/VoBLEPairingView.swift`
+- Modify: `apps/ios/SimHelp/Info.plist`
+- Modify: `apps/ios/SimHelp/SimHelpSetupView.swift`
+- Modify: `apps/ios/SimHelp/AppModel.swift`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
 - Produces: observable Bluetooth discovery/auth/readiness state, pairing confirmation UI, `send(command:) async throws`, and typed Android events.
@@ -317,28 +317,28 @@ Add `NSBluetoothAlwaysUsageDescription` and `bluetooth-central` background mode.
 - [x] **Step 4: Run XCTest and an unsigned simulator build**
 
 ```bash
-xcodebuild test -project iOS/AirSIM.xcodeproj -scheme AirSIM \
-  -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' -only-testing:AirSIMTests
-xcodebuild build -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild test -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
+  -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' -only-testing:SimHelpTests
+xcodebuild build -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
 
 - [x] **Step 5: Commit iOS BLE control paths**
 
 ```bash
-git add iOS/AirSIM iOS/AirSIMTests iOS/AirSIM.xcodeproj/project.pbxproj
+git add apps/ios/SimHelp apps/ios/SimHelpTests apps/ios/SimHelp.xcodeproj/project.pbxproj
 git commit -m "feat: add iOS VoBLE pairing and control"
 ```
 
 ### Task 7: iOS GATT Media and Voice-Processing Audio Engine
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLEMediaTransport.swift`
-- Create: `iOS/AirSIM/VoBLEAudioEngine.swift`
-- Modify: `iOS/AirSIM/AudioSessionController.swift`
-- Modify: `iOS/AirSIM/VoBLECentralController.swift`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/VoBLEMediaTransport.swift`
+- Create: `apps/ios/SimHelp/VoBLEAudioEngine.swift`
+- Modify: `apps/ios/SimHelp/AudioSessionController.swift`
+- Modify: `apps/ios/SimHelp/VoBLECentralController.swift`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
 - Produces: `CallMediaTransport`, `VoBLEGATTMediaTransport`, bounded uplink scheduling, downlink reassembly/jitter, and Voice Processing I/O lifecycle.
@@ -361,22 +361,22 @@ Use Task 6 Step 4 commands. Expected: PASS.
 - [x] **Step 5: Commit iOS media paths**
 
 ```bash
-git add iOS/AirSIM iOS/AirSIMTests iOS/AirSIM.xcodeproj/project.pbxproj
+git add apps/ios/SimHelp apps/ios/SimHelpTests apps/ios/SimHelp.xcodeproj/project.pbxproj
 git commit -m "feat: add iOS VoBLE call audio"
 ```
 
 ### Task 8: CallKit, Live Activity, and Apple Watch Integration
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLECallCoordinator.swift`
-- Modify: `iOS/AirSIM/AppModel.swift`
-- Modify: `iOS/AirSIM/CallKitController.swift`
-- Modify: `iOS/AirSIM/WatchCallCoordinator.swift`
-- Modify: `iOS/AirSIM/LiveActivityController.swift`
-- Modify: `iOS/Shared/WatchCallPayload.swift`
-- Modify: `iOS/Shared/AirSIMLiveActivityShared.swift`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
+- Create: `apps/ios/SimHelp/VoBLECallCoordinator.swift`
+- Modify: `apps/ios/SimHelp/AppModel.swift`
+- Modify: `apps/ios/SimHelp/CallKitController.swift`
+- Modify: `apps/ios/SimHelp/WatchCallCoordinator.swift`
+- Modify: `apps/ios/SimHelp/LiveActivityController.swift`
+- Modify: `apps/ios/Shared/WatchCallPayload.swift`
+- Modify: `apps/ios/Shared/SimHelpLiveActivityShared.swift`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
 
 **Interfaces:**
 - Produces: outgoing/incoming Bluetooth call flows, generation-locked media, and exact-once terminal cleanup.
@@ -397,23 +397,23 @@ Remove BLE decisions from VoWLAN route helpers. Start media only after Android `
 - [x] **Step 5: Commit lifecycle paths**
 
 ```bash
-git add iOS/AirSIM iOS/AirSIMTests iOS/Shared iOS/AirSIM.xcodeproj/project.pbxproj
+git add apps/ios/SimHelp apps/ios/SimHelpTests apps/ios/Shared apps/ios/SimHelp.xcodeproj/project.pbxproj
 git commit -m "feat: integrate VoBLE with CallKit and Watch"
 ```
 
 ### Task 9: Diagnostics, AVF Recovery, and Settings Presentation
 
 **Files:**
-- Create: `iOS/AirSIM/VoBLEDiagnostics.swift`
-- Create: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEDiagnostics.java`
-- Modify: `iOS/AirSIM/AirSIMSetupView.swift`
-- Modify: `iOS/AirSIM/PhoneViews.swift`
-- Modify: `iOS/AirSIM/AppModel.swift`
-- Modify: `android/phone-control-app/src/com/airsim/phonecontrol/MainActivity.java`
-- Modify: `android/phone-control-app/src/com/airsim/phonecontrol/voble/VoBLEPCMBackendResolver.java`
-- Modify: `iOS/AirSIM.xcodeproj/project.pbxproj`
-- Test: `iOS/AirSIMTests/AirSIMTests.swift`
-- Test: `android/phone-control-app/test/com/airsim/phonecontrol/CoreTests.java`
+- Create: `apps/ios/SimHelp/VoBLEDiagnostics.swift`
+- Create: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEDiagnostics.java`
+- Modify: `apps/ios/SimHelp/SimHelpSetupView.swift`
+- Modify: `apps/ios/SimHelp/PhoneViews.swift`
+- Modify: `apps/ios/SimHelp/AppModel.swift`
+- Modify: `apps/android/phone-control/src/com/simhelp/phonecontrol/MainActivity.java`
+- Modify: `apps/android/phone-control/src/com/simhelp/phonecontrol/voble/VoBLEPCMBackendResolver.java`
+- Modify: `apps/ios/SimHelp.xcodeproj/project.pbxproj`
+- Test: `apps/ios/SimHelpTests/SimHelpTests.swift`
+- Test: `apps/android/phone-control/test/com/simhelp/phonecontrol/CoreTests.java`
 
 **Interfaces:**
 - Produces: sanitized Bluetooth status on both devices and three-second same-call recovery.
@@ -432,18 +432,18 @@ Display selected mode, peer, authentication, control/audio subscription, Agent t
 - [x] **Step 4: Run all unit suites and both platform builds**
 
 ```bash
-./android/phone-control-app/test.sh
-./android/phone-control-app/build.sh
-xcodebuild test -project iOS/AirSIM.xcodeproj -scheme AirSIM \
-  -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' -only-testing:AirSIMTests
-xcodebuild build -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+./apps/android/phone-control/test.sh
+./apps/android/phone-control/build.sh
+xcodebuild test -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
+  -destination 'platform=iOS Simulator,name=iPhone Air,OS=27.0' -only-testing:SimHelpTests
+xcodebuild build -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO
 ```
 
 - [x] **Step 5: Commit diagnostics paths**
 
 ```bash
-git add iOS/AirSIM iOS/AirSIMTests iOS/AirSIM.xcodeproj/project.pbxproj \
+git add apps/ios/SimHelp apps/ios/SimHelpTests apps/ios/SimHelp.xcodeproj/project.pbxproj \
   android/phone-control-app
 git commit -m "feat: add VoBLE diagnostics and recovery"
 ```
@@ -453,7 +453,7 @@ git commit -m "feat: add VoBLE diagnostics and recovery"
 **Files:**
 - Create: `docs/voble-real-device-test-matrix.md`
 - Modify: `README.md`
-- Modify: `android-standalone/README.md`
+- Modify: `apps/android/standalone/README.md`
 - Modify: `docs/superpowers/plans/2026-10-13-voble-bluetooth-call.md`
 
 **Interfaces:**
@@ -479,7 +479,7 @@ Cover background restrictions, screen lock, Bluetooth loss under three seconds, 
 - [x] **Step 5: Update documentation with verified behavior and commit**
 
 ```bash
-git add README.md android-standalone/README.md docs/voble-real-device-test-matrix.md \
+git add README.md apps/android/standalone/README.md docs/voble-real-device-test-matrix.md \
   docs/superpowers/plans/2026-10-13-voble-bluetooth-call.md
 git commit -m "docs: document VoBLE setup and device validation"
 ```

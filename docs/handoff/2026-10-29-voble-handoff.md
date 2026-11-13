@@ -1,7 +1,7 @@
-# AirSIM / VoBLE 全项目交接 — 2026-10-29
+# SimHelp / VoBLE 全项目交接 — 2026-10-29
 
 交接对象：Codex
-工作目录：`/Users/kyle/.codex/worktrees/voble/AirSIM`
+工作目录：`/Users/kyle/.codex/worktrees/voble/SimHelp`
 当前分支：`VoBLE`
 当前 HEAD：`06021aa fix: keep the Contacts navigation bar and search visible`
 
@@ -25,16 +25,16 @@
 
 当前版本文件：
 
-- `android-standalone/AndroidManifest.xml`：versionCode `123`，versionName `0.9.8.18`
-- `android/phone-control-app/AndroidManifest.xml`：versionCode `123`，versionName `0.9.8.18`
-- `iOS/AirSIM.xcodeproj/project.pbxproj`：CURRENT_PROJECT_VERSION `147`，MARKETING_VERSION `0.9.8`
+- `apps/android/standalone/AndroidManifest.xml`：versionCode `123`，versionName `0.9.8.18`
+- `apps/android/phone-control/AndroidManifest.xml`：versionCode `123`，versionName `0.9.8.18`
+- `apps/ios/SimHelp.xcodeproj/project.pbxproj`：CURRENT_PROJECT_VERSION `147`，MARKETING_VERSION `0.9.8`
 
 近期提交（从新到旧）：
 
 ```text
 06021aa fix: keep the Contacts navigation bar and search visible
 5bd9d9b docs: record TestFlight build 147 upload
-664f5dc release: AirSIM Apps v0.9.8.18
+664f5dc release: SimHelp Apps v0.9.8.18
 da907bb fix: dedupe Watch call payloads without timestamp
 d5afb83 Merge pull request #7 from zeyugao/fix/watch-ring-stop-on-iphone-answer
 7a6d24e fix: prepare CallKit audio before answering without failing the action
@@ -64,7 +64,7 @@ v0.9.8.16
 - 设置页“云端通知（APNs）”独立于媒体模式。
 - 关闭本地模式不会再自动切换到自动模式。
 - VoWLAN 下可以保留 PushKit/APNs；媒体仍优先 VoWLAN。
-- 相关文件：`ConnectionModePreference.swift`、`AppModel.swift`、`VoIPPushController.swift`、`BackgroundStandbyController.swift`、`CallKitController.swift`、`AirSIMSetupView.swift`。
+- 相关文件：`ConnectionModePreference.swift`、`AppModel.swift`、`VoIPPushController.swift`、`BackgroundStandbyController.swift`、`CallKitController.swift`、`SimHelpSetupView.swift`。
 
 ### 3.2 CallKit 修复
 
@@ -104,7 +104,7 @@ v0.9.8.16
 
 ### 3.7 开屏展示
 
-- 只修改 `iOS/AirSIM/AppUpdateView.swift` 和 `AppReleaseNotes.items`。
+- 只修改 `apps/ios/SimHelp/AppUpdateView.swift` 和 `AppReleaseNotes.items`。
 - 页面内容：VoWLAN CallKit、通讯录、短信会话、Watch 停铃。
 - 没有改业务逻辑。
 
@@ -116,10 +116,10 @@ v0.9.8.16
 
 ```text
 release-assets/0.9.8.18/
-  AirSIM-Android-Standalone-0.9.8.18-build123.apk
-  AirSIM-Android-AVF-0.9.8.18-build123.apk
-  AirSIM-iOS-0.9.8-build147-unsigned.ipa
-  AirSIM-iOS-0.9.8-build147-sideload-unsigned.ipa
+  SimHelp-Android-Standalone-0.9.8.18-build123.apk
+  SimHelp-Android-AVF-0.9.8.18-build123.apk
+  SimHelp-iOS-0.9.8-build147-unsigned.ipa
+  SimHelp-iOS-0.9.8-build147-sideload-unsigned.ipa
   SHA256SUMS.txt
   LICENSE
   NOTICE
@@ -138,7 +138,7 @@ ab8900a9801ebc7fbefdf612374b32a3c7f0e1da324a4b4fbfd43e4d76a9ee80  sideload IPA
 GitHub：
 
 ```text
-https://github.com/kai-wu-cortex/AirSIM/releases/tag/v0.9.8.18
+https://github.com/Skeezad/SimHelp/releases/tag/v0.9.8.18
 ```
 
 发布资产未提交到 Git，不要误加。
@@ -171,9 +171,9 @@ networksetup -setsocksfirewallproxystate Wi-Fi off
 env -u HTTP_PROXY -u HTTPS_PROXY -u ALL_PROXY \
     -u http_proxy -u https_proxy -u all_proxy \
   xcodebuild -exportArchive \
-    -archivePath /tmp/AirSIM-0.9.8.18.xcarchive \
-    -exportOptionsPlist /tmp/AirSIM-ExportOptions.plist \
-    -exportPath /tmp/AirSIM-export-0.9.8.18 \
+    -archivePath /tmp/SimHelp-0.9.8.18.xcarchive \
+    -exportOptionsPlist /tmp/SimHelp-ExportOptions.plist \
+    -exportPath /tmp/SimHelp-export-0.9.8.18 \
     -allowProvisioningUpdates
 networksetup -setwebproxystate Wi-Fi on
 networksetup -setsecurewebproxystate Wi-Fi on
@@ -229,7 +229,7 @@ Exceeded allowed volume of requests in Durable Objects free tier.
 1. Android 当前控制端口和 PCM 端口是否变化。
 2. iOS 手动 Tailscale 路由是否仍保存旧端口。
 3. Tailscale ACL 是否放行控制/PCM，而不只是配对端口。
-4. `无效 HTTP` 表示 TCP 连通但不是 AirSIM HTTP，最常见是 HTTP 请求发到了 PCM/配对端口。
+4. `无效 HTTP` 表示 TCP 连通但不是 SimHelp HTTP，最常见是 HTTP 请求发到了 PCM/配对端口。
 5. 重新按当前端口配对，配对时选“仅本次配对不写入云端”。
 6. 如果 Android 重启后端口变化，需要更新手动路由；当前没有自动刷新端口的实现。
 
@@ -265,7 +265,7 @@ The device rejected the Bluetooth connection attempt.
 之后安装：
 
 ```text
-/tmp/watch-real-device/Build/Products/Debug-iphoneos/AirSIM.app/Watch/AirSIMWatchApp.app
+/tmp/watch-real-device/Build/Products/Debug-iphoneos/SimHelp.app/Watch/SimHelpWatchApp.app
 ```
 
 测试：
@@ -295,7 +295,7 @@ Make sure the relevant pages and databases are shared with your integration "Web
 PR：
 
 ```text
-https://github.com/kai-wu-cortex/AirSIM/pull/11
+https://github.com/Skeezad/SimHelp/pull/11
 状态：CLOSED，作者关闭
 目标：main，不是 VoBLE
 ```
@@ -340,7 +340,7 @@ xcrun devicectl list devices
 xcrun devicectl device info apps --device 00008150-0019598E01C0401C
 xcrun devicectl device info apps --device 00008310-000C2AAC0240E01E
 adb devices -l
-adb shell dumpsys package com.airsim.phonecontrol.standalone | grep version
+adb shell dumpsys package com.simhelp.phonecontrol.standalone | grep version
 ```
 
 ---
@@ -350,7 +350,7 @@ adb shell dumpsys package com.airsim.phonecontrol.standalone | grep version
 iOS 模拟器：
 
 ```sh
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath /tmp/airsim-build \
   CODE_SIGNING_ALLOWED=NO build-for-testing
@@ -359,9 +359,9 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 iOS 真机开发包：
 
 ```sh
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -configuration Debug -destination 'generic/platform=iOS' \
-  -xcconfig iOS/build/relay-routing-install/Install.xcconfig \
+  -xcconfig apps/ios/build/relay-routing-install/Install.xcconfig \
   -allowProvisioningUpdates \
   -derivedDataPath /tmp/airsim-device build
 ```
@@ -369,8 +369,8 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 Android：
 
 ```sh
-./android/phone-control-app/test.sh
-./android-standalone/build.sh
+./apps/android/phone-control/test.sh
+./apps/android/standalone/build.sh
 ```
 
 Relay：
@@ -381,15 +381,15 @@ npm test
 npm run check
 ```
 
-注意：`android-standalone/test.sh` 有已知基线失败（`test-gateway-lifecycle.sh` 的 fake Handler/BroadcastReceiver 方法缺失）；不要把它误报成业务回归。
+注意：`apps/android/standalone/test.sh` 有已知基线失败（`test-gateway-lifecycle.sh` 的 fake Handler/BroadcastReceiver 方法缺失）；不要把它误报成业务回归。
 
 ---
 
 ## 10. 发布流程提醒
 
 1. 升版本前先确认没有未提交业务改动。
-2. Android release 需要 keychain 中的 `AirSIM Android Release Keystore Password` / `Key Password`，不要回显。
-3. iOS production archive 使用 `/tmp/AirSIM-AppStore.xcconfig` 或等价自动签名配置；公开 IPA 必须重新生成 unsigned full/sideload。
+2. Android release 需要 keychain 中的 `SimHelp Android Release Keystore Password` / `Key Password`，不要回显。
+3. iOS production archive 使用 `/tmp/SimHelp-AppStore.xcconfig` 或等价自动签名配置；公开 IPA 必须重新生成 unsigned full/sideload。
 4. TestFlight 上传前关闭系统 HTTP/HTTPS/SOCKS 代理及环境代理，否则 Xcode Apple 账户 TLS 会失败。
 5. 上传成功只代表 Apple 接收；processing、外测审核、测试者可见分别核实。
 6. 不要提交 `release-assets/`。

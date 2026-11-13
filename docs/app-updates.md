@@ -15,7 +15,7 @@
 
 该修改保留原有按版本／build 展示与确认机制，不清空已有已读标记，同一 build 可在「设置 → 关于 → 当前版本更新内容」重看。此次未安装或发布；已装的 160 不会自动获得新的介绍。U30Air 的早期媒体仅完成临时候选单次试听，不在开屏中宣称已正式开放，详见 [早期媒体交接](handoff/2026-11-03-early-media.md)。
 
-验证：`iOS/scripts/test-app-updates.sh` 的 21 项发布策略检查与 39 项更新生命周期检查通过；iPhone 17e 模拟器目标完整构建通过（`/tmp/airsim-onboarding-features-build.log`）。本轮未覆盖安装用户设备，未执行真机视觉验收。
+验证：`apps/ios/scripts/test-app-updates.sh` 的 21 项发布策略检查与 39 项更新生命周期检查通过；iPhone 17e 模拟器目标完整构建通过（`/tmp/airsim-onboarding-features-build.log`）。本轮未覆盖安装用户设备，未执行真机视觉验收。
 
 以下为此前介绍与安装历史，页面内容以上方最新改版为准。
 
@@ -44,7 +44,7 @@ iOS 包内新功能轮播与文字摘要已更新，入口为「设置 → 关�
 
 ## 更新来源与边界
 
-匿名读取 [GitHub Releases API](https://docs.github.com/en/rest/releases/releases) 的最近 100 项发布：`https://api.github.com/repos/kai-wu-cortex/AirSIM/releases?per_page=100`。每天的「检查」是一次有界 API 请求，不使用 `/releases/latest`：仓库 Latest 保留给 AVF Linux Agent，不能用于应用更新。响应上限 4 MiB，有限超时，无自动重试，不发送设备标识、号码、Push token 或 Relay 凭据。此 GitHub 访问独立于通话本地／云端模式；仅本地模式不等于禁用已确认的应用更新检查。
+匿名读取 [GitHub Releases API](https://docs.github.com/en/rest/releases/releases) 的最近 100 项发布：`https://api.github.com/repos/Skeezad/SimHelp/releases?per_page=100`。每天的「检查」是一次有界 API 请求，不使用 `/releases/latest`：仓库 Latest 保留给 AVF Linux Agent，不能用于应用更新。响应上限 4 MiB，有限超时，无自动重试，不发送设备标识、号码、Push token 或 Relay 凭据。此 GitHub 访问独立于通话本地／云端模式；仅本地模式不等于禁用已确认的应用更新检查。
 
 只接受非 draft、非 prerelease、数字版本 tag，并要求对应平台的已上传资产及官方仓库的 HTTPS 下载路径匹配。数字比较支持三段／四段版本，不按字符串排序。安装版本无法识别时不猜测；已知远端 build 小于或等于本机时不提示更新。
 
@@ -54,36 +54,36 @@ iOS 从 IPA 文件名读取版本和 build，只链接发布说明，不尝试�
 
 最近 100 项中未发现更新只表示此扫描范围内没有可识别的新应用版本，不保证第三方分发渠道或 App Store 状态。检查结果及待提醒结果保存在进程内；如果进程在请求中被系统结束，仍保留当日尝试时间，手动检查可重试，下一日再自动核对。
 
-iOS 热修复保留仓库既有命名：例如 Release `v0.9.7.2` 可以包含 `AirSIM-iOS-0.9.7-build91-unsigned.ipa`。四段发布 tag 可对应前三段相同的 iOS 版本，按 IPA 自己的 build 判断升级；不能把发布 tag 的第四段当作 iOS 的版本，也不能接受主／次版本不一致的旧资产。
+iOS 热修复保留仓库既有命名：例如 Release `v0.9.7.2` 可以包含 `SimHelp-iOS-0.9.7-build91-unsigned.ipa`。四段发布 tag 可对应前三段相同的 iOS 版本，按 IPA 自己的 build 判断升级；不能把发布 tag 的第四段当作 iOS 的版本，也不能接受主／次版本不一致的旧资产。
 
 ## 发布维护约定
 
 当前兼容资产名：
 
 ```text
-AirSIM-Android-Standalone-0.9.8-Android10-13.apk
-AirSIM-Android-AVF-0.9.8-Android10-13.apk
-AirSIM-iOS-0.9.8-build92-unsigned.ipa
-AirSIM-iOS-0.9.8-build92-sideload-unsigned.ipa
+SimHelp-Android-Standalone-0.9.8-Android10-13.apk
+SimHelp-Android-AVF-0.9.8-Android10-13.apk
+SimHelp-iOS-0.9.8-build92-unsigned.ipa
+SimHelp-iOS-0.9.8-build92-sideload-unsigned.ipa
 ```
 
 后续推荐 Android 文件名增加显式 build，以支持同版本重打包比较：
 
 ```text
-AirSIM-Android-Standalone-0.9.8.1-build95-Android10-13.apk
-AirSIM-Android-AVF-0.9.8.1-build95-Android10-13.apk
+SimHelp-Android-Standalone-0.9.8.1-build95-Android10-13.apk
+SimHelp-Android-AVF-0.9.8.1-build95-Android10-13.apk
 ```
 
 不含 Android build 的旧文件仅能比较版本名：同版本不能证明 versionCode 更高，不提示升级；不同版本只能提示发现新版发布，是否允许覆盖仍由系统安装器校验。不得从 iOS build 猜测 Android versionCode。
 
-发布新版本时同时维护 `iOS/AirSIM/AppUpdateView.swift` 的 `NewFeatureCatalog`（实际轮播）、对应插图与 `AppReleaseNotes`（文字摘要），以及 Android `AppUpdatePresenter.showNotes` 的本机摘要，核对包版本与验证边界，并移除已发布项的候选措辞。正式发布仍需用户另行授权，不新增 workflow。
+发布新版本时同时维护 `apps/ios/SimHelp/AppUpdateView.swift` 的 `NewFeatureCatalog`（实际轮播）、对应插图与 `AppReleaseNotes`（文字摘要），以及 Android `AppUpdatePresenter.showNotes` 的本机摘要，核对包版本与验证边界，并移除已发布项的候选措辞。正式发布仍需用户另行授权，不新增 workflow。
 
 ## 验证
 
 ```sh
-sh iOS/scripts/test-app-updates.sh
-sh android-standalone/test.sh
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+sh apps/ios/scripts/test-app-updates.sh
+sh apps/android/standalone/test.sh
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'platform=iOS Simulator,name=iPhone Air' CODE_SIGNING_ALLOWED=NO test
 ```
 

@@ -1,6 +1,6 @@
 # 接通前运营商语音：客户端与 U30 Air 联调契约
 
-用户要求听到真实运营商接通前语音，保持未接通状态、不提前计时。用户已明确授权通知 U30Air 线程协同设备端；该线程负责 Agent、网关与音频源，本线程只改 AirSIM 客户端。源码实现阶段未操作设备。随后用户明确回复“安装”，授权覆盖安装两端候选及准备临时试听；真实拨号与挂断仍由用户手动执行，不录音、不发布。
+用户要求听到真实运营商接通前语音，保持未接通状态、不提前计时。用户已明确授权通知 U30Air 线程协同设备端；该线程负责 Agent、网关与音频源，本线程只改 SimHelp 客户端。源码实现阶段未操作设备。随后用户明确回复“安装”，授权覆盖安装两端候选及准备临时试听；真实拨号与挂断仍由用户手动执行，不录音、不发布。
 
 ## 不能混淆的状态
 
@@ -55,7 +55,7 @@
 - 最终模拟器回归：41 项通过，含续期后 TCP 重连使用新授权、CallKit 音频暂停／恢复不重新拨号、不提前计时。日志 `/tmp/airsim-early-media-renewal-tests.log`。
 - 50 项生产通话策略断言通过：`python3 scripts/tests/r18-call-safety/run.py`。
 - iPhone arm64 Debug 0.9.8（160）构建成功，主 App 和扩展签名深度校验通过。日志 `/tmp/airsim-early-media-build160-final.log`。已覆盖安装 iPhone Air 并启动，尚未提交或发布。
-- 可安装包：`/Users/kyle/Library/Caches/AirSIM/iPhone153/DerivedData/Build/Products/Debug-iphoneos/AirSIM.app`。
+- 可安装包：`/Users/kyle/Library/Caches/SimHelp/iPhone153/DerivedData/Build/Products/Debug-iphoneos/SimHelp.app`。
 - 主可执行文件 SHA-256：`c358ccca8195367c4c66e5e8d1b64cc06702ef7820184ec205f2d6b2256ea522`。
 - Debug 实现动态库 SHA-256：`bf3e4660342fc87fd9cf18f11704fd7ad6d9ffcfcc7f85197725071cc5339a5f`。
 

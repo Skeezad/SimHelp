@@ -2,7 +2,7 @@
 
 ## Purpose
 
-VoBLE adds Bluetooth as an explicit AirSIM connection mode. In Bluetooth mode,
+VoBLE adds Bluetooth as an explicit SimHelp connection mode. In Bluetooth mode,
 an iPhone controls calls on a paired Android phone and carries bidirectional call
 audio over Bluetooth without requiring Wi-Fi, Relay, PushKit registration, an
 internet connection, or VoWLAN configuration.
@@ -19,7 +19,7 @@ modes with independent lifecycles, pairing state, health, and errors.
   Android call, with target one-way latency below 250 ms.
 - Standalone PCM at `127.0.0.1:7580` and AVF PCM at the discovered AVF-private
   address on port `7580` use one Bluetooth media interface.
-- An authenticated AirSIM pairing is distinct from a Bluetooth link connection;
+- An authenticated SimHelp pairing is distinct from a Bluetooth link connection;
   an unauthenticated device is never shown as ready.
 - Explicit Bluetooth mode never silently falls back to VoWLAN or Cloud.
 - Only Automatic mode selects among VoWLAN, Bluetooth, and Cloud before a call.
@@ -41,7 +41,7 @@ modes with independent lifecycles, pairing state, health, and errors.
 ## Top-Level Mode Model
 
 ```swift
-enum AirSIMConnectionMode: String, Codable, CaseIterable {
+enum SimHelpConnectionMode: String, Codable, CaseIterable {
     case vowlan
     case bluetooth
     case cloud
@@ -108,7 +108,7 @@ Android Telecom / Agent call control
 
 ## Pairing and Authentication
 
-Bluetooth connection and OS bonding do not constitute AirSIM pairing:
+Bluetooth connection and OS bonding do not constitute SimHelp pairing:
 
 1. Android advertises protocol version and peer identity without a secret.
 2. Both peers generate ephemeral Curve25519 keys and random nonces.

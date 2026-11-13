@@ -21,7 +21,7 @@
 
 - 发送顺序：KernelSU root → Shizuku shell → 普通 App SmsManager。
 - Root：RootSmsSender 用 su -c 启动 app APK 内的 RootSmsMain；SMS JSON 放在 App 私有 cache 文件，经路径传给 helper，正文不进入 shell 命令行；helper 以 UID 0 调 SmsManager，返回 ok:<segments>。
-- 不把 AirSIM 设为默认短信应用；不改默认 SIM。KernelSU 首次调用会弹一次 root 授权，之后按 root 通道发送。
+- 不把 SimHelp 设为默认短信应用；不改默认 SIM。KernelSU 首次调用会弹一次 root 授权，之后按 root 通道发送。
 - 失败时回退 Shizuku/旧路径；未在 KernelSU 小米真机验证，MIUI 若仍按 package 拦截需回传弹窗/日志。
 - 全局 root 通道（0.9.8.5 / 99）：ShizukuBridgeManager 优先 Root；RootBridgeTransport 通过 su 启动 RootBridgeMain，复用 ShizukuBridgeUserService 的 PCM、静音、audio snapshot、拨号角色和短信；TCP loopback + 一次性 token；失败回 Shizuku。
 - Root 启动时会请求一次 KernelSU 授权；尚未在 root 真机验证。

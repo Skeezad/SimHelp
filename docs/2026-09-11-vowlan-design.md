@@ -1,10 +1,10 @@
-# AirSIM VoWLAN Design
+# SimHelp VoWLAN Design
 
 Date: 2026-09-11
 
 ## Goal
 
-When an already paired iPhone is connected to the Samsung phone's hotspot, AirSIM must place and answer cellular calls through a local VoWLAN path. The control plane and bidirectional PCM remain on the hotspot LAN for the lifetime of that call. When VoWLAN is unavailable before a call begins, AirSIM uses the existing cloud Relay path.
+When an already paired iPhone is connected to the Samsung phone's hotspot, SimHelp must place and answer cellular calls through a local VoWLAN path. The control plane and bidirectional PCM remain on the hotspot LAN for the lifetime of that call. When VoWLAN is unavailable before a call begins, SimHelp uses the existing cloud Relay path.
 
 The user-visible name is **VoWLAN**. The names `WLANECM` and `LANCalling` are retired from UI strings, logs, diagnostics, and newly introduced wire fields.
 

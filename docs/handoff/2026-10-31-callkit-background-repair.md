@@ -87,7 +87,7 @@ post-answer PCM startup cancellation, not APNs/ringing latency.
 - Added three tests for serial handoff/coalescing, cancelled waiters and repeated
   cancellation. Original polling-cancellation and late-rollback tests still pass.
 - Integrated iOS unit suite: 373 passed, 0 failures on iOS 27 Simulator. This is
-  the `AirSIMTests` target, not physical-device or UI-test acceptance.
+  the `SimHelpTests` target, not physical-device or UI-test acceptance.
 - Worker unit suite: 67 passed; Android `test.sh`: passed; diff checks passed.
 - No new Worker deployment is required for PR #18. No phone installation,
   Release asset or TestFlight upload was performed as part of this integration.

@@ -38,7 +38,7 @@ def translate(token):
         cache[token] = token
     return token
 
-files = [p for p in ROOT.rglob("*.swift") if p.name not in {"AppUpdateView.swift", "AirSIMSetupView.swift"}]
+files = [p for p in ROOT.rglob("*.swift") if p.name not in {"AppUpdateView.swift", "SimHelpSetupView.swift"}]
 tokens = set()
 for path in files:
     tokens.update(t for t in LITERAL.findall(path.read_text(encoding="utf-8")) if should_translate(t))

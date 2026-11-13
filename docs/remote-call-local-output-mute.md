@@ -36,11 +36,11 @@ VoBLE 音频泵遇到 EOF／异常时，即使 GATT 控制仍在线，也只释�
 
 真机需要分别检查三种链路的拨出／接听、安卓本机无通话播放、iPhone 双向声音仍正常、挂断／断开恢复，以及新的一通普通安卓电话可正常使用。不得自动拨打真实号码代替用户操作。
 
-本轮本地验证：`sh android-standalone/test.sh` 完整通过，其中新增 13 组通话生命周期场景和 2 组真实网关并发场景；Android 29–35 短信兼容、旧 API 检查、PCM 桥及其他原有测试通过。Standalone 与 AVF Bridge 的 debug APK 均完成构建和签名校验，Manifest 版本为 `0.9.7.1 (86)`、最低 API 29。构建仍有已有 Android API 弃用和工具链提示，没有构建错误。
+本轮本地验证：`sh apps/android/standalone/test.sh` 完整通过，其中新增 13 组通话生命周期场景和 2 组真实网关并发场景；Android 29–35 短信兼容、旧 API 检查、PCM 桥及其他原有测试通过。Standalone 与 AVF Bridge 的 debug APK 均完成构建和签名校验，Manifest 版本为 `0.9.7.1 (86)`、最低 API 29。构建仍有已有 Android API 弃用和工具链提示，没有构建错误。
 
 产物：
 
-- Standalone：`android-standalone/build/android/AirSIM-Android-Standalone-debug.apk`；SHA-256 `d1462571794e50b0d1df368786aee5a4375ce73eb506d7d7536922fc82e07f6d`。
-- AVF Bridge：`android/phone-control-app/build/android/AirSIM-Phone-Bridge-debug.apk`；SHA-256 `03f58a535a5fe9d664040bb9f326c4dfe9cac75f033712a0781c9e8e46c4fd13`。
+- Standalone：`apps/android/standalone/build/android/SimHelp-Android-Standalone-debug.apk`；SHA-256 `d1462571794e50b0d1df368786aee5a4375ce73eb506d7d7536922fc82e07f6d`。
+- AVF Bridge：`apps/android/phone-control/build/android/SimHelp-Phone-Bridge-debug.apk`；SHA-256 `03f58a535a5fe9d664040bb9f326c4dfe9cac75f033712a0781c9e8e46c4fd13`。
 
 测试记录：`/tmp/airsim-remote-mute-86-final-tests.log`、`/tmp/airsim-remote-mute-86-bridge-build.log`。未覆盖安装、未执行真实电话或短信、未再次部署生产 Relay。

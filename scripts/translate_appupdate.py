@@ -1,5 +1,5 @@
 from pathlib import Path
-p=Path(__file__).resolve().parents[1]/'iOS/AirSIM/AppUpdateView.swift'
+p=Path(__file__).resolve().parents[1]/'apps/ios/AirSIM/AppUpdateView.swift'
 s=p.read_text(encoding='utf8')
 m={
 '支持连接运行兼容 SimHelp 设备端的 U30Air，在 iPhone 上使用通话与短信功能。':'Supports U30Air with a compatible SimHelp device for calls and messages on iPhone.',

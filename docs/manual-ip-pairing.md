@@ -2,21 +2,21 @@
 
 2026-10-29 未发布恢复修复：网络切换后保留其他 VPN 私网地址作为未验证候选，不再仅保留 Tailscale 100.64/10；蜂窝下可单次重新验证，LAN/VPN fallback 每轮有界。仍需签名身份检查，不能把保存地址等同在线，不能解决 VPN 自身不通或端口变化。日志证据、限制与复测见 [隧道反馈复查](handoff/2026-10-29-tunnel-recovery-review.md)。下文 build 83 为历史实现说明。
 
-适用于自动发现一直停在“发现中”、但两端 IP 可以互访的场景。手动地址只是现有 VoWLAN 直连的发现替代方式，不增加第四种通话模式，不要求开启 AirSIM 云端，也不改变蓝牙模式或自动选择顺序。安卓 APK 和 iOS App 都需更新；已发布 build 81 不支持此入口。候选版尚未发布，真实 Tailscale 设备验收待执行。
+适用于自动发现一直停在“发现中”、但两端 IP 可以互访的场景。手动地址只是现有 VoWLAN 直连的发现替代方式，不增加第四种通话模式，不要求开启 SimHelp 云端，也不改变蓝牙模式或自动选择顺序。安卓 APK 和 iOS App 都需更新；已发布 build 81 不支持此入口。候选版尚未发布，真实 Tailscale 设备验收待执行。
 
 公网域名首次配对及已配对设备添加域名属于试验性功能，请见 [NAS／软路由自建域名 TLS 直连](self-hosted-tls-direct.md)。它使用独立的「公网域名」入口与可信 HTTPS，不放宽本页「私网 IP」的地址限制。
 
 ## 使用
 
-1. 安卓确认 AirSIM 默认电话角色和 Shizuku PCM 桥已就绪，再打开“一次性配对”窗口。
+1. 安卓确认 SimHelp 默认电话角色和 Shizuku PCM 桥已就绪，再打开“一次性配对”窗口。
 2. iPhone「设置 → 安卓连接 → 配对安卓手机」切换“私网 IP”。
-3. 输入安卓局域网 IPv4，或安卓在 Tailscale App 中显示的 IPv4；另填安卓 AirSIM 当次配对页显示的随机配对端口及六位码。端口每次开窗口可能变化，有效期两分钟。
+3. 输入安卓局域网 IPv4，或安卓在 Tailscale App 中显示的 IPv4；另填安卓 SimHelp 当次配对页显示的随机配对端口及六位码。端口每次开窗口可能变化，有效期两分钟。
 4. “本地模式配对”打开时不读取或写入 Relay／推送参数；关闭时仍按原规则要求云端配置就绪。它只控制本次配对，不改全局模式。
 5. 点击“连接并加密配对”。App 自动取得实际控制与 PCM 端口，认证通过后保存直连地址；拨号和短信继续复用现有 VoWLAN 控制、媒体链路。
 
 **不要填无线 ADB 端口、7592/7593 的通话端口或 Linux 8575/8576。** 第一版只支持 IPv4，不支持主机名、MagicDNS、IPv6、URL 或路径。
 
-使用 Tailscale 时，两端需已接入允许互访的 tailnet，且访问规则允许配对及实际控制／PCM 端口。安卓可能无法枚举出 userspace Tailscale 的虚拟 IP，因此配对页也会提示从 Tailscale App 复制本机 IPv4。不能仅凭看到 `100.x` 就确认网络已连通。Tailscale 使用范围为 [`100.64.0.0/10`](https://tailscale.com/docs/concepts/tailscale-ip-addresses)，不是所有 `100.x` 地址。AirSIM 不内嵌 Tailscale，不更改其登录、VPN、退出节点或 ACL；Tailscale 本身仍可能使用其转发节点。
+使用 Tailscale 时，两端需已接入允许互访的 tailnet，且访问规则允许配对及实际控制／PCM 端口。安卓可能无法枚举出 userspace Tailscale 的虚拟 IP，因此配对页也会提示从 Tailscale App 复制本机 IPv4。不能仅凭看到 `100.x` 就确认网络已连通。Tailscale 使用范围为 [`100.64.0.0/10`](https://tailscale.com/docs/concepts/tailscale-ip-addresses)，不是所有 `100.x` 地址。SimHelp 不内嵌 Tailscale，不更改其登录、VPN、退出节点或 ACL；Tailscale 本身仍可能使用其转发节点。
 
 ## 重连与清理
 
@@ -38,6 +38,6 @@ Tailscale 地址的 HTTP 控制与 PCM 使用系统 VPN 路由，不强制绑定
 
 ## 验证边界
 
-本地候选 build 83 已通过 iOS 122 项回归测试、Android Standalone 完整测试（含 47 项 PCM 桥检查）及真实 TCP PCM 集成测试；Release 归档、两种 APK 签名校验和 full／sideload 未签名 IPA 结构校验通过。安装包在 `iOS/build/candidate83/`，未安装或发布；IPA 需要重新签名，不能直接安装。
+本地候选 build 83 已通过 iOS 122 项回归测试、Android Standalone 完整测试（含 47 项 PCM 桥检查）及真实 TCP PCM 集成测试；Release 归档、两种 APK 签名校验和 full／sideload 未签名 IPA 结构校验通过。安装包在 `apps/ios/build/candidate83/`，未安装或发布；IPA 需要重新签名，不能直接安装。
 
 回归覆盖地址／端口边界、公网拒绝、跨端 HMAC 向量、完整加密 claim 与篡改端口拒绝、保存／删除／绑定、失效手动地址与新 Bonjour 合并、真实 TCP 超时和取消，以及 JVM 真实 TCP PCM 卡握手清理、进程内语音门闩恢复和按通话 ID 断链清理。这些不等同于 iPhone＋安卓＋Tailscale 真机验收；仍需检查实际配对、冷启动重连、双向音频、短信、VPN 断开、局域网切换及其他通话不受影响。

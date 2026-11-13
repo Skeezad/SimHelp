@@ -6,7 +6,7 @@
 
 用户已确认 Debug 129 + 官方 Shizuku 13.5.4 下，Redmi 9 与 iPhone 的通话双向都有声音。这是用户手动通话的反馈，不代表所有联发科设备已兼容。
 
-本次复用 iOS/U30 Air 已有的 `AIRSIMEM1` 协议，在 Redmi 9 的 Standalone VoWLAN 网关增加接通前只收下行的通道。仅匹配 Xiaomi/Redmi、lancelot、mt6768。未更改 iOS、U30 Air、AVF、云端 Relay 或 VoBLE 音频协议；旧客户端继续使用原通话路径，其他安卓设备不开放本试验接口。
+本次复用 apps/ios/U30 Air 已有的 `AIRSIMEM1` 协议，在 Redmi 9 的 Standalone VoWLAN 网关增加接通前只收下行的通道。仅匹配 Xiaomi/Redmi、lancelot、mt6768。未更改 iOS、U30 Air、AVF、云端 Relay 或 VoBLE 音频协议；旧客户端继续使用原通话路径，其他安卓设备不开放本试验接口。
 
 两个用户场景分别处理：
 
@@ -30,10 +30,10 @@
 
 ## 自动化验证与安装
 
-- `sh android/phone-control-app/test.sh` 通过：早期租约 20 项断言（含固定 HMAC 向量）；真实 TCP 网关测试覆盖错误签名、只收下行、上行拒绝、接通/结束/取消配对/关闭连接后的撤销、无误挂断及门闩复用；现有拨号、PCM 和短信回归通过。
-- `sh android/phone-audio-bridge/build.sh` 通过：执行真实初始化代码的 Android 边界测试验证合成下行、没有创建 AudioTrack、上行拒绝及 AudioRecord 释放；原双向 Redmi 初始化和格式转换测试通过。
+- `sh apps/android/phone-control/test.sh` 通过：早期租约 20 项断言（含固定 HMAC 向量）；真实 TCP 网关测试覆盖错误签名、只收下行、上行拒绝、接通/结束/取消配对/关闭连接后的撤销、无误挂断及门闩复用；现有拨号、PCM 和短信回归通过。
+- `sh apps/android/audio-bridge/build.sh` 通过：执行真实初始化代码的 Android 边界测试验证合成下行、没有创建 AudioTrack、上行拒绝及 AudioRecord 释放；原双向 Redmi 初始化和格式转换测试通过。
 - Debug APK 构建成功，`git diff --check` 通过。测试仅使用合成 PCM，不等于运营商实机验收。
-- 包：`android-standalone/build/redmi9-130/AirSIM-Standalone-Redmi9-130-debug.apk`。
+- 包：`apps/android/standalone/build/redmi9-130/SimHelp-Standalone-Redmi9-130-debug.apk`。
 - SHA-256：`b566efa5ef4fc88918d1a0e91f01de8c428789151c833161c76e5d0c1afbd6cf`。
 - 已在 Redmi 9 通过 `install -r --no-incremental` 覆盖安装，未卸载或清除数据；设备报告 `0.9.8.21-redmi9-debug / 130`，启动成功，Shizuku 用户服务重新连接并出现 `bridge_listening`。空闲时 `pcm_initialized=false` 正常。
 - 正式发布 manifest 未改，仅临时构建 manifest 增加测试 build。没有提交、推送、发布 Release 或部署 Worker。
@@ -60,10 +60,10 @@
 
 131 修复：统一准备状态判定，CONNECTING / SELECT_PHONE_ACCOUNT / DIALING 保留同一回执和 session；只有 DIALING 可真正打开只收下行通道。ACTIVE、DISCONNECTING、DISCONNECTED 等状态仍撤销；迟到的准备状态不能恢复已撤销授权。新增不含通话 ID、号码或密钥的探测结果日志（pending / ready / revoked / unsupported）。
 
-回归覆盖真实重复 CONNECTING 顺序、准备阶段 session 稳定、三种接通/终态后不可复活，以及经过此顺序后的签名 TCP 下行。新构建使用通用命名 `AirSIM-Android-Standalone`、版本名 `0.9.8.21`，不设厂商版本。
+回归覆盖真实重复 CONNECTING 顺序、准备阶段 session 稳定、三种接通/终态后不可复活，以及经过此顺序后的签名 TCP 下行。新构建使用通用命名 `SimHelp-Android-Standalone`、版本名 `0.9.8.21`，不设厂商版本。
 
 这修复了已证实的授权时序缺陷；运营商语音实际可听仍需安装后手动复测。已接通后的终态处理保持不变，不为播放公告延迟结束。
 
-`sh android/phone-control-app/test.sh` 全部通过，包含新增状态回归与真实 TCP 测试；APK 构建和 `git diff --check` 通过。已保留数据覆盖安装 `0.9.8.21 (131)` 并启动成功。包为 `android-standalone/build/candidate-131/AirSIM-Android-Standalone-debug.apk`，SHA-256：`f6eb82a332c1cd5d8daa5ece11a6c2a23d77080acd77a33f488e873f9ab97c89`。未更新 iPhone、发布或替用户发起通话。
+`sh apps/android/phone-control/test.sh` 全部通过，包含新增状态回归与真实 TCP 测试；APK 构建和 `git diff --check` 通过。已保留数据覆盖安装 `0.9.8.21 (131)` 并启动成功。包为 `apps/android/standalone/build/candidate-131/SimHelp-Android-Standalone-debug.apk`，SHA-256：`f6eb82a332c1cd5d8daa5ece11a6c2a23d77080acd77a33f488e873f9ab97c89`。未更新 iPhone、发布或替用户发起通话。
 
 用户随后手动复测并反馈“有了”，确认此次运营商音频可以听到。未单独确认的接通后挂断、所有运营商及不同机型仍不扩大为已验收。

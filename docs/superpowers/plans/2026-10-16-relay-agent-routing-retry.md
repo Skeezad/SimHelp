@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - 不执行生产部署、真机安装、提交推送、Release、TestFlight 或账户套餐调整。
-- 现有未提交的 build 82–85 改动保留；使用 `/Users/kyle/.codex/worktrees/voble/AirSIM`，不修改另一个主 checkout。
+- 现有未提交的 build 82–85 改动保留；使用 `/Users/kyle/.codex/worktrees/voble/SimHelp`，不修改另一个主 checkout。
 - 保持 VoWLAN、VoBLE 与当前连接模式独立；不改变默认 SIM、媒体编解码、正常心跳间隔，不新增 iOS Relay 状态查询定时器。
 - 连接至少稳定 60 秒才清零；普通失败 3、6、12、24、48、60 秒并附加最多 25% 抖动；429／5xx 15 秒起、最高 300 秒，不能缩短有效 Retry-After；4001 至少冷却 60 秒。
 - Agent ID 是有界、不含控制字符的非空标识，不是鉴权凭据；设备 Secret、call UUID、generation、owner 检查保持。
@@ -35,11 +35,11 @@
 
 | 文件 | 职责 |
 | --- | --- |
-| `push-relay-worker/src/command-routing.mjs` | Agent ID 验证、scope key、缺省目标判定、归属比较 |
-| `push-relay-worker/test/helpers/command-fixtures.mjs` | 无网络的 storage / socket / Response 101 测试边界 |
-| `android/phone-control-app/src/com/airsim/phonecontrol/RelayCommandRetryState.java` | 有状态退避、共享冷却和 epoch 失效 |
-| `android/phone-control-app/src/com/airsim/phonecontrol/WebSocketPeerClose.java` | 有类型的关闭码和允许列表原因分类 |
-| `iOS/AirSIM/CloudAgentRouting.swift` | 目标快照、能力要求、结果查询退避纯策略 |
+| `services/relay/src/command-routing.mjs` | Agent ID 验证、scope key、缺省目标判定、归属比较 |
+| `services/relay/test/helpers/command-fixtures.mjs` | 无网络的 storage / socket / Response 101 测试边界 |
+| `apps/android/phone-control/src/com/simhelp/phonecontrol/RelayCommandRetryState.java` | 有状态退避、共享冷却和 epoch 失效 |
+| `apps/android/phone-control/src/com/simhelp/phonecontrol/WebSocketPeerClose.java` | 有类型的关闭码和允许列表原因分类 |
+| `apps/ios/SimHelp/CloudAgentRouting.swift` | 目标快照、能力要求、结果查询退避纯策略 |
 
 对外新增动作入口（旧入口保留）：
 
@@ -60,7 +60,7 @@
 
 ### Task 1: 连接身份与替换隔离
 
-**Files:** Create `push-relay-worker/src/command-routing.mjs`、`test/helpers/command-fixtures.mjs`、`test/command-routing.test.mjs`；modify `push-relay-worker/src/index.mjs` 的 connect handler 和 `DeviceCommandSession`。
+**Files:** Create `services/relay/src/command-routing.mjs`、`test/helpers/command-fixtures.mjs`、`test/command-routing.test.mjs`；modify `services/relay/src/index.mjs` 的 connect handler 和 `DeviceCommandSession`。
 
 **Interfaces:**
 
@@ -111,7 +111,7 @@ for (const old of this.state.getWebSockets("agent")) {
 
 ### Task 2: 命令归属、补拉与回执隔离
 
-**Files:** Modify `push-relay-worker/src/index.mjs` 的 enqueue/pending/complete/flush/alarm/rescue 和 `sameCommandIntent`；extend `test/command-routing.test.mjs`、`test/relay.test.mjs`。
+**Files:** Modify `services/relay/src/index.mjs` 的 enqueue/pending/complete/flush/alarm/rescue 和 `sameCommandIntent`；extend `test/command-routing.test.mjs`、`test/relay.test.mjs`。
 
 **Interfaces:** Consumes Task 1 helpers。记录新增 `target_agent_id`；`completeCommand(value, callerAgentID)` 验证归属后再执行幂等完成；`flushPending(socket)` 从 attachment 得到 caller。内部 HTTP caller 身份只由经认证的外部 handler 写入。
 
@@ -145,7 +145,7 @@ if (!matchesTarget(record.target_agent_id, callerAgentID)) continue;
 
 ### Task 3: 版本化 HTTP 边界与通话目标固定
 
-**Files:** Modify `push-relay-worker/src/index.mjs`、`src/status-store.mjs`（心跳能力字段透传）、`test/relay.test.mjs`；extend routing tests。
+**Files:** Modify `services/relay/src/index.mjs`、`src/status-store.mjs`（心跳能力字段透传）、`test/relay.test.mjs`；extend routing tests。
 
 **Interfaces:** 新 `/v2` 路径见上表；call 状态新增 `agent_id`。请求 `target_agent_id`、持久化 `target_agent_id`、call `agent_id` 对应同一安卓，不能用 active heartbeat 覆盖。
 
@@ -177,12 +177,12 @@ command.target_agent_id = call.agent_id ?? null;
 
 ### Task 4: Standalone 重连冷却、关闭帧与协议身份
 
-**Files:** Create `RelayCommandRetryState.java`、`WebSocketPeerClose.java` under `android/phone-control-app/src/com/airsim/phonecontrol/`；create matching `RelayCommandRetryTests.java` and `WebSocketPeerCloseTests.java` under shared test package；modify `StandaloneAgentService.java`、`StandaloneWebSocket.java`、`StandaloneRelayClient.java`、`RelayHTTPException.java`、`StandaloneCloudMediaManager.java`、`CommandPollingPolicy.java`、shared `test.sh`。
+**Files:** Create `RelayCommandRetryState.java`、`WebSocketPeerClose.java` under `apps/android/phone-control/src/com/simhelp/phonecontrol/`；create matching `RelayCommandRetryTests.java` and `WebSocketPeerCloseTests.java` under shared test package；modify `StandaloneAgentService.java`、`StandaloneWebSocket.java`、`StandaloneRelayClient.java`、`RelayHTTPException.java`、`StandaloneCloudMediaManager.java`、`CommandPollingPolicy.java`、shared `test.sh`。
 
 **Interfaces:**
 
 ```text
-package: com.airsim.phonecontrol
+package: com.simhelp.phonecontrol
 record RetryDecision(long delayMillis, int failures, String reason)
 RelayCommandRetryState.failed(long nowMillis, long connectedDurationMillis, Throwable error, double jitterUnit): RetryDecision
 RelayCommandRetryState.remainingMillis(long nowMillis): long
@@ -207,7 +207,7 @@ check(retry.remainingMillis(5000) > 0, "HTTP pull shares WebSocket cooldown");
 
 关闭帧用实际字节解析：空 payload=无状态；长度1拒绝；非法保留关闭码拒绝；非法 UTF-8 拒绝；合法4001映射replaced，诊断不包含原始原因正文。
 
-- [ ] **2. RED。** 将新测试接入共享 test.sh，运行 `./android-standalone/test.sh`，确认缺策略／旧行为导致失败，未触发真实短信或电话。
+- [ ] **2. RED。** 将新测试接入共享 test.sh，运行 `./apps/android/standalone/test.sh`，确认缺策略／旧行为导致失败，未触发真实短信或电话。
 - [ ] **3. 实现解析与策略。** `RelayHTTPException` 新增 retryAfterMillis（保留旧构造器）；HTTP 响应和 WSS 握手均解析 Retry-After 秒数／HTTP-date 后转为 duration。握手资源在所有失败路径 finally 关闭；成功返回后才转移 socket 所有权。策略核心如下，所有输入取测试传入值：
 
 ```java
@@ -221,11 +221,11 @@ long delay = base + (long) (base * .25 * unit);
 ```
 - [ ] **4. 接入服务。** 命令连接用 `/v2/.../commands/connect?agent_id=`；pull/complete 用 `/v2` 并携带当前 Agent ID。握手成功只记录单调 connectedAt，不清零；断线时调用策略。HTTP pull 同时受 `commandChannelConnected`、15秒间隔和共享冷却约束。429／5xx 的 HTTP/WSS 任一路失败都延长同一截止时间；心跳维持原间隔和既有错误处理。
 - [ ] **5. 取消与日志测试后实现。** 用可关闭的 socket factory 测试 service lifecycle：关闭云端、换 device/relay/secret/agent 或停止服务会关闭旧 socket，epoch 失效后不能重连；metadata／号码变化不能无故重连。新来电与 call-state 使用 `/v2/events` 带源 ID，心跳声明 command_routing_version。日志只输出代次、存活时长、原因类别、失败档位、等待值和兜底开关。
-- [ ] **6. GREEN 与构建。** `./android-standalone/test.sh` 和 `./android/phone-control-app/build.sh`；核对 Android API 29–35 兼容检查。不得运行安装脚本，也不要覆盖 candidate85 已验证安装包。
+- [ ] **6. GREEN 与构建。** `./apps/android/standalone/test.sh` 和 `./apps/android/phone-control/build.sh`；核对 Android API 29–35 兼容检查。不得运行安装脚本，也不要覆盖 candidate85 已验证安装包。
 
 ### Task 5: AVF Agent 身份、关闭原因与旧配置安全失败
 
-**Files:** Modify `module/module-agent/cloud_command.go`、`cloud_command_test.go`、`cloud_websocket.go`、对应 websocket tests、`push.go`、`push_test.go`。
+**Files:** Modify `services/gateway/module-agent/cloud_command.go`、`cloud_command_test.go`、`cloud_websocket.go`、对应 websocket tests、`push.go`、`push_test.go`。
 
 **Interfaces:** `cloudDeviceCommand.TargetAgentID string`、`cloudCommandCall.AgentID string`；`cloudCommandURL(registration)` 用 `url.Values` 生成 v2 agent_id query。`pushManager.pullCommands()`、`completeCommand()` 从同一 registration 快照携带 `agent_id`。保持命令结果缓存与 `cloudCommandExecMu`。
 
@@ -247,7 +247,7 @@ func TestCloudCommandURLPinsAgentID(t *testing.T) {
 
 补测空 Agent ID 的旧配置不给自己捏造新身份，不访问 Relay 死循环；HTTP pull/complete 使用同一 ID；目标不匹配在执行 AT／Android 命令前失败；旧 Relay 404／405 不回退 v1；关闭码4001保留原因但不输出任意服务器正文；现有一分钟稳定连接后清零测试不退化。
 
-- [ ] **2. RED。** `(cd module/module-agent && go test ./...)`；确认 URL 路径、身份或目标检查的断言失败。
+- [ ] **2. RED。** `(cd services/gateway/module-agent && go test ./...)`；确认 URL 路径、身份或目标检查的断言失败。
 - [ ] **3. 实现。** 更新 URL／payload／event 路径与源 Agent 字段，先核对 target 再调用既有去重执行器。注册没有 AndroidAgentID 时显示需补全原配对配置，不删除数据、不用号码生成 ID；重试前等待本地配置变化／有界休眠。保留既有稳定连接判定与有限退避，新增关闭分类。
 
 ```go
@@ -260,7 +260,7 @@ relay.RawQuery = query.Encode()
 
 ### Task 6: iOS 目标快照、能力与结果查询
 
-**Files:** Create `iOS/AirSIM/CloudAgentRouting.swift`；modify `VoIPPushController.swift`、`APIModels.swift`、`AppModel.swift`、`IPhoneCloudCallSession.swift`、`iOS/AirSIM.xcodeproj/project.pbxproj`；extend `iOS/AirSIMTests/AirSIMTests.swift`。
+**Files:** Create `apps/ios/SimHelp/CloudAgentRouting.swift`；modify `VoIPPushController.swift`、`APIModels.swift`、`AppModel.swift`、`IPhoneCloudCallSession.swift`、`apps/ios/SimHelp.xcodeproj/project.pbxproj`；extend `apps/ios/SimHelpTests/SimHelpTests.swift`。
 
 **Interfaces:**
 
@@ -293,7 +293,7 @@ func testShortResultPollingRemainsBounded() {
 
 再测：新能力缓存仍在、服务器只支持 v1 时，新动作只请求 `/v2` 并因404明确失败，不调用 v1；进入终态或任务取消后停止查询；旧无agent push按legacy展示，不根据当前绑定填充虚假源 ID。
 
-- [ ] **2. RED。** 用原模拟器测试命令执行 AirSIMTests，新策略／编码断言应失败；不同时运行两个共用 DerivedData 的 Xcode 构建。
+- [ ] **2. RED。** 用原模拟器测试命令执行 SimHelpTests，新策略／编码断言应失败；不同时运行两个共用 DerivedData 的 Xcode 构建。
 - [ ] **3. 实现。** AppModel 发起云端动作前快照目标；`boundCloudReady` 不再要求目标恰好是“最后心跳 Agent”，而是该 Agent 自身在线并支持定向。采用 v2 路径；请求失败不得自动回退 v1。结果查询0.5、1、2秒封顶，不新增常驻循环；每次请求与 sleep 前后检查取消和超时，终态立即退出。
 
 ```swift
@@ -304,11 +304,11 @@ try await Task.sleep(for: .seconds(CloudAgentRouting.resultDelay(attempt: attemp
 try Task.checkCancellation()
 ```
 - [ ] **4. 通话动作。** CloudCallControlClient 采用 v2 call actions；DTMF 使用锁定 call 的 agentID、UUID、generation，不能读当前选择。保持现有结束 tombstone 和异步代次保护，挂断后不复活页面。
-- [ ] **5. GREEN。** 完整 iOS 130项基线加新回归通过；新文件加入主target及测试可见的源列表，不加入不需要 UIKit 的扩展。无签名 iOS/Watch 构建通过，不安装／上传。
+- [ ] **5. GREEN。** 完整 iOS 130项基线加新回归通过；新文件加入主target及测试可见的源列表，不加入不需要 UIKit 的扩展。无签名 apps/ios/Watch 构建通过，不安装／上传。
 
 ### Task 7: Watch 及来电全链路归属
 
-**Files:** Modify `iOS/AirSIM/WatchCallCoordinator.swift`、`iOS/Shared/WatchCallPayload.swift`、`iOS/AirSIMWatchApp/WatchCallSession.swift`、`iOS/Shared/AirSIMLiveActivityShared.swift` 中实际生成云端动作的部分；extend iOS tests。
+**Files:** Modify `apps/ios/SimHelp/WatchCallCoordinator.swift`、`apps/ios/Shared/WatchCallPayload.swift`、`apps/ios/SimHelpWatchApp/WatchCallSession.swift`、`apps/ios/Shared/SimHelpLiveActivityShared.swift` 中实际生成云端动作的部分；extend iOS tests。
 
 **Interfaces:** `WatchVoIPCall.agentID: String?`，现有 WatchConnectivity reply／call payload 使用 `agent_id`；legacy 字段缺失仍可解码。新 Watch 呼出由 iPhone 在发起时决定唯一 `CloudCommandTarget`，回执与后续动作保存该快照。
 
@@ -341,7 +341,7 @@ self.agentID = userInfo["agent_id"] as? String
 
 ### Task 8: 混合版本、完整验证与文档交付
 
-**Files:** Update `push-relay-worker/README.md`、`android-standalone/README.md`、`android/phone-control-app/README.md`、`iOS/README.md`、`docs/AVF_INSTALL_GUIDE.md`、`README.md`、`LLM.txt`、`codex.md`、`claude.md`；create `docs/relay-agent-routing.md`。
+**Files:** Update `services/relay/README.md`、`apps/android/standalone/README.md`、`apps/android/phone-control/README.md`、`apps/ios/README.md`、`docs/AVF_INSTALL_GUIDE.md`、`README.md`、`LLM.txt`、`codex.md`、`claude.md`；create `docs/relay-agent-routing.md`。
 
 **Interfaces:** 对外协议字段和错误码以任务1–7为准；测试不得调用维护者生产 Relay；不把本轮源码状态写成已经发布。
 
@@ -351,19 +351,19 @@ self.agentID = userInfo["agent_id"] as? String
 
 ```sh
 (cd push-relay-worker && npm test && npm run check)
-./android-standalone/test.sh
-(cd module/module-agent && go test ./... && go test -race ./...)
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+./apps/android/standalone/test.sh
+(cd services/gateway/module-agent && go test ./... && go test -race ./...)
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination 'platform=iOS Simulator,id=C61995AB-0BE5-4AA8-BD06-2E7AB8E58449' \
-  -derivedDataPath /tmp/AirSIM-VoBLE-derived CODE_SIGNING_ALLOWED=NO \
+  -derivedDataPath /tmp/SimHelp-VoBLE-derived CODE_SIGNING_ALLOWED=NO \
   -parallel-testing-enabled NO test
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -configuration Release -destination 'generic/platform=iOS' \
-  -derivedDataPath /tmp/AirSIM-VoBLE-derived CODE_SIGNING_ALLOWED=NO build
+  -derivedDataPath /tmp/SimHelp-VoBLE-derived CODE_SIGNING_ALLOWED=NO build
 git diff --check
 ```
 
-模拟器 UUID 必须先用本机设备列表确认仍可用；若变化只替换命令中的已验证 UUID，不创建／删除用户设备。Android测试会重建忽略的debug构建目录，不覆盖`iOS/build/candidate85`；本轮无发布产物要求。
+模拟器 UUID 必须先用本机设备列表确认仍可用；若变化只替换命令中的已验证 UUID，不创建／删除用户设备。Android测试会重建忽略的debug构建目录，不覆盖`apps/ios/build/candidate85`；本轮无发布产物要求。
 
 - [ ] **4. 文档与隐私复核。** 说明 v2 / v1、唯一目标／歧义拒绝、旧配置需补配、心跳不变、部署顺序和回退限制。检索本轮新增日志，确认无 raw body、query URL、服务器任意reason或私密字段。既有diff保留；不暂存无关改动，不自动commit。
 - [ ] **5. 完成前复核。** 依verification-before-completion流程核对实际命令退出码及新旧测试数，记录未执行的真机／生产步骤。按执行方式做最终审查；若使用独立只读审查，限制为本轮改动，不授权修改或部署。

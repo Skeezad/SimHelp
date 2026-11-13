@@ -22,7 +22,7 @@ Android 官方说明：[PhoneAccount](https://developer.android.com/reference/an
 
 ## 构建与实机结果
 
-完整 `sh android/phone-control-app/test.sh`、Debug 构建与 `git diff --check` 均通过。已保留数据覆盖安装统一版本 `0.9.8.21 (132)`，启动成功。包为 `android-standalone/build/candidate-132/AirSIM-Android-Standalone-debug.apk`，SHA-256：`37cc7fafc8a9e17dfa40bb53e7ffbd1892eae09b2f8d72ed1a981d0063460ece`。
+完整 `sh apps/android/phone-control/test.sh`、Debug 构建与 `git diff --check` 均通过。已保留数据覆盖安装统一版本 `0.9.8.21 (132)`，启动成功。包为 `apps/android/standalone/build/candidate-132/SimHelp-Android-Standalone-debug.apk`，SHA-256：`37cc7fafc8a9e17dfa40bb53e7ffbd1892eae09b2f8d72ed1a981d0063460ece`。
 
 安装后通过原配对认证重新读取真实 `/v1/health`：
 

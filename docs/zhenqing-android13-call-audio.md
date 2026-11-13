@@ -25,9 +25,9 @@ Android Standalone／Bridge 候选版本 `0.9.8.1 (93)`，尚未发布，尚未�
 
 JVM 回归覆盖零／非零系统最低档、原来已静音、重复接管、音量及静音漂移、OEM 忽略写入、失败回滚、恢复重试、三星及其他厂商行为不变，以及实际控制器参与的 Watchdog 修复。构建／模拟边界测试不能代替声学验收。
 
-本地已运行 `sh android-standalone/test.sh`，退出码 0，包含 API 29–35 短信兼容、旧 API 检查、18 组通话静音生命周期、PCM 集成、网关生命周期和拨号归属测试。新回归先在旧行为下出现 3 个预期断言失败，修正后通过。构建有已有 Android API 弃用及 JDK 工具链提示，无编译错误。只读审查无 Critical／Important 问题；已补充服务销毁恢复为尽力而为的说明。
+本地已运行 `sh apps/android/standalone/test.sh`，退出码 0，包含 API 29–35 短信兼容、旧 API 检查、18 组通话静音生命周期、PCM 集成、网关生命周期和拨号归属测试。新回归先在旧行为下出现 3 个预期断言失败，修正后通过。构建有已有 Android API 弃用及 JDK 工具链提示，无编译错误。只读审查无 Critical／Important 问题；已补充服务销毁恢复为尽力而为的说明。
 
-已构建正式证书签名的 Standalone 候选包（非正式发布），版本 `0.9.8.1 (93)`、`debuggable=false`，签名验证通过且与既有正式包证书 SHA-256 一致。产物位于 `android-standalone/build/candidate-0.9.8.1-93/AirSIM-Android-Standalone-0.9.8.1-93-release.apk`，文件 SHA-256：`6bee2e64150e77e0ce06c274a2efbb4af535f39dfc94efaa8e8c47d419aefedf`。未安装、未提交推送、未发布 Release，未部署 Relay。
+已构建正式证书签名的 Standalone 候选包（非正式发布），版本 `0.9.8.1 (93)`、`debuggable=false`，签名验证通过且与既有正式包证书 SHA-256 一致。产物位于 `apps/android/standalone/build/candidate-0.9.8.1-93/SimHelp-Android-Standalone-0.9.8.1-93-release.apk`，文件 SHA-256：`6bee2e64150e77e0ce06c274a2efbb4af535f39dfc94efaa8e8c47d419aefedf`。未安装、未提交推送、未发布 Release，未部署 Relay。
 
 需要问题设备覆盖安装后再进行实际通话：接听后确认 iPhone 双向语音、本机最低音量、挂断恢复；分别复测 VoWLAN 和实际使用的其他模式。导出的新 TXT 应显示 `output_policy=minimum_nonzero_volume`、`minimum_volume>=1`、`muted=false`。若持续 `near_zero`／无声，继续采集日志，不以音量已回读成功作为问题解决证据。
 

@@ -1,4 +1,4 @@
-# AirSIM 全尺寸 Widget 概念方案
+# SimHelp 全尺寸 Widget 概念方案
 
 - [01 系统原生](01-native.png)：优先推荐，白底、清晰状态、蓝色入口。
 - [02 连接仪表盘](02-dashboard.png)：深色、高信息密度、多设备概览。

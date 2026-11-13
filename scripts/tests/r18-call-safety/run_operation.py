@@ -8,8 +8,8 @@ UIKit audio or the device server. No real network requests are sent.
 from pathlib import Path
 import tempfile, subprocess
 import run as core
-api = core.source('AirSIMAPI.swift'); router = core.source('DeviceCallActionRouter.swift')
-tests = (core.root/'iOS/AirSIMTests/AirSIMTests.swift').read_text()
+api = core.source('SimHelpAPI.swift'); router = core.source('DeviceCallActionRouter.swift')
+tests = (core.root/'apps/ios/SimHelpTests/SimHelpTests.swift').read_text()
 methods = core.between(api, '    func dialOwnedCall(', '    func answerCall(')
 require = core.between(api, '    private static func requireSuccess', '\n}\n\nenum APIError')
 adapter = r'''

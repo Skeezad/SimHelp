@@ -22,7 +22,7 @@
 
 同时验证前台恢复、无效身份凭据不能恢复在线、重复网络通知不使恢复任务失效、通话模式约束。
 
-2026-11-02：iOS 模拟器构建通过，上述 9 项定向回归全部通过，`git diff --check` 通过。测试结果位于本机 `~/Library/Developer/XcodeBuildMCP/workspaces/AirSIM-f427c59789df/result-bundles/test_sim_2026-11-02T01-24-14-436Z_pid50551_9ffefed0.xcresult`。一次测试启动挂起后重新启动测试成功；这些测试不等同于真实 VPN/Wi-Fi 环境验收。
+2026-11-02：iOS 模拟器构建通过，上述 9 项定向回归全部通过，`git diff --check` 通过。测试结果位于本机 `~/Library/Developer/XcodeBuildMCP/workspaces/SimHelp-f427c59789df/result-bundles/test_sim_2026-11-02T01-24-14-436Z_pid50551_9ffefed0.xcresult`。一次测试启动挂起后重新启动测试成功；这些测试不等同于真实 VPN/Wi-Fi 环境验收。
 
 ## 真机验收步骤
 

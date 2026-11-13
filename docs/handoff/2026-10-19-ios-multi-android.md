@@ -1,4 +1,4 @@
-# AirSIM Handoff：iOS 多安卓配对修复
+# SimHelp Handoff：iOS 多安卓配对修复
 
 交接日期：2026-10-19（Asia/Shanghai）。本文是本地工作区快照，不是发布或真机验收回执。
 
@@ -16,10 +16,10 @@
 
 | 项目 | 快照 |
 | --- | --- |
-| 实际修改的 checkout | `/Users/kyle/.codex/worktrees/voble/AirSIM` |
+| 实际修改的 checkout | `/Users/kyle/.codex/worktrees/voble/SimHelp` |
 | 分支 | `VoBLE` |
 | 当前 HEAD | `9e2f80faaeb617d4e5c097972c190ff42c88bab5` |
-| 会话显示的项目目录 | `/Users/kyle/codex project/AirSIM`，不要直接假定它包含本轮改动 |
+| 会话显示的项目目录 | `/Users/kyle/codex project/SimHelp`，不要直接假定它包含本轮改动 |
 | 仓库发布基线记录 | Apps `v0.9.8.1`；Android `0.9.8.1 (95)`；iOS／Watch／Live Activity `0.9.8 (95)` |
 | 本轮版本号 | 未变更；已发布 build 95 不包含这批未提交修复 |
 
@@ -28,7 +28,7 @@
 开始操作前执行：
 
 ```sh
-cd /Users/kyle/.codex/worktrees/voble/AirSIM
+cd /Users/kyle/.codex/worktrees/voble/SimHelp
 git branch --show-current
 git rev-parse HEAD
 git status --short
@@ -44,7 +44,7 @@ git diff --stat
 
 旧逻辑优先显示不可点击的“蓝牙模式”横幅，导致已认证两台手机但未绑定默认设备时，用户没有入口选择拨号目标，而安全路由又拒绝有歧义的拨号。
 
-- [PhoneViews.swift](../../iOS/AirSIM/PhoneViews.swift)：提取并接入 `DialPadAgentSection`，已配对设备的选择入口优先于无设备时的 BLE 横幅。多设备未选定时提示“请选择拨号设备”。
+- [PhoneViews.swift](../../apps/ios/SimHelp/PhoneViews.swift)：提取并接入 `DialPadAgentSection`，已配对设备的选择入口优先于无设备时的 BLE 横幅。多设备未选定时提示“请选择拨号设备”。
 - 沿用原来的 `PairedAndroidAgentsView` 弹窗和 `bindAndroidAgent`，没有新增第二套绑定状态。
 - 同一轮 View 渲染只取一次配对设备快照，避免重复组装列表。
 - 选择入口具有 `dial-pad-device-selector` accessibility identifier。
@@ -54,7 +54,7 @@ git diff --stat
 
 `PairedAndroidDeviceStore.permits(id)` 只判断设备是否被删除／拉黑，不代表它已配对。原先所有 Bonjour 发现候选都能进入列表，并带入未认证的 TXT 名称、号码和类型。
 
-- [AppModel.swift](../../iOS/AirSIM/AppModel.swift)：`pairedAndroidAgents` 使用 `androidAgentPresentations(discoveredAgents:)` 统一组装。
+- [AppModel.swift](../../apps/ios/SimHelp/AppModel.swift)：`pairedAndroidAgents` 使用 `androidAgentPresentations(discoveredAgents:)` 统一组装。
 - 原始 Bonjour／手动地址候选须有配对记录或已注册云端身份才能从该分支进入列表；新完成认证的 LocalDeviceDirectory 和 BLE 设备仍可由各自可信分支加入。
 - 广播只提供发现地址，不再用其号码、名称或类型覆盖可信资料。**发现页面仍可显示未配对设备供首次配对**，没有把发现能力关闭。
 - 复核补充发现：认证 health 没有返回可选 `device_name` 时，旧刷新逻辑会把 TXT 名称存进历史。现由 `rememberVerifiedLocalDevice` 使用认证名称、可信旧记录或通用“Android 手机”，不再回退到 TXT 名称。
@@ -64,7 +64,7 @@ git diff --stat
 
 `DeviceCallRegistry` 原本保留最多 128 条终态历史，但 Router 的 `routes`、`targets` 没有对应清理。
 
-- [DeviceCallActionRouter.swift](../../iOS/AirSIM/DeviceCallActionRouter.swift)：新增 `pruneRetiredCalls()`，在事件处理和完成回调后清理。
+- [DeviceCallActionRouter.swift](../../apps/ios/SimHelp/DeviceCallActionRouter.swift)：新增 `pruneRetiredCalls()`，在事件处理和完成回调后清理。
 - `routes` 跟随 Registry 清理过期终态记录，近期 UUID 作为轻量 tombstone 保留；活动通话不因历史清理而被换路。
 - `targets` 不再保留终态通话的后台对象。异步 dial／answer／end 已在局部变量中捕获准确后端，仍能处理原设备的迟到回复或挂断。
 - `pendingTerminations` 与延迟释放传输的规则未移除；UI 退出不等于可提前断开挂断控制连接。
@@ -73,16 +73,16 @@ git diff --stat
 ### 修改文件清单
 
 ```text
-iOS/AirSIM/AppModel.swift
-iOS/AirSIM/DeviceCallActionRouter.swift
-iOS/AirSIM/PhoneViews.swift
-iOS/AirSIMTests/DeviceCallActionRouterTests.swift
-iOS/AirSIMTests/LocalDeviceDirectoryTests.swift
-iOS/AirSIMTests/VoBLEMultiDeviceTests.swift
-iOS/README.md
+apps/ios/SimHelp/AppModel.swift
+apps/ios/SimHelp/DeviceCallActionRouter.swift
+apps/ios/SimHelp/PhoneViews.swift
+apps/ios/SimHelpTests/DeviceCallActionRouterTests.swift
+apps/ios/SimHelpTests/LocalDeviceDirectoryTests.swift
+apps/ios/SimHelpTests/VoBLEMultiDeviceTests.swift
+apps/ios/README.md
 ```
 
-实现说明与验证边界已同步到 [iOS README](../../iOS/README.md)。
+实现说明与验证边界已同步到 [iOS README](../../apps/ios/README.md)。
 
 ## 4. 测试证据与重跑方式
 
@@ -108,7 +108,7 @@ iOS/README.md
 /tmp/airsim-multi-fix-build-final.log
 /tmp/airsim-multi-fix-final-tests.log
 
-/Users/kyle/Library/Developer/Xcode/DerivedData/AirSIM-gncnqbpdvhboxggpcttuyfioywdp/Logs/Test/Test-AirSIM-2026.10.19_12-01-20-+0800.xcresult
+/Users/kyle/Library/Developer/Xcode/DerivedData/SimHelp-gncnqbpdvhboxggpcttuyfioywdp/Logs/Test/Test-SimHelp-2026.10.19_12-01-20-+0800.xcresult
 ```
 
 最终日志包含 `TEST BUILD SUCCEEDED`、`Executed 276 tests, with 0 failures` 和 `TEST EXECUTE SUCCEEDED`；构建与测试均退出 0。测试用例运行约 33.5 秒，测试命令总计约 48.8 秒。
@@ -116,19 +116,19 @@ iOS/README.md
 重跑示例，先确认目标模拟器仍存在。新的 DerivedData 目录不依赖上述临时产物：
 
 ```sh
-cd /Users/kyle/.codex/worktrees/voble/AirSIM
+cd /Users/kyle/.codex/worktrees/voble/SimHelp
 xcrun simctl list devices available
 
 # 用当前可用的 iPhone 模拟器 ID 替换 SIMULATOR_UDID。
-xcodebuild -project iOS/AirSIM.xcodeproj \
-  -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj \
+  -scheme SimHelp \
   -destination 'platform=iOS Simulator,id=SIMULATOR_UDID' \
   -derivedDataPath /tmp/airsim-handoff-verification \
   CODE_SIGNING_ALLOWED=NO \
   build-for-testing
 
-xcodebuild -project iOS/AirSIM.xcodeproj \
-  -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj \
+  -scheme SimHelp \
   -destination 'platform=iOS Simulator,id=SIMULATOR_UDID' \
   -derivedDataPath /tmp/airsim-handoff-verification \
   CODE_SIGNING_ALLOWED=NO \
@@ -160,11 +160,11 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 
 ## 6. 架构约束与接手入口
 
-- [LocalDeviceDirectory.swift](../../iOS/AirSIM/LocalDeviceDirectory.swift)：每个 Agent 独立的 VoWLAN 凭据、HMAC 身份证明、API／事件轮询。HTTP 200、保存地址或配对缓存不代表在线。
-- [VoBLEDeviceHub.swift](../../iOS/AirSIM/VoBLEDeviceHub.swift)：共享 BLE Radio、每个外设独立认证会话。UI 选中的外设不等于默认拨号 Agent，认证身份不以号码或外设名称推断。
-- [ConnectionModePreference.swift](../../iOS/AirSIM/ConnectionModePreference.swift)：连接模式、默认 Agent 绑定、已配对历史与删除 tombstone。
-- [DeviceCallRegistry.swift](../../iOS/AirSIM/DeviceCallRegistry.swift)：设备＋通话身份／代际、别名合并与终态窗口；不能按号码或到达时序合并通话。
-- [AppModel.swift](../../iOS/AirSIM/AppModel.swift)：`bindAndroidAgent`、`callKitStart(number:)`、`callKitEnd(uuid:)`，以及 Router 回调与传输释放策略。
+- [LocalDeviceDirectory.swift](../../apps/ios/SimHelp/LocalDeviceDirectory.swift)：每个 Agent 独立的 VoWLAN 凭据、HMAC 身份证明、API／事件轮询。HTTP 200、保存地址或配对缓存不代表在线。
+- [VoBLEDeviceHub.swift](../../apps/ios/SimHelp/VoBLEDeviceHub.swift)：共享 BLE Radio、每个外设独立认证会话。UI 选中的外设不等于默认拨号 Agent，认证身份不以号码或外设名称推断。
+- [ConnectionModePreference.swift](../../apps/ios/SimHelp/ConnectionModePreference.swift)：连接模式、默认 Agent 绑定、已配对历史与删除 tombstone。
+- [DeviceCallRegistry.swift](../../apps/ios/SimHelp/DeviceCallRegistry.swift)：设备＋通话身份／代际、别名合并与终态窗口；不能按号码或到达时序合并通话。
+- [AppModel.swift](../../apps/ios/SimHelp/AppModel.swift)：`bindAndroidAgent`、`callKitStart(number:)`、`callKitEnd(uuid:)`，以及 Router 回调与传输释放策略。
 - 接通前才选路，同一设备优先 VoWLAN→BLE；自动模式既有云端回退按原规则处理。通话开始后设备与媒体链路锁定，不静默切换、重拨或开启第二路 PCM。
 - BLE 短信并未在本轮实现；不要将蓝牙语音可用理解为纯 BLE 短信已支持。
 - 不记录真实号码、短信正文、配对密钥、认证材料、Push token 或 PCM。输出流静音／最低档不等于已证明实际静音或双向音频质量。
@@ -187,7 +187,7 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 2026-10-19 17:43（Asia/Shanghai）核对：
 
 - 用户追加请求“安装到 ios”，目标为此前使用的 iPhone Air，主 App `com.eric3u.airsim`。
-- 从当前未提交源码重新构建 **Release**，使用既有本机安装配置 `iOS/build/relay-routing-install/Install.xcconfig`；Apple Development 签名，entitlement `aps-environment=development`，包内 APNs 环境为 `sandbox`，Relay 地址保持 AirSIM 专用域名。这不是 TestFlight／production 分发包。
+- 从当前未提交源码重新构建 **Release**，使用既有本机安装配置 `apps/ios/build/relay-routing-install/Install.xcconfig`；Apple Development 签名，entitlement `aps-environment=development`，包内 APNs 环境为 `sandbox`，Relay 地址保持 SimHelp 专用域名。这不是 TestFlight／production 分发包。
 - `BUILD SUCCEEDED`、命令退出 0，`codesign --verify --deep --strict` 通过。
 - 首次无线安装因调试连接中断失败，重连后重试成功。没有卸载、清除数据或重置配对。
 - 安装前设备查询为 `0.9.8 (92)`；安装后重新查询已确认 **`0.9.8 (95)`**。这是本轮本地修复版，不是重新下载的已发布旧 build 95。
@@ -220,7 +220,7 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 ### 已核对的现场证据
 
 - iPhone 上安装的是 `0.9.8 (95)`（第 9 节构建），连接模式 `bluetooth`，绑定的 `agent_id` 为 `android-d213…3846d9`，存在外设映射。
-- 局域网 mDNS 仍能解析到 `AirSIM-standalone-333846d9`，TXT `agent_id=android-d213d226841fa6f9333846d9`，与 iPhone 绑定值一致；安卓在网且身份未变。
+- 局域网 mDNS 仍能解析到 `SimHelp-standalone-333846d9`，TXT `agent_id=android-d213d226841fa6f9333846d9`，与 iPhone 绑定值一致；安卓在网且身份未变。
 - 同一天 VoWLAN 日志多次 `DISCOVERED` 后 `VoWLAN 鉴权失败`，说明 iPhone 保存的 VoWLAN 密钥已与安卓不一致；这是独立的凭据问题，不由 BLE 扫描修复解决。
 - 当天 Verbose trace 没有任何 VoBLE 事件；最后一条 BLE 记录是 10-18 02:51。trace 原本不记录扫描，因此不能仅凭缺事件判断扫描器状态。
 
@@ -234,23 +234,23 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 
 ### 验证与安装边界
 
-- Android `./android/phone-control-app/test.sh`：通过，包含新增广播回调断言。
+- Android `./apps/android/phone-control/test.sh`：通过，包含新增广播回调断言。
 - iOS 全量 XCTest：**281 项、0 失败、退出 0**，`TEST EXECUTE SUCCEEDED`；`VoBLEMultiDeviceTests` 覆盖 re-arm。
-- iOS Release 设备构建成功，使用 `iOS/build/relay-routing-install/Install.xcconfig`（Apple Development、`com.eric3u.airsim`、sandbox APNs），以 `CURRENT_PROJECT_VERSION=96` 保留数据覆盖安装到 iPhone Air；安装时设备随后锁屏，尚未取得新版启动／页面回执。
-- Android 只构建了 debug APK：`android-standalone/build/android/AirSIM-Android-Standalone-debug.apk`。已安装的正式包使用 `CN=AirSIM Release` 证书（SHA-256 `cde660…965b`），debug 包不能覆盖；本轮**未**生成／安装正式签名的安卓更新，需要现有 release keystore 与口令。
+- iOS Release 设备构建成功，使用 `apps/ios/build/relay-routing-install/Install.xcconfig`（Apple Development、`com.eric3u.airsim`、sandbox APNs），以 `CURRENT_PROJECT_VERSION=96` 保留数据覆盖安装到 iPhone Air；安装时设备随后锁屏，尚未取得新版启动／页面回执。
+- Android 只构建了 debug APK：`apps/android/standalone/build/android/SimHelp-Android-Standalone-debug.apk`。已安装的正式包使用 `CN=SimHelp Release` 证书（SHA-256 `cde660…965b`），debug 包不能覆盖；本轮**未**生成／安装正式签名的安卓更新，需要现有 release keystore 与口令。
 - 未发起真实电话／短信，未提交、推送、发布或部署 Relay。
 
 ### 下一步真机判定
 
 1. 解锁 iPhone，打开 build 96；设置 → 蓝牙连接应显示发现状态，点“重新扫描蓝牙 Agent”。
-2. 打开“配对蓝牙 Agent”，若列表出现三星，说明 iOS 扫描已恢复；若仍为空，优先检查安卓端：系统蓝牙是否开启、“附近的设备”权限、“AirSIM 蓝牙通话”前台通知是否存在。
+2. 打开“配对蓝牙 Agent”，若列表出现三星，说明 iOS 扫描已恢复；若仍为空，优先检查安卓端：系统蓝牙是否开启、“附近的设备”权限、“SimHelp 蓝牙通话”前台通知是否存在。
 3. 拉取 `agent-verbose-trace.json` 的 `voble-radio` 事件：有 `peer_discovered` 说明安卓在广播；只有 `scan_started` 且长时间无 peer，则安卓未广播或射频环境异常。
 4. 安卓正式更新必须用原 release keystore 重新构建；不能用 debug 包覆盖或先卸载（会清配对数据）。
 
 ### 真机追加结果（2026-10-19 19:25–19:26）
 
-- 三星安装的候选为 **同证书 AirSIM Debug**（安装前 `0.9.8.1 (94)`），因此 `adb install -r` debug build 95 成功，数据保留；安装后 versionCode 95。
-- 安卓日志于 19:25:16 出现 `voble_gatt_service_ready characteristics=7` 与 `voble_gatt_advertising_ready`；`dumpsys bluetooth_manager` 显示 `com.airsim.phonecontrol.standalone` 的活动 Advertising ID，起始时间 19:25:16，高速广播参数。
+- 三星安装的候选为 **同证书 SimHelp Debug**（安装前 `0.9.8.1 (94)`），因此 `adb install -r` debug build 95 成功，数据保留；安装后 versionCode 95。
+- 安卓日志于 19:25:16 出现 `voble_gatt_service_ready characteristics=7` 与 `voble_gatt_advertising_ready`；`dumpsys bluetooth_manager` 显示 `com.simhelp.phonecontrol.standalone` 的活动 Advertising ID，起始时间 19:25:16，高速广播参数。
 - iPhone build 96 于同一秒记录 `PEER_DISCOVERED`（RSSI -42，peers=1），说明共享扫描重下发后能够发现安卓；此前 build 95 的页面停留在发现状态。
 - 19:26:03–19:26:05 设备上出现一通 BLE 拨号：`DIAL_REPLY success=true`，通话进入 `active`，媒体引擎启动；统计收到 91／162／226 帧，输出 Speaker、输入内置麦克风。**这不是声学或双向音质验收**；同一窗口 `dropped_frames` 从 17 增至 108，仍需复测稳定性。
 - 安卓本次由 App 启动直接广播，**未**在真机触发“先关蓝牙再打开”的恢复路径；该路径由 `ACTION_STATE_CHANGED` 代码与 JVM 回归覆盖，仍需在非通话时实测。
@@ -263,8 +263,8 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 - 修复：`VoBLERadioController` 新增 `pauseScanForMedia()` / `resumeScanAfterMedia()`；`VoBLEDeviceHub` 监听任一 session 的 `audio.running`，媒体运行期间暂停共享扫描，结束恢复。`scanIfNeeded`、`rearmScan`、`rescan`、`restartDiscoveryAfterDisconnect` 均遵守暂停；前台 re-arm 间隔由 1 秒改为 10 秒，减少正常使用中的扫描启停。
 - 新增回归 `testMediaPauseStopsSharedScanAndResumesWhenAudioEnds`；全量 **282 项 XCTest、0 失败**；Release build **97** 已保留数据安装并启动到 iPhone Air。
 - build 97 真机复测：`SCAN_PAUSED_MEDIA` 已触发，但一次扬声器通话 `dropped_frames` 仍从 13 → 54 → 95 → 139（约 7 秒），说明扫描不是唯一原因。修复前另一次听筒通话仅 5 次丢帧；两次扬声器通话分别为 108／139，**丢帧与输出路由（Speaker）高度相关**。
-- 为排除 debug 构建性能因素，已用同一 Debug 证书构建 **非 debuggable** 的优化 APK（`android-standalone/build/android/AirSIM-Android-Standalone-release.apk`，versionCode 95、证书 SHA-256 `a0d90a…`），覆盖安装成功、数据保留；广告与前台服务正常。
-- 2026-10-19 用户定位：后台运行了模拟蓝牙触摸板，占用了 BLE 通道；关闭后卡顿消失。此前 `dropped_frames` 与 Speaker 路由的相关性属于外部 BLE 流量叠加，**不能把暂停扫描或音频管线当作唯一修复**。暂停扫描仍保留，因为它恢复了旧版“连接后停止扫描”的行为，避免 AirSIM 自己的扫描与媒体连接争抢射频。
+- 为排除 debug 构建性能因素，已用同一 Debug 证书构建 **非 debuggable** 的优化 APK（`apps/android/standalone/build/android/SimHelp-Android-Standalone-release.apk`，versionCode 95、证书 SHA-256 `a0d90a…`），覆盖安装成功、数据保留；广告与前台服务正常。
+- 2026-10-19 用户定位：后台运行了模拟蓝牙触摸板，占用了 BLE 通道；关闭后卡顿消失。此前 `dropped_frames` 与 Speaker 路由的相关性属于外部 BLE 流量叠加，**不能把暂停扫描或音频管线当作唯一修复**。暂停扫描仍保留，因为它恢复了旧版“连接后停止扫描”的行为，避免 SimHelp 自己的扫描与媒体连接争抢射频。
 - 后续复测：关闭外部 BLE 设备后重跑一次听筒／扬声器通话，确认 `dropped_frames` 与听感；若仍卡，再查上行采集主线程切换、发送队列背压与 GATT MTU／连接间隔，不继续叠加扫描逻辑。
 
 ### 配对核对码需要二次点击
@@ -304,7 +304,7 @@ xcodebuild -project iOS/AirSIM.xcodeproj \
 
 - 目标：当配对安卓上报多于一个 call-capable SIM/PhoneAccount 时，iPhone 拨号页顶部当前设备卡显示一个小按钮；点开可选择**本次拨号**使用的卡槽，并在菜单中显示卡槽标签和号码。选择按 agent 记忆，不修改安卓全局默认通话卡。
 - 安卓：`DefaultCallAccount.dialExtras(context, simAccount)` 支持逐次覆盖；`AgentCommand`、`VoBLECallController.Request`、`CallRepository.executeRemote` 透传 `sim_account`；`SimSlotJson` 在 Android 端组装 `sim_slots`（id/label/number/default，不写日志）；BLE `device_info` 与 VoWLAN `/v1/health` 上报。BLE `dial` 与 VoWLAN `/api/calls/dial` 读取该字段。
-- iOS：新增 `AndroidSIMSlot`，从 BLE metadata／VoWLAN health 解码；`AppModel.simSlots/selectedSIMSlotID/selectSIMSlot` 按 agent 持久化；`DialPadCurrentAgentCard` 在 `simSlots.count > 1` 时显示 `simcard.2` 菜单；`deviceCallRouter.dial`、`VoBLECallCoordinator.startOutgoing`、`AirSIMAPI.dialOwnedCall` 携带 `sim_account`。
+- iOS：新增 `AndroidSIMSlot`，从 BLE metadata／VoWLAN health 解码；`AppModel.simSlots/selectedSIMSlotID/selectSIMSlot` 按 agent 持久化；`DialPadCurrentAgentCard` 在 `simSlots.count > 1` 时显示 `simcard.2` 菜单；`deviceCallRouter.dial`、`VoBLECallCoordinator.startOutgoing`、`SimHelpAPI.dialOwnedCall` 携带 `sim_account`。
 - 验证：iOS 全量 **289 项 XCTest、0 失败**；Android JVM 测试与 Standalone 构建通过；build **102** 已保留数据安装到 iPhone，安卓同证书优化包已覆盖安装。
 - 范围/限制：当前三星 `dumpsys isub` 仅 `simSlotIndex=0`，`dumpsys telecom` 只有一个 call-capable 账号，因此设备上**不会显示**选择按钮（符合“多个才显示”）；真实双 SIM/eSIM 验收尚未执行。AVF Go Agent 与 Cloud Relay 命令尚未透传 `sim_account`，这两条路径会回退到安卓默认通话卡，不改变全局设置。
 

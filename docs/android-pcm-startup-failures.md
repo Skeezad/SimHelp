@@ -1,6 +1,6 @@
 # 三份音频日志的分流修复：候选 0.9.8.1（94）
 
-> 另见：[Shizuku 13.6.0 在 HyperOS 3 上的 PCM 启动回归](shizuku-13.6.0-pcm-regression.md)。这是 Shizuku 上游问题，不是 AirSIM 0.9.8.9 的音频桥缺陷。
+> 另见：[Shizuku 13.6.0 在 HyperOS 3 上的 PCM 启动回归](shizuku-13.6.0-pcm-regression.md)。这是 Shizuku 上游问题，不是 SimHelp 0.9.8.9 的音频桥缺陷。
 
 这是未发布的 Android Standalone／AVF Bridge 候选，不自动安装、提交推送或部署 Relay。保留 build 93 的臻情兼容修复，并补充 PCM 启动失败处理。iOS 已有的 0.9.8（92）音频图初始化顺序修正不在本轮重复修改。
 
@@ -38,6 +38,6 @@ pcm_failure_count=1
 
 构建和 JVM 回归不证明问题华为设备已经有双向声音。需保留数据覆盖正式签名候选包，在问题设备做一通电话，再导出音频 Watchdog TXT。若仍失败，新字段应能把泛化的 `Connection reset` 收敛到具体权限／路由／初始化阶段。无法凭现有日志承诺该系统开放蜂窝音频能力。
 
-最终验证：`sh android-standalone/test.sh` 在最后一次 READY 阶段修正后完整重跑，退出码 0。包含 PCM 桥 64 项检查、真实启动路径的四次属性／路由失败及 READY 写失败注入、18 组通话音频生命周期、API 29–35 兼容、静音策略与恢复、VoBLE 网关生命周期及归属拨号测试。首次全量曾被新增的权限查询误分类回归拦下，修正后重跑通过；后续审查指出的 READY 阶段误分类也已先观察失败、后修复并纳入最终全量。构建仍有 API 弃用和资源 lease 哨兵未在 try 正文引用的编译提示，无编译错误。只读复核无剩余 Critical／Important／Minor。
+最终验证：`sh apps/android/standalone/test.sh` 在最后一次 READY 阶段修正后完整重跑，退出码 0。包含 PCM 桥 64 项检查、真实启动路径的四次属性／路由失败及 READY 写失败注入、18 组通话音频生命周期、API 29–35 兼容、静音策略与恢复、VoBLE 网关生命周期及归属拨号测试。首次全量曾被新增的权限查询误分类回归拦下，修正后重跑通过；后续审查指出的 READY 阶段误分类也已先观察失败、后修复并纳入最终全量。构建仍有 API 弃用和资源 lease 哨兵未在 try 正文引用的编译提示，无编译错误。只读复核无剩余 Critical／Important／Minor。
 
-已构建正式证书签名的 Standalone 候选包（未正式发布）：`android-standalone/build/candidate-0.9.8.1-94/AirSIM-Android-Standalone-0.9.8.1-94-release.apk`。Manifest 为 `0.9.8.1 (94)`、最低 API 29、目标 API 35、`debuggable=false`；APK v3 签名校验通过，证书与既有正式包一致，可覆盖同证书安装而保留数据。文件 SHA-256：`9bb6a7f5af2a7aaeec31c0609a25ced181e9a6659f40ded361e393911ac80f89`。未安装、未提交推送、未发布 Release、未部署 Relay；现有 iOS 后台状态修复工作不在本轮重复修改。
+已构建正式证书签名的 Standalone 候选包（未正式发布）：`apps/android/standalone/build/candidate-0.9.8.1-94/SimHelp-Android-Standalone-0.9.8.1-94-release.apk`。Manifest 为 `0.9.8.1 (94)`、最低 API 29、目标 API 35、`debuggable=false`；APK v3 签名校验通过，证书与既有正式包一致，可覆盖同证书安装而保留数据。文件 SHA-256：`9bb6a7f5af2a7aaeec31c0609a25ced181e9a6659f40ded361e393911ac80f89`。未安装、未提交推送、未发布 Release、未部署 Relay；现有 iOS 后台状态修复工作不在本轮重复修改。

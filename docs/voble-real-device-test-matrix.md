@@ -43,10 +43,10 @@
 
 | 范围 | 命令 | 结果 | 产物或说明 |
 | --- | --- | --- | --- |
-| Android Bridge JVM | `./android/phone-control-app/test.sh` | 通过 | core、NotificationUpdateGate、call repository 均通过；覆盖 VoBLE 协议、认证和 PCM 队列 |
-| Android Standalone 集成 | `./android-standalone/test.sh` | 通过 | `BridgeUnitTests checks=47`，随后完成 Standalone Bridge 构建/签名检查 |
-| Android AVF Bridge APK | `./android/phone-control-app/build.sh` | 通过 | `android/phone-control-app/build/android/AirSIM-Phone-Bridge-debug.apk`，APK v3 签名验证通过 |
-| Android Standalone APK | `./android-standalone/build.sh` | 通过 | `android-standalone/build/android/AirSIM-Android-Standalone-debug.apk`，APK v3 签名验证通过 |
+| Android Bridge JVM | `./apps/android/phone-control/test.sh` | 通过 | core、NotificationUpdateGate、call repository 均通过；覆盖 VoBLE 协议、认证和 PCM 队列 |
+| Android Standalone 集成 | `./apps/android/standalone/test.sh` | 通过 | `BridgeUnitTests checks=47`，随后完成 Standalone Bridge 构建/签名检查 |
+| Android AVF Bridge APK | `./apps/android/phone-control/build.sh` | 通过 | `apps/android/phone-control/build/android/SimHelp-Phone-Bridge-debug.apk`，APK v3 签名验证通过 |
+| Android Standalone APK | `./apps/android/standalone/build.sh` | 通过 | `apps/android/standalone/build/android/SimHelp-Android-Standalone-debug.apk`，APK v3 签名验证通过 |
 | iOS 编译测试 | `xcodebuild build-for-testing ... generic/platform=iOS Simulator CODE_SIGNING_ALLOWED=NO` | 通过 | App 与 XCTest bundle 均成功编译 |
 | iOS 运行时 XCTest | `xcodebuild test ... iPhone Air,OS=27.0` | 未形成完整最终结果 | 新增生命周期用例在运行中通过；CoreSimulator runner 随后消失/重启，不能据此宣称整套通过。此前 Task 6 基线曾完成 58 项通过 |
 | iPhoneOS unsigned build | `xcodebuild build ... generic/platform=iOS CODE_SIGNING_ALLOWED=NO` | 通过 | arm64 App、Live Activity 与 Watch 目标编译成功；这是本地重签输入，不等同正式签名验收 |
@@ -55,7 +55,7 @@
 
 | 设备/场景 | 状态 | 证据或阻塞原因 |
 | --- | --- | --- |
-| iPhone Air 覆盖安装（保留数据） | 通过 | 使用开发描述文件重签并覆盖 `AirSIM Diag`；`devicectl` 安装、启动成功，主进程与 Live Activity 扩展均存活；未清除 App 数据 |
+| iPhone Air 覆盖安装（保留数据） | 通过 | 使用开发描述文件重签并覆盖 `SimHelp Diag`；`devicectl` 安装、启动成功，主进程与 Live Activity 扩展均存活；未清除 App 数据 |
 | 三星 Standalone 覆盖安装 | 阻塞 | 本轮 `adb devices -l` 无设备，未执行安装或真实电话 |
 | 三星 AVF Bridge + AVF PCM | 阻塞 | 三星未连接；未验证 AVF 地址变化后的下一会话解析 |
 | 小米 HyperOS Standalone | 阻塞 | 小米未连接 |
@@ -70,7 +70,7 @@
 
 ### Standalone
 
-1. 用 `adb install -r android-standalone/build/android/AirSIM-Android-Standalone-debug.apk` 覆盖安装，禁止清除数据。
+1. 用 `adb install -r apps/android/standalone/build/android/SimHelp-Android-Standalone-debug.apk` 覆盖安装，禁止清除数据。
 2. 确认默认电话角色、附近设备、通知、Shizuku 和 PCM 桥均正常。
 3. iPhone 选择“蓝牙直连”，两端核对短码并确认。
 4. 关闭两端 Wi-Fi，Relay 保持不可用；分别执行拨出和呼入。
@@ -91,7 +91,7 @@
 
 ## 2026-10-13 晚间蓝牙音频复现与修复
 
-- 三星 SM-F766U 已通过无线 ADB `<samsung-lan>:38137` 接入，Standalone 前台服务正常；iPhone Air 使用保留数据的 `AirSIM Diag`。
+- 三星 SM-F766U 已通过无线 ADB `<samsung-lan>:38137` 接入，Standalone 前台服务正常；iPhone Air 使用保留数据的 `SimHelp Diag`。
 - 修复前真实蓝牙呼出已到达 Android Telecom 的 `active`。PCM 下行持续增长，上行仅短暂出现静音帧；此证据不能算作双向语音通过。
 - Android `STREAM_VOICE_CALL` 为静音，音频 HAL 收到 `setVoiceVolume(0.0)` 和 `l_volume_voice=0.0`，因此不能仅凭 App 的静音请求日志判断实际听感。
 - iOS 临时呼出 ID 不再绑定 CallKit 后端身份，只在 Android 权威通话 ID 到达后同步。拨号响应晚于 Telecom 事件时，不再回写临时 ID 或把已接通电话降回连接中。
@@ -127,7 +127,7 @@
 - iOS `unpairCurrentPeer` 删除双方凭据后只调用 `stop`，页面未重新出现，因此 `onAppear` 不会再启动扫描。统一配对取消/清除后的连接重置：原先启用则先停止旧会话再启动扫描，原先关闭则保持关闭；新扫描仍等待旧 GATT 断开回调，不绕过上一轮取消屏障。
 - 新增回归捕获“只 disconnect、没有 scan”的失败，修复后全部 83 项 iOS 测试通过，iPhoneOS 编译通过。DEBUG 日志记录 enabled、状态和等待取消标志，不记录密钥、安全码或号码。
 - 覆盖安装后真机已离开 stopped，但停在 connecting，且没有等待旧取消回调；Android 的 GATT 服务与可连接广播仍正常注册。缓存外设连接无超时，因此新增 8 秒连接看门狗：仅 connecting 超时才取消旧连接，收到取消回调后跳过缓存恢复、重新扫描；不打断 authenticating 或 ready，也覆盖系统原生重连等待。
-- 超时策略回归先失败后通过，全部 84 项 iOS 测试及 iPhoneOS 构建通过；保留数据覆盖安装到 AirSIM Diag。仍需真机日志确认扫描和安全码认证恢复，不能据此宣称音频卡顿或重新配对验收完成。
+- 超时策略回归先失败后通过，全部 84 项 iOS 测试及 iPhoneOS 构建通过；保留数据覆盖安装到 SimHelp Diag。仍需真机日志确认扫描和安全码认证恢复，不能据此宣称音频卡顿或重新配对验收完成。
 - 真机进一步捕获 connecting 超时取消后未收到断开回调，等待屏障未释放。新增实际外设状态观察：只在同一旧外设已是 disconnected 时释放屏障，connecting/connected/disconnecting 和无关外设都不放行；最多观察 8 秒，仍未释放则显示明确错误，而不是强行建立重叠连接。
 - 断开状态屏障回归先失败后通过，全部 85 项 iOS 测试、iPhoneOS 编译与签名验证通过；新版再次保留数据安装至 iPhone Air。
 - 最新真机日志已经依次到达 connect_timeout → cancellation_finished → scanning → connecting → connected → authenticating；未开关系统蓝牙。首次认证进入 failed，随后 App 内连接重置再次完成扫描、连接、认证，最终进入 ready。已验证链路恢复与认证完成，尚不能视为通话听感验收通过。
@@ -139,7 +139,7 @@
 - Android 当前通话拥有权在权威 ended 事件时清空；此后到达的 end/reject 被视为 call_mismatch。现对记录过的同一 callID+generation 终态做幂等确认，不调用 Telecom，不影响下一通；未知身份与未认证命令继续拒绝。
 - iOS 等待挂断回复期间可能先收到 ended，旧逻辑仍会发出 ending，或将迟到的错误弹到拨号页。现只在同一身份仍为当前通话时发布 ending；仅该身份已有认证的终态事件时才接受迟到挂断错误为已完成，不掩盖当前通话的真实错误。
 - Android 回归覆盖 ended 先到、重复 end/reject、新通话隔离、未知身份和未认证拒绝，旧实现失败；iOS 使用真实通话协调器注入控制传输，复现迟到成功恢复 ending 和迟到失败弹错，两项旧实现失败。改动后 iOS 全部 87 项与 Android phone-control 全套测试通过。新增 DEBUG 通话状态/命令日志不记录号码、通话 ID 或密钥。
-- Standalone 全套测试与 APK 构建通过，已保留数据覆盖安装到 Flip7；iPhoneOS 编译、签名验证及 AirSIM Diag 保留数据覆盖安装至 Air 成功。纯 BLE 的挂断弹窗是否消失仍待安装后的真机复测，未把回归测试当成实际验收。
+- Standalone 全套测试与 APK 构建通过，已保留数据覆盖安装到 Flip7；iPhoneOS 编译、签名验证及 SimHelp Diag 保留数据覆盖安装至 Air 成功。纯 BLE 的挂断弹窗是否消失仍待安装后的真机复测，未把回归测试当成实际验收。
 
 ## Android 默认通话卡（双卡 / 多卡）
 
@@ -155,11 +155,11 @@
 - BLE 改为从当前广播连接，不以缓存 UUID 直接恢复；认证后读取 `device_info`，校验身份，号码为空时显示未提供，不借用旧 VoWLAN/Relay 号码。VoWLAN 当前健康检查清空旧空值，旧会话迟到结果不能更新已删除或重启发现后的设备。
 - Standalone 心跳不再使用首次注册的号码；Android 当前号码对应 App 所选通话卡或系统默认通话卡，停用、换卡和撤销权限均不借用另一张卡号码。旧 AVF Linux Agent 的云端心跳仍使用注册 metadata，未在本次迁移。
 - 新增 5 项 iOS 回归，先复现空号码保留旧值、删除不持久化、身份不匹配、删除广播仍自动重连及离线凭据未撤销，再修复；最新整套 **92 项通过**，iPhoneOS 编译与诊断包签名验证通过。离线撤销测试保留真实 BLE 控制器，仅替换凭据存储边界；unsigned Simulator 无 Keychain entitlement（-34018），未将内存测试称为真实 Keychain 验收。
-- Android 当前 SIM 身份测试先因错误选择第一张卡而失败，修复后 phone-control、Standalone 全套和 AVF Bridge APK 构建均通过。新版已保留数据安装到 Flip7 与 iPhone Air 的 AirSIM Diag；iPhone 锁屏，启动被系统拒绝（Locked），新列表显示、真实换卡与用户设备删除后重新配对仍待真机验收，未删除真实设备记录测试。
+- Android 当前 SIM 身份测试先因错误选择第一张卡而失败，修复后 phone-control、Standalone 全套和 AVF Bridge APK 构建均通过。新版已保留数据安装到 Flip7 与 iPhone Air 的 SimHelp Diag；iPhone 锁屏，启动被系统拒绝（Locked），新列表显示、真实换卡与用户设备删除后重新配对仍待真机验收，未删除真实设备记录测试。
 
 ### 2026-10-14 诊断包启动闪退补验
 
-- 用户解锁后发生启动闪退；Air 真机 `AirSIM-2026-10-14-010451.ips` 显示 DYLD 在进入业务代码前终止，原因是 `AirSIM.debug.dylib` 未签名。同次 Live Activity 扩展崩溃为 `AirSIMLiveActivityExtension.debug.dylib` 未签名，不是设备列表或历史数据异常。
+- 用户解锁后发生启动闪退；Air 真机 `SimHelp-2026-10-14-010451.ips` 显示 DYLD 在进入业务代码前终止，原因是 `SimHelp.debug.dylib` 未签名。同次 Live Activity 扩展崩溃为 `SimHelpLiveActivityExtension.debug.dylib` 未签名，不是设备列表或历史数据异常。
 - 对旧包两个 Debug 动态库单独执行 `codesign --verify --strict` 均失败，确认包根目录的 `--deep` 验证未覆盖此遗漏。重新签名全部四个内嵌动态库（含两个 preview），逐个验证，再签扩展和主 App；不改业务代码、不清除数据。
 - 修正版覆盖安装成功，Air 真机 console 已执行主 App 初始化并恢复 BLE `ready`；间隔复查主 App 与实时活动扩展进程仍存活。用户确认「能打开，列表正常」，设备列表真机显示已验收；实际换卡与真实删除仍待测试。最新 iOS 全套 92 项测试通过（0 失败）。另见 ActivityKit `SessionCore.PermissionsError Code=3`，不将启动修复表述为实时活动权限问题已解决。
 
@@ -197,7 +197,7 @@
 - 本轮未新增真实运营商通话或删除用户配对数据；此前真机结果与待验收边界继续保留。
 
 - VoBLE 是独立模式，不是 VoWLAN 的依赖；一次通话建立后不会在 VoBLE、VoWLAN 和 Relay 之间无提示漂移。
-- BLE 只承载 AirSIM 控制和音频，不实现 Android 到 iPhone 的 Bluetooth PAN 网络共享。
+- BLE 只承载 SimHelp 控制和音频，不实现 Android 到 iPhone 的 Bluetooth PAN 网络共享。
 - 音频为 G.711 μ-law 8 kHz 单声道，控制和媒体均以 AES-256-GCM 认证；PCM 只在内存中处理。
 - iOS 用户强制退出 App 后，系统不保证 BLE 后台唤醒。CallKit 可用于本地蓝牙通话，但本地模式不依赖 PushKit。
 - Apple Watch 使用 iPhone 的 CallKit/WatchConnectivity 状态与系统音频路由，不是 Watch 到 Android 的直接 BLE 音频链路。
@@ -209,12 +209,12 @@
 - iOS 共享 Radio 新增 `rearmScan()`：前台恢复、重新进入配对页或模式切换时即使 `scanning` 仍为 true 也重新下发 `scanForPeripherals`；1 秒时间戳限制避免重复启停。新增 `voble-radio` Verbose 事件记录扫描／电源／发现数量，不记录设备身份。
 - 安卓 `VoBLEGatewayService` 监听 `ACTION_STATE_CHANGED`，蓝牙打开时重启广播、关闭时释放失效 GATT server；广播失败按 2/4/8 秒有界重试 3 次。GATT 生命周期回归新增成功／失败回调断言。
 - 验证：Android `phone-control-app/test.sh` 通过；iOS 全量 **281 项、0 失败、退出 0**。iOS Release build **96** 使用本机安装配置保留数据覆盖安装到 iPhone Air（Apple Development／sandbox）；安装后设备锁屏，启动与真实发现未取得回执。
-- 安卓仅生成 debug APK；已安装正式包使用 `CN=AirSIM Release` 证书，debug 包不能覆盖。正式安卓更新需要原 release keystore；真实 BLE 发现、SAS 认证、拨号与双向音频仍待两台真机复验。
+- 安卓仅生成 debug APK；已安装正式包使用 `CN=SimHelp Release` 证书，debug 包不能覆盖。正式安卓更新需要原 release keystore；真实 BLE 发现、SAS 认证、拨号与双向音频仍待两台真机复验。
 - **19:25 真机追加**：三星已安装同证书 debug build 95（覆盖 build 94，数据保留）。安卓日志出现 `voble_gatt_service_ready` / `voble_gatt_advertising_ready`，`dumpsys bluetooth_manager` 显示活动广播；iPhone build 96 同一秒 `PEER_DISCOVERED`（RSSI −42）。19:26 设备上 BLE 拨号被安卓接受并进入 active，媒体引擎运行，收到下行帧 91→226；输出 Speaker、输入内置麦克风。未做声学／双向质量验收，`dropped_frames` 17→108 增长，需复测；蓝牙开关恢复路径未在真机触发。
 - **19:30 卡顿回归修复**：旧版 `connect` 前会 `stopScan`，多设备共享 Radio 在通话中持续扫描，挤占 BLE 吞吐。现在任一会话 `audio.running` 时暂停扫描，通话结束恢复；re-arm 间隔改为 10 秒。新增 `testMediaPauseStopsSharedScanAndResumesWhenAudioEnds`；全量 **282 项、0 失败**；build 97 已保留数据安装并启动。
 - **19:31 复测**：`SCAN_PAUSED_MEDIA` 已触发，但扬声器通话 `dropped_frames` 仍 13→54→95→139（约 7 秒）；此前听筒通话仅 5，扬声器通话 108／139。丢帧与 Speaker 路由高度相关，扫描不是唯一原因。
 - 已用同一 Debug 证书构建非 debuggable 优化 APK 并覆盖安装（数据保留），用于排除 debug 构建性能因素；广告与前台服务正常。听筒／扬声器 A/B、长通话与双向音质仍待复验。
-- **用户定位**：卡顿来自后台运行的模拟蓝牙触摸板占用 BLE 通道，关闭后消失；不是 AirSIM 扫描或音频管线的唯一原因。暂停扫描保留为恢复旧版“连接后停扫”的回归修复；关闭外部 BLE 设备后需重跑一次通话，记录 `dropped_frames` 与听感。
+- **用户定位**：卡顿来自后台运行的模拟蓝牙触摸板占用 BLE 通道，关闭后消失；不是 SimHelp 扫描或音频管线的唯一原因。暂停扫描保留为恢复旧版“连接后停扫”的回归修复；关闭外部 BLE 设备后需重跑一次通话，记录 `dropped_frames` 与听感。
 - **配对核对码延迟**：`pendingSAS` 变化未从中央控制器转发到 Hub/AppModel，视图只有在下一次点击改变 `selectedPeripheralID` 时重绘，导致已进入认证却要再点一次设备才显示六位码。Hub 现在转发所选控制器的 `objectWillChange`；新增回归，全量 **283 项、0 失败**；build 98 已安装。真实配对显示仍待复验。
 - **通话路径审查修复**：过滤未验证 peer、绑定离线设备不再显示另一台为当前；云端通话期间本地来电转为提醒；接听失败释放 media/registry 并恢复响铃页；直接拨号失败清 pending；BLE start_media 仅对 disconnected/notReady 重试一次；云端来电不再无谓启动本地浏览。全量 **286 项、0 失败**；build **100** 已保留数据安装并启动。真机 trace 可见 BLE 扫描/发现（同环境 8–9 个 peer）；覆盖安装时 trace 记录 21:03:56 结束了一通 outgoing 云端通话，可能是安装终止，未记作验收。
 - **PCM 探活误报**：`VoWLANGatewayService.portOpen()` 的裸 TCP 探活被桥当成客户端，桥先建音频端点再读握手→`handshake_failed`，并可能短暂抢占音频。修复为先读 hello 再建端点；`ProbeClosed` 静默关闭。空闲 health 日志降为状态变化/30s，通话中每秒并带 `in_call`。桥单测 65 项、Android JVM 通过；APK 已安装；未做通话复验。

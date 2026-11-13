@@ -5,7 +5,7 @@
 ## 1. 已确认的使用规则
 
 - 设置中增加 VoWLAN＋VoBLE 双通道选项，既有单 VoWLAN、单蓝牙、云端、自动模式继续保留。
-- 一个 iOS AirSIM 可同时连接多台已配对安卓，而非仅保存多条配对历史、切换时才连接。
+- 一个 iOS SimHelp 可同时连接多台已配对安卓，而非仅保存多条配对历史、切换时才连接。
 - 拨出时由用户指定安卓设备；默认拨号设备只是拨出偏好，不过滤其他设备的来电。
 - 来电操作始终指向真正来电的安卓，不因默认设备或当前列表选择变化而转移。
 - 已在安卓 A 通话时，安卓 B 来电只做提醒，不打断 A，不自动接听或挂断任何一台。
@@ -38,7 +38,7 @@
 
 1. A 继续通话，音频、CallKit 主通话和灵动岛主计时均不被 B 替换。
 2. B 的首个有效响铃事件生成一次来源明确的提醒，包含设备名与来电人信息，遵守系统隐私设置。默认采用视觉提示与系统允许的轻触反馈，不往 A 的 PCM 混入响铃音，不以每次状态刷新重复提醒。
-3. B 自己继续响铃；AirSIM 不因 iPhone 忙而发送拒接、挂断、接听、PCM 启动或受控降音量命令。
+3. B 自己继续响铃；SimHelp 不因 iPhone 忙而发送拒接、挂断、接听、PCM 启动或受控降音量命令。
 4. A 结束后，重新核对 B 是否仍响铃；仍响铃时允许用户主动接听，不自动接听。若有多个仍响铃设备，保留全部来源，等待用户选择，不自动挑选一个。
 5. B 已结束时撤销其提醒，并正确记录其未接／已在安卓处理的实际终态；B 的结束事件不能结束 A。
 6. 重复事件、断线重连与迟到响铃不能恢复已经结束的提醒。通知操作必须携带来源设备和通话标识，操作前验证当前状态；不通过当前全局选中设备重新推断目标。
@@ -90,7 +90,7 @@ VoWLAN 当前有全局凭据入口：新设备注册与路由必须具有明确�
 
 ## 8. 参考
 
-- 现有协议与路由约束：`codex.md`、`iOS/AirSIM/ConnectionModePreference.swift`、`iOS/AirSIM/VoBLECentralController.swift`、`iOS/AirSIM/VoBLEPairing.swift`、`iOS/AirSIM/VoWLANAuth.swift`、`iOS/AirSIM/CallKitController.swift`。
+- 现有协议与路由约束：`codex.md`、`apps/ios/SimHelp/ConnectionModePreference.swift`、`apps/ios/SimHelp/VoBLECentralController.swift`、`apps/ios/SimHelp/VoBLEPairing.swift`、`apps/ios/SimHelp/VoWLANAuth.swift`、`apps/ios/SimHelp/CallKitController.swift`。
 - Apple Core Bluetooth 多外设连接：[Performing Common Central Role Tasks](https://developer.apple.com/library/archive/documentation/NetworkingInternetWeb/Conceptual/CoreBluetooth_concepts/PerformingCommonCentralRoleTasks/PerformingCommonCentralRoleTasks.html)。
 - 后台／强退边界：[Bluetooth State Restoration app relaunch rules](https://developer.apple.com/documentation/technotes/tn3115-bluetooth-state-restoration-app-relaunch-rules)。
 - VoIP Push 不可改作任意提醒：[Responding to VoIP Notifications from PushKit](https://developer.apple.com/documentation/pushkit/responding-to-voip-notifications-from-pushkit)。

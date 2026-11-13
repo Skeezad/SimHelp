@@ -6,7 +6,7 @@ UIKit audio, CallKit and the live backend still require separate integration tes
 from pathlib import Path
 import subprocess, tempfile
 root = Path(__file__).resolve().parents[3]
-def source(name): return (root / 'iOS/AirSIM' / name).read_text()
+def source(name): return (root / 'apps/ios/AirSIM' / name).read_text()
 def between(text, start, end): return text[text.index(start):text.index(end, text.index(start))]
 models = source('APIModels.swift'); app = source('AppModel.swift'); auth = source('VoWLANAuth.swift')
 parts = ['import Foundation\nimport CryptoKit\nimport Security\n',

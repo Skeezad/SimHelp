@@ -9,8 +9,8 @@
 - 设备：Redmi 9，型号 M2004J19C / lancelot，厂商 Xiaomi，平台与 hardware 均为 `mt6768`，arm64。
 - 系统：Android 12 / API 31，MIUI `V13.0.5.0.SJCCNXM`，安全补丁 2022-09-01。
 - 原安装：Standalone `0.9.7.1 (81)`。
-- 已通过 `adb install -r` 覆盖为 **`0.9.8.21 (126)`**，包名 `com.airsim.phonecontrol.standalone`；未卸载、未清除数据，firstInstallTime 保持不变。
-- 安装包来自本机既有 Release 资产，SHA-256 与 [GitHub v0.9.8.21](https://github.com/kai-wu-cortex/AirSIM/releases/tag/v0.9.8.21) 一致：`2c7dff44a660c4a1433a84bc11c4b7f9f548a69083bb1753a61fc6e52401e537`。安装后设备上 base.apk 的摘要也再次匹配。
+- 已通过 `adb install -r` 覆盖为 **`0.9.8.21 (126)`**，包名 `com.simhelp.phonecontrol.standalone`；未卸载、未清除数据，firstInstallTime 保持不变。
+- 安装包来自本机既有 Release 资产，SHA-256 与 [GitHub v0.9.8.21](https://github.com/Skeezad/SimHelp/releases/tag/v0.9.8.21) 一致：`2c7dff44a660c4a1433a84bc11c4b7f9f548a69083bb1753a61fc6e52401e537`。安装后设备上 base.apk 的摘要也再次匹配。
 - 新旧签名 SHA-256 相同：`cde660af4c3e053615a4967e5188ca29eee084e50958ead1fd5cc80837b0965b`。
 - MainActivity 启动返回 Status ok，后续进程仍在；检查窗口 AndroidRuntime 未输出崩溃。这里只证明安装/启动，不是通话验收。
 - GitHub 的 latest 指针仍指向较旧的 v0.9.8.16；已另外查发布列表和指定 tag，确认最新发布的非草稿、非预发布应用版本为 v0.9.8.21。本轮未修改 Release 的 latest 标记。
@@ -27,7 +27,7 @@
 - 已有 `getRoutedDevice()` 上行观测和 `voice_tx_route_unverified` 日志，但只在开始写入后验证。未验证路由时继续降级运行，以兼容部分三星隐藏路由；这不能对所有厂商等价表示“双向正常”。
 - 没有下行实际 routed device 的同等完整证据，也没有将 HAL profile 与桥协议格式解耦。
 
-源码位置：[PhoneAudioBridge.java](../android/phone-audio-bridge/src/com/airsim/bridge/PhoneAudioBridge.java)；通话静音策略见 [LocalOutputMuteController.java](../android/phone-control-app/src/com/airsim/phonecontrol/LocalOutputMuteController.java)。当前策略统一保持通话流最低非零且不 mute，避免连带压低采集；本轮不改这条策略。
+源码位置：[PhoneAudioBridge.java](../audio-bridge/src/com/simhelp/bridge/PhoneAudioBridge.java)；通话静音策略见 [LocalOutputMuteController.java](../phone-control/src/com/simhelp/phonecontrol/LocalOutputMuteController.java)。当前策略统一保持通话流最低非零且不 mute，避免连带压低采集；本轮不改这条策略。
 
 ## 只读真机证据
 
@@ -89,7 +89,7 @@ MTK 路径若实际路由为 Speaker/Earpiece，应立即停止其上行 Track �
 
 - JVM：端口选择、profile 匹配、无端口/权限拒绝/未知格式，三星路径不回归；重采样的分块连续性、频率/幅度、单声道复制、欠载静音、积压丢旧帧，错误与取消不泄漏端点。
 - 真机：用户呼出与来电各测；对端听到 iPhone、iPhone 听到对端；本机不意外外放；静音、扬声器/耳机、挂断恢复、拒接后不自动重拨。
-- 通路：VoWLAN 基线通过后再测 VoBLE 和云端 PCM。先不要把尚未验收的 AirSIM Cloud WebRTC 加入同一轮排障。
+- 通路：VoWLAN 基线通过后再测 VoBLE 和云端 PCM。先不要把尚未验收的 SimHelp Cloud WebRTC 加入同一轮排障。
 - 生命周期：锁屏、返回前台、Shizuku 重启、Wi-Fi 切换、连续 30 分钟；短信/默认电话角色不回归。
 
 完成判据是当前 ROM 的可重复双向语音与正确收尾，而不是日志仅出现 `AIRSIMREADY`、`route_verified` 或进程存活。本轮只完成正式 APK 无损升级和只读设备检查；音频方案未实施，真实通话待用户手动验收。

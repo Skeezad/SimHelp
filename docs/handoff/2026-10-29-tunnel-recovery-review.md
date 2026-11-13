@@ -37,7 +37,7 @@
 
 该修复消除安卓错误的完成提示，不代表已修复三星网关无法启动。具体原因仍需安卓 `vowlan_state` / `vowlan_lifecycle_failed` / `pcm_probe_failed` 等故障时日志确认。先前附件机型为 Nothing A059，不能代替这台三星的现场证据。当前 ADB 无设备，尚未操作用户三星。
 
-此增量已通过 `android/phone-control-app/test.sh`（包括新增源码防回归检查）及 Standalone debug APK 完整构建。未执行真实 PairingServer 双端超时场景、未安装 debug APK；debug 签名不能视作可覆盖正式签名安装的发布包。
+此增量已通过 `apps/android/phone-control/test.sh`（包括新增源码防回归检查）及 Standalone debug APK 完整构建。未执行真实 PairingServer 双端超时场景、未安装 debug APK；debug 签名不能视作可覆盖正式签名安装的发布包。
 
 - iPhone Air **模拟器**（iOS 26.5）：Xcode 编译并运行 19 项定向测试，19 通过、0 失败。包含本轮 5 项新回归、现有 5 项 VoWLAN 网络恢复测试及 9 项路由/配对/身份与端口证明测试。
 - 新增测试覆盖：保留非 CGNAT 私网候选、候选不等于在线、无效路由过滤、新 Bonjour 与通话路由优先级、有界端点尝试、Verbose 开关标识。不是完整控制器时序/真实 VPN 集成验收。

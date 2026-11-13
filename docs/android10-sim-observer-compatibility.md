@@ -24,7 +24,7 @@ Standalone 与 AVF Bridge 的 Manifest 均声明 `minSdkVersion=29`。
 API 29 测试替身会在误调用 Executor 重载时抛出 `NoSuchMethodError`。
 JVM 测试不能替代 Android 10 真机启动验收。
 
-2026-10-31 本地验证：`android-standalone/test.sh` 完整通过（包含上述兼容测试、
+2026-10-31 本地验证：`apps/android/standalone/test.sh` 完整通过（包含上述兼容测试、
 核心／短信／音频桥／云端通话／纯本地模式测试和 Standalone Debug APK 构建），
 `git diff --check` 通过。ADB 未发现设备，尚未覆盖安装或验证红米冷启动。
 本次仅修改本地 VoBLE 工作树；已发布的 v0.9.8.20 资产未替换，修复尚未发布。

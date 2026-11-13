@@ -4,17 +4,17 @@
 
 > 最新状态（2026-11-03）：用户要求取消两分钟限制后，U30Air 已在 `ce198d0` 移除同号码冷却。设备线程的 `out/r18-no-cooldown-installed-status.json` 记录 `installed=true`、`released=false`、`manual_acceptance=pending`。本线程只读核对代码、安装记录与设备线程进度，未另行操作 USB。原通话确认结束且基带空闲后，可用新的人工拨号意图立即重拨；原 operation ID 持久去重仍保留。下文涉及旧候选“保留两分钟保护/未安装”的描述属于此前阶段。客户端新增只读恢复仍未安装，early media 仍未实现。
 
-承接 U30Air 本地候选提交 `8041906` 的 `docs/handoff/2026-11-03-r18-device-call-safety.md`，并只读核对了 `internal/gateway/operations.go` 的实际签名代码。此次仅修改 AirSIM VoBLE 工作树的 iOS 客户端和测试，保留原有改动。
+承接 U30Air 本地候选提交 `8041906` 的 `docs/handoff/2026-11-03-r18-device-call-safety.md`，并只读核对了 `internal/gateway/operations.go` 的实际签名代码。此次仅修改 SimHelp VoBLE 工作树的 iOS 客户端和测试，保留原有改动。
 
 ## 部署状态必须分开说明
 
-此前 AirSIM 的终态/防自动重拨修复已按本线程用户授权覆盖安装到 iPhone Air，沿用 `0.9.8 (158)`。**本次新增 operation 查询恢复代码尚未安装。** U30Air 交接说明设备仍为 `45ec46c` 候选，新增持久回执候选 `8041906` 尚未安装；客户端未另行验证或操作该设备。没有提交、推送、Release/TestFlight、真实拨号、短信、录音或设备重启。
+此前 SimHelp 的终态/防自动重拨修复已按本线程用户授权覆盖安装到 iPhone Air，沿用 `0.9.8 (158)`。**本次新增 operation 查询恢复代码尚未安装。** U30Air 交接说明设备仍为 `45ec46c` 候选，新增持久回执候选 `8041906` 尚未安装；客户端未另行验证或操作该设备。没有提交、推送、Release/TestFlight、真实拨号、短信、录音或设备重启。
 
 R18 继续暂停发布。同号码两分钟保护仍保留；Relay/WLAN 配对身份未可靠统一，不能宣称跨路由持久去重已完成。early media 仍未在 U30 实现，404 和拒绝 `AIRSIMEM1` 应安全回退，不能宣称运营商公告已经可听。
 
 ## 客户端入口
 
-`AppModel` 已认证目录 → 带固定 Agent ID 的 `WLANDeviceCallBackend` → `AirSIMAPI.dialOwnedCall`。
+`AppModel` 已认证目录 → 带固定 Agent ID 的 `WLANDeviceCallBackend` → `SimHelpAPI.dialOwnedCall`。
 
 一次原 POST 的结果未知（网络异常、HTTP 5xx、损坏/不可信回执）时：
 

@@ -6,7 +6,7 @@
 
 - 用户反馈三星仍能听见通话声音；Shizuku 为 shell UID 2000，已获授权。
 - 通话期间框架持续报告 `muted=true volume=0 mode=2 speaker=false`。
-- AudioPolicy 的原生 `Telephony Rx -> Earpiece` patch 处于活动状态；AirSIM 的 `VOICE_TX` AudioTrack 则正确输出到 `TELEPHONY_TX`，并未走普通听筒 AudioTrack。
+- AudioPolicy 的原生 `Telephony Rx -> Earpiece` patch 处于活动状态；SimHelp 的 `VOICE_TX` AudioTrack 则正确输出到 `TELEPHONY_TX`，并未走普通听筒 AudioTrack。
 - Shizuku 的 PCM 守护进程仍是安装 87 之前启动的旧实例，缺少新版 PCM 证据字段。
 
 这证明原有框架标志不足以验收用户要求的物理听筒无声，不证明某个未经测试的 HAL 接口必定可用。不要将三星上的结果推广到其他厂商。
@@ -25,13 +25,13 @@
 
 ## 验收
 
-自动回归覆盖历史静音位、新通话重发、原音量与静音恢复、忽略指令、接口拒绝、恢复重试、三／四参数契约及旧服务版本升级。运行 `sh android-standalone/test.sh`；真机验收必须另做：VoWLAN 接通后三星听筒／扬声器无声、iPhone 双向语音保留，挂断后普通安卓电话输出与原音量正常。
+自动回归覆盖历史静音位、新通话重发、原音量与静音恢复、忽略指令、接口拒绝、恢复重试、三／四参数契约及旧服务版本升级。运行 `sh apps/android/standalone/test.sh`；真机验收必须另做：VoWLAN 接通后三星听筒／扬声器无声、iPhone 双向语音保留，挂断后普通安卓电话输出与原音量正常。
 
 若三星策略回读为零仍有声，应记录为尚未解决的 OEM 蜂窝输出问题，不能继续把多次相同的框架静音请求报告成“自动修复成功”。
 
 ## 本轮执行记录
 
-- `sh android-standalone/test.sh` 完整通过（`/tmp/airsim-88-final-tests.log`），包含新增音量策略、接口契约、超时准备与恢复用例，原生 PCM 55 项检查、13 组通话静音生命周期等原有测试通过。
+- `sh apps/android/standalone/test.sh` 完整通过（`/tmp/airsim-88-final-tests.log`），包含新增音量策略、接口契约、超时准备与恢复用例，原生 PCM 55 项检查、13 组通话静音生命周期等原有测试通过。
 - Standalone 与 AVF Bridge 的 Android 0.9.7.1（88）Debug APK 构建成功。未提交推送、未公开发布、未修改 Relay 或 iOS。
 - 2026-10-16 15:56（Asia/Shanghai），Standalone 已保留数据覆盖安装到用户三星 Flip7。服务 PID 从 19204 替换为 24420，PCM 桥从 19262 替换为 24458；状态确认 `uid=2000 service_revision=10 pcm=running`。未重启全局 Shizuku，未终止旧 AVF 的独立桥。
 - 启动未见本次崩溃。16:03 真机通话仍报告 `output_policy=zero_readback pcm_capture=observed pcm_route=verified`，但用户确认三星听筒仍有声。因此候选 88 **未通过物理输出静音验收**；此项仍未解决，不能用框架回读代替声学验证。

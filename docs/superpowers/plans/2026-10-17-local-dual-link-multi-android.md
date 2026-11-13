@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 同一 iOS AirSIM 同时连接多台安卓，支持本地 VoWLAN＋VoBLE 双待、指定设备拨出、按来电来源接听，以及通话中其他设备来电只提醒。
+**Goal:** 同一 iOS SimHelp 同时连接多台安卓，支持本地 VoWLAN＋VoBLE 双待、指定设备拨出、按来电来源接听，以及通话中其他设备来电只提醒。
 
 **Architecture:** 共享发现入口管理多个隔离的设备会话；设备协调层统一已认证的 VoWLAN／BLE 身份，通话注册表与唯一媒体租约独立于默认拨号选择。沿用现有 Android Telecom、加密控制与 PCM 协议，不做通话途中跨传输迁移；按来源设备锁定所有命令。
 
@@ -35,18 +35,18 @@
 
 | 文件 | 责任 |
 | --- | --- |
-| 新增 `iOS/AirSIM/DeviceCallRegistry.swift` | 设备域通话键、事件去重、终态与主通话／提醒策略，不操作网络或 UIKit |
-| 新增 `iOS/AirSIM/VoBLERadioController.swift` | 唯一 CBCentralManager、扫描、外设回调分发和系统多外设恢复 |
-| 新增 `iOS/AirSIM/VoBLEDeviceHub.swift` | 每台 BLE 控制／通话／媒体会话的生命周期与已认证目录 |
-| 修改 `iOS/AirSIM/VoBLECentralController.swift` | 保留为单外设认证控制会话，移出全局扫描／默认设备的所有权 |
-| 新增 `iOS/AirSIM/LocalDeviceDirectory.swift` | 多设备路由与认证能力汇合、设备级 VoWLAN 会话及本地事件订阅 |
-| 修改 `iOS/AirSIM/VoWLANAuth.swift`、`SamsungPairingClient.swift`、`SamsungPairingView.swift`、`VoWLANController.swift` | 设备级凭据、配对事务、共享发现及旧安装兼容 |
-| 新增 `iOS/AirSIM/DeviceCallActionRouter.swift` | 绑定来源设备／传输／系统 UUID 的不可漂移操作与唯一媒体租约 |
-| 新增 `iOS/AirSIM/OtherDeviceCallReminder.swift` | 次要来电提示的去重、撤销和来源明确的本地通知 |
-| 修改 `iOS/AirSIM/AppModel.swift`、`CallKitController.swift`、`VoBLECallCoordinator.swift` | 替换单全局来源假设；接入注册表、动作路由及媒体授权 |
-| 修改 `iOS/AirSIM/ConnectionModePreference.swift`、`VoBLEModeController.swift`、`AirSIMSetupView.swift`、`PhoneViews.swift`、`VoBLEPairingView.swift` | 新模式、拨号设备选择、各设备状态与配对操作目标 |
-| 修改 `iOS/AirSIM/BackgroundStandbyController.swift`、`LiveActivityController.swift`、`RootView.swift`、`WatchCallCoordinator.swift`、`iOS/Shared/WatchCallPayload.swift`、`iOS/Shared/AirSIMLiveActivityShared.swift` | 次要提醒、深链与现有主通话展示／Watch 动作的来源保护；不新增 Watch 直连功能 |
-| 新增设备域 XCTest 文件，修改 `iOS/AirSIMTests/AirSIMTests.swift` 及 `iOS/AirSIM.xcodeproj/project.pbxproj` | 各单元和生产者／消费者集成回归，所有新文件必须入 target |
+| 新增 `apps/ios/SimHelp/DeviceCallRegistry.swift` | 设备域通话键、事件去重、终态与主通话／提醒策略，不操作网络或 UIKit |
+| 新增 `apps/ios/SimHelp/VoBLERadioController.swift` | 唯一 CBCentralManager、扫描、外设回调分发和系统多外设恢复 |
+| 新增 `apps/ios/SimHelp/VoBLEDeviceHub.swift` | 每台 BLE 控制／通话／媒体会话的生命周期与已认证目录 |
+| 修改 `apps/ios/SimHelp/VoBLECentralController.swift` | 保留为单外设认证控制会话，移出全局扫描／默认设备的所有权 |
+| 新增 `apps/ios/SimHelp/LocalDeviceDirectory.swift` | 多设备路由与认证能力汇合、设备级 VoWLAN 会话及本地事件订阅 |
+| 修改 `apps/ios/SimHelp/VoWLANAuth.swift`、`SamsungPairingClient.swift`、`SamsungPairingView.swift`、`VoWLANController.swift` | 设备级凭据、配对事务、共享发现及旧安装兼容 |
+| 新增 `apps/ios/SimHelp/DeviceCallActionRouter.swift` | 绑定来源设备／传输／系统 UUID 的不可漂移操作与唯一媒体租约 |
+| 新增 `apps/ios/SimHelp/OtherDeviceCallReminder.swift` | 次要来电提示的去重、撤销和来源明确的本地通知 |
+| 修改 `apps/ios/SimHelp/AppModel.swift`、`CallKitController.swift`、`VoBLECallCoordinator.swift` | 替换单全局来源假设；接入注册表、动作路由及媒体授权 |
+| 修改 `apps/ios/SimHelp/ConnectionModePreference.swift`、`VoBLEModeController.swift`、`SimHelpSetupView.swift`、`PhoneViews.swift`、`VoBLEPairingView.swift` | 新模式、拨号设备选择、各设备状态与配对操作目标 |
+| 修改 `apps/ios/SimHelp/BackgroundStandbyController.swift`、`LiveActivityController.swift`、`RootView.swift`、`WatchCallCoordinator.swift`、`apps/ios/Shared/WatchCallPayload.swift`、`apps/ios/Shared/SimHelpLiveActivityShared.swift` | 次要提醒、深链与现有主通话展示／Watch 动作的来源保护；不新增 Watch 直连功能 |
+| 新增设备域 XCTest 文件，修改 `apps/ios/SimHelpTests/SimHelpTests.swift` 及 `apps/ios/SimHelp.xcodeproj/project.pbxproj` | 各单元和生产者／消费者集成回归，所有新文件必须入 target |
 
 命名是计划接口约定，不是已有实现。Task 1–3 先通过适配器保留现有单机功能，Task 4 连接完整多机行为，Task 5 开放模式入口；不得在中间任务把未完成能力标成在线。
 
@@ -55,19 +55,19 @@
 由 `xcrun simctl list devices booted` 选定已启动的测试模拟器，将实际 ID 填入 `SIM_ID`，不能误用物理 Air UDID；测试不使用生产 Bundle 配置。每阶段先运行新增测试观察失败，再运行整个 iOS 测试 target；不要把编译成功或 0 个测试视为通过。
 
 ```sh
-xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
+xcodebuild -project apps/ios/SimHelp.xcodeproj -scheme SimHelp \
   -destination "platform=iOS Simulator,id=$SIM_ID" \
-  -derivedDataPath /tmp/AirSIM-multi-device-tests -jobs 2 \
+  -derivedDataPath /tmp/SimHelp-multi-device-tests -jobs 2 \
   CODE_SIGNING_ALLOWED=NO test
 ```
 
-新增测试首轮可加 `-only-testing:AirSIMTests/<TestClass>`，最终必须去掉过滤执行全套。采用带可控响应的真实本地 TCP／认证夹具；仅 CoreBluetooth 和系统通知送达边界需要替身，不 mock 注册表或动作路由本身。
+新增测试首轮可加 `-only-testing:SimHelpTests/<TestClass>`，最终必须去掉过滤执行全套。采用带可控响应的真实本地 TCP／认证夹具；仅 CoreBluetooth 和系统通知送达边界需要替身，不 mock 注册表或动作路由本身。
 
 ---
 
 ### Task 1: 设备域通话注册表与唯一所有者
 
-**Files:** Create `iOS/AirSIM/DeviceCallRegistry.swift`, `iOS/AirSIMTests/DeviceCallRegistryTests.swift`; modify `iOS/AirSIM/AppModel.swift`, `iOS/AirSIM.xcodeproj/project.pbxproj`.
+**Files:** Create `apps/ios/SimHelp/DeviceCallRegistry.swift`, `apps/ios/SimHelpTests/DeviceCallRegistryTests.swift`; modify `apps/ios/SimHelp/AppModel.swift`, `apps/ios/SimHelp.xcodeproj/project.pbxproj`.
 
 **Interfaces:**
 - Produces `DeviceCallKey: Hashable, Sendable { agentID: String, callID: String, generation: UInt64 }`。
@@ -84,7 +84,7 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 
 ### Task 2: 一个蓝牙 Radio，多台隔离会话
 
-**Files:** Create `iOS/AirSIM/VoBLERadioController.swift`, `iOS/AirSIM/VoBLEDeviceHub.swift`, `iOS/AirSIMTests/VoBLEMultiDeviceTests.swift`; modify `VoBLECentralController.swift`, `VoBLECallCoordinator.swift`, `VoBLEPairingView.swift`, `AppModel.swift`, project target entries.
+**Files:** Create `apps/ios/SimHelp/VoBLERadioController.swift`, `apps/ios/SimHelp/VoBLEDeviceHub.swift`, `apps/ios/SimHelpTests/VoBLEMultiDeviceTests.swift`; modify `VoBLECentralController.swift`, `VoBLECallCoordinator.swift`, `VoBLEPairingView.swift`, `AppModel.swift`, project target entries.
 
 **Interfaces:**
 - Consumes Task 1 的 `DeviceCallEvent` 与注册表。
@@ -101,11 +101,11 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 
 ### Task 3: 多设备 VoWLAN 凭据、认证路由与事件订阅
 
-**Files:** Create `iOS/AirSIM/LocalDeviceDirectory.swift`, `iOS/AirSIMTests/LocalDeviceDirectoryTests.swift`; modify `VoWLANAuth.swift`, `VoWLANController.swift`, `SamsungPairingClient.swift`, `SamsungPairingView.swift`, `AppModel.swift`, project entries.
+**Files:** Create `apps/ios/SimHelp/LocalDeviceDirectory.swift`, `apps/ios/SimHelpTests/LocalDeviceDirectoryTests.swift`; modify `VoWLANAuth.swift`, `VoWLANController.swift`, `SamsungPairingClient.swift`, `SamsungPairingView.swift`, `AppModel.swift`, project entries.
 
 **Interfaces:**
 - Produces `LocalDeviceRoutes { agentID: String, vowlan: VoWLANEndpoint?, bluetoothReady: Bool }`，其中 vowlan 只能表示已认证端点，不承载凭据明文展示。
-- Produces `@MainActor LocalDeviceDirectory`，`routes(for agentID: String) -> LocalDeviceRoutes?`, `api(for agentID: String) -> AirSIMAPI?`, `verify(agentID: String, endpoint: VoWLANEndpoint) async throws`, `forget(agentID: String) async throws`，`onCallEvent: ((DeviceCallEvent) -> Void)?`；消费 Task 2 的已认证 BLE 目录，不重建 CBCentralManager。
+- Produces `@MainActor LocalDeviceDirectory`，`routes(for agentID: String) -> LocalDeviceRoutes?`, `api(for agentID: String) -> SimHelpAPI?`, `verify(agentID: String, endpoint: VoWLANEndpoint) async throws`, `forget(agentID: String) async throws`，`onCallEvent: ((DeviceCallEvent) -> Void)?`；消费 Task 2 的已认证 BLE 目录，不重建 CBCentralManager。
 - Produces `VoWLANCredentialStore.load(agentID: String) -> VoWLANCredential?`, `save(_ credential: VoWLANCredential, agentID: String) throws`, `remove(agentID: String)`；保留旧无参 API 供尚未迁移的旧单机调用，所有新多机路由必须显式指定 agentID。
 - 配对事务生成临时 credential，不替换正在使用的全局密钥。成功 claim 后，经该密钥的 HMAC 健康检查确认来源 agentID 才提交关联；取消或失败不影响旧关联。Bonjour claim 可继续使用链路本地 IPv6，控制端点仍用现有 IPv4 广播／手动路由，不能因想获取端口证明而卡在不存在的 IPv6 PCM 路由。
 
@@ -117,12 +117,12 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 
 ### Task 4: 来源锁定的通话动作、CallKit 与唯一媒体租约
 
-**Files:** Create `iOS/AirSIM/DeviceCallActionRouter.swift`, `iOS/AirSIMTests/DeviceCallActionRouterTests.swift`; modify `AppModel.swift`, `CallKitController.swift`, `VoBLECallCoordinator.swift`, `CallLifecycleStore.swift`, `WatchCallCoordinator.swift`, `iOS/Shared/WatchCallPayload.swift`, project entries.
+**Files:** Create `apps/ios/SimHelp/DeviceCallActionRouter.swift`, `apps/ios/SimHelpTests/DeviceCallActionRouterTests.swift`; modify `AppModel.swift`, `CallKitController.swift`, `VoBLECallCoordinator.swift`, `CallLifecycleStore.swift`, `WatchCallCoordinator.swift`, `apps/ios/Shared/WatchCallPayload.swift`, project entries.
 
 **Interfaces:**
 - Consumes `DeviceCallKey`, `DeviceCallRegistry`, Task 2 Hub 与 Task 3 Directory。
 - Produces `LockedDeviceCallRoute { key: DeviceCallKey, transport: CallTransport, systemUUID: UUID }`。
-- Produces `@MainActor DeviceCallActionRouter`：`dial(agentID: String, number: String, mode: AirSIMConnectionMode) async throws -> LockedDeviceCallRoute`, `answer(_ key: DeviceCallKey) async throws`, `end(_ key: DeviceCallKey, rejectIfRinging: Bool) async throws`, `sendDTMF(_ digits: String, for key: DeviceCallKey) async throws`；内部对每次拨出保留目标快照，不通过当前 UI 选择重新解析。
+- Produces `@MainActor DeviceCallActionRouter`：`dial(agentID: String, number: String, mode: SimHelpConnectionMode) async throws -> LockedDeviceCallRoute`, `answer(_ key: DeviceCallKey) async throws`, `end(_ key: DeviceCallKey, rejectIfRinging: Bool) async throws`, `sendDTMF(_ digits: String, for key: DeviceCallKey) async throws`；内部对每次拨出保留目标快照，不通过当前 UI 选择重新解析。
 - Produces `DeviceMediaLease.acquire(_ key: DeviceCallKey) -> Bool`, `release(_ key: DeviceCallKey)`；不同键的 release 必须无副作用。
 - CallKit delegate 到 handler 的 answer／end／mute／DTMF 路径必须传入 action.callUUID，并由明确的 UUID→LockedDeviceCallRoute 映射解析；旧调用可适配，但不能在映射缺失时借用全局 currentCall。Watch 动作同样校验 UUID／agentID；缺少来源的旧负载只允许匹配唯一当前通话。
 
@@ -134,10 +134,10 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 
 ### Task 5: 本地双通道入口、设备状态与次要来电提醒
 
-**Files:** Create `iOS/AirSIM/OtherDeviceCallReminder.swift`, `iOS/AirSIMTests/OtherDeviceCallReminderTests.swift`; modify `ConnectionModePreference.swift`, `VoBLEModeController.swift`, `AirSIMSetupView.swift`, `PhoneViews.swift`, `VoBLEPairingView.swift`, `BackgroundStandbyController.swift`, `RootView.swift`, `LiveActivityController.swift`, `iOS/Shared/AirSIMLiveActivityShared.swift`, project entries.
+**Files:** Create `apps/ios/SimHelp/OtherDeviceCallReminder.swift`, `apps/ios/SimHelpTests/OtherDeviceCallReminderTests.swift`; modify `ConnectionModePreference.swift`, `VoBLEModeController.swift`, `SimHelpSetupView.swift`, `PhoneViews.swift`, `VoBLEPairingView.swift`, `BackgroundStandbyController.swift`, `RootView.swift`, `LiveActivityController.swift`, `apps/ios/Shared/SimHelpLiveActivityShared.swift`, project entries.
 
 **Interfaces:**
-- `AirSIMConnectionMode.localDual` 的持久化值为 `localDual`、标题“本地双通道”；startsVoWLAN=true、startsBluetooth=true、startsCloud=false、usesCallKit=true。`DialRouteSelector.preferred(...)` 对这一个设备仅 VoWLAN→BLE，不使用云端。
+- `SimHelpConnectionMode.localDual` 的持久化值为 `localDual`、标题“本地双通道”；startsVoWLAN=true、startsBluetooth=true、startsCloud=false、usesCallKit=true。`DialRouteSelector.preferred(...)` 对这一个设备仅 VoWLAN→BLE，不使用云端。
 - Produces `OtherDeviceCallReminder { key: DeviceCallKey, deviceName: String, number: String?, stillRinging: Bool }` 与 `@MainActor OtherDeviceCallReminderController`：`init(lookup: @escaping (DeviceCallKey) -> OtherDeviceCallReminder?)`、`consume(_ effects: [DeviceCallEffect])`；published `reminders: [OtherDeviceCallReminder]`。lookup 使用注册表 latestEvent 和目录的当前认证设备资料，只有仍响铃且非主通话才返回提醒；发通知前再次验证。通知 ID 从整个设备域通话键稳定派生，不包含号码。
 - `AppModel.otherDeviceCallReminders` 提供真实状态；通知 userInfo 的新事件 `other_android_incoming` 携带 agentID／callID／协调层 generation。点击只打开并验证提醒来源，不自动接听，也不改变默认拨号设备。
 
@@ -150,13 +150,13 @@ xcodebuild -project iOS/AirSIM.xcodeproj -scheme AirSIM \
 
 ### Task 6: 全量回归、兼容与真机验收准备
 
-**Files:** Modify `iOS/README.md`, `docs/voble-real-device-test-matrix.md`, `docs/superpowers/specs/2026-10-17-local-dual-link-multi-android-design.md`；仅在实际改变共享 Android 协议时才同步安卓组件 README 和协议测试，不能未经需要增改 Relay。
+**Files:** Modify `apps/ios/README.md`, `docs/voble-real-device-test-matrix.md`, `docs/superpowers/specs/2026-10-17-local-dual-link-multi-android-design.md`；仅在实际改变共享 Android 协议时才同步安卓组件 README 和协议测试，不能未经需要增改 Relay。
 
 **Interfaces:** 消费 Task 1–5 的真实 AppModel、Hub、Directory、Router 和提醒控制器；不在测试中另写一个能通过的独立路由实现。
 
 - [ ] **Step 1:** 用完整生产协调链覆盖至少两设备的“连接→指定 A 拨出→B 来电提醒→B 结束→A 挂断→下一通选 B”；断言真实发出的命令目标、媒体启动次数为一路、A 的计时未被 B 重置。
 - [ ] **Step 2:** 增加锁屏／恢复状态夹具：恢复两个 OS peripheral、删除其中一个、同一设备换地址、旧认证结果迟到、任务取消、权限撤回。断言没有用历史号码补齐当前不可读号码、没有主线程认证／持续扫描刷 UI。
-- [ ] **Step 3:** 运行完整 iOS XCTest、`sh android-standalone/test.sh`、`sh android/phone-control-app/test.sh`、两种 APK 构建／验签、iOS Release 无签名完整归档及 `sh iOS/scripts/test-package-unsigned.sh`。有基础设施失败时保留诊断并报告，不能用“构建通过”替代没跑的测试。
+- [ ] **Step 3:** 运行完整 iOS XCTest、`sh apps/android/standalone/test.sh`、`sh apps/android/phone-control/test.sh`、两种 APK 构建／验签、iOS Release 无签名完整归档及 `sh apps/ios/scripts/test-package-unsigned.sh`。有基础设施失败时保留诊断并报告，不能用“构建通过”替代没跑的测试。
 - [ ] **Step 4:** 请求本功能的保留数据安装许可，并确认 iPhone、两台安卓的身份与当前连接地址。安装后实测两台同时连接、指定拨出、来电来源、A 通话中 B 提醒、B 未结束／已结束、Wi-Fi／蓝牙独立断开及下一通备用链路、锁屏恢复、双向语音与三星音量；不自行拨打真实号码、发短信或删除真实设备。
 - [ ] **Step 5:** 在测试矩阵逐项记录自动化／真实反馈／未执行；最终新鲜命令验证、整段独立代码审查并处理重要问题后再交付。仅确认实施不等于授权 commit／push／Release／TestFlight，交付明确列出尚未授权的动作。
 

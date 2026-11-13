@@ -1,10 +1,10 @@
 # TestFlight 162 启动崩溃：Date 比较的运行时兼容处理
 
-调查日期：2026-11-04。来源：用户提供的 `TestFlight – AirSIM 0.9.8 (162).crash`。
+调查日期：2026-11-04。来源：用户提供的 `TestFlight – SimHelp 0.9.8 (162).crash`。
 
 ## 已确认的证据
 
-- AirSIM 0.9.8（162），TestFlight，iPhone18,4，iOS 27.2 Beta `24B5089g`。
+- SimHelp 0.9.8（162），TestFlight，iPhone18,4，iOS 27.2 Beta `24B5089g`。
 - 启动 08:41:54.3049，终止 08:41:54.5876，约 0.283 秒。
 - 报告包含 `EXC_BAD_ACCESS (SIGKILL)`、`CODESIGNING 2 Invalid Page`、`pc=0`、`x16=0` 和执行权限缺页信息。
 - 栈为 `Date.>=` → `VoWLANRecoveryGate.shouldAttempt` → `recoverIfNeeded` → Agent 轮询。重连检查在主线程控制器内调用。
@@ -27,7 +27,7 @@
 
 不修改计数器、DispatchTime 或 Unix 秒整数比较；不放宽鉴权窗口、不绕过签名、不增加自动拨号。
 
-新增 `iOS/scripts/check-date-runtime-imports.py <app-or-Mach-O>`：扫描 App、扩展、Watch 和内嵌动态库，拒绝以上两个未解析导入；后续安装／发布包签名完成后执行。它补充签名校验，不能替代真实运行。
+新增 `apps/ios/scripts/check-date-runtime-imports.py <app-or-Mach-O>`：扫描 App、扩展、Watch 和内嵌动态库，拒绝以上两个未解析导入；后续安装／发布包签名完成后执行。它补充签名校验，不能替代真实运行。
 
 ## 验证结果
 

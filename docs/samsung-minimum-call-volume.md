@@ -21,8 +21,8 @@ Watchdog 对最低档目标检查实际档位漂移，最多沿用原有 3 次�
 ## 验证
 
 - 先复现旧实现不显式设置最低档、Watchdog 误判最低档、Samsung 接听前降音量三个失败，再验证修复。
-- `sh android-standalone/test.sh` 完整通过，含最低档 0/1/2、重复操作、原有静音位、忽略写入、恢复失败重试、延迟写入后恢复、Watchdog 目标校验、15 组通话音量生命周期和原有 PCM/权限/配对回归。构建有既有过时 API/JDK 工具告警，但退出成功。
-- Standalone APK：`android-standalone/build/android/AirSIM-Android-Standalone-debug.apk`，0.9.7.1（90）。特权服务 revision=11，按新 build code 替换旧实例，不重启全局 Shizuku、不终止独立 AVF 桥。
+- `sh apps/android/standalone/test.sh` 完整通过，含最低档 0/1/2、重复操作、原有静音位、忽略写入、恢复失败重试、延迟写入后恢复、Watchdog 目标校验、15 组通话音量生命周期和原有 PCM/权限/配对回归。构建有既有过时 API/JDK 工具告警，但退出成功。
+- Standalone APK：`apps/android/standalone/build/android/SimHelp-Android-Standalone-debug.apk`，0.9.7.1（90）。特权服务 revision=11，按新 build code 替换旧实例，不重启全局 Shizuku、不终止独立 AVF 桥。
 - 不修改 iOS、Relay 或配对凭据；未提交推送、未公开发布。最终听感需用户在 iPhone 接通后确认三星是否明显变小，且 iPhone 双向语音不变，挂断后三星通话音量恢复。
 - 已通过无线 ADB 保留数据覆盖安装到用户三星 SM-F766U，设备包信息确认 build 90，主界面启动。持久日志确认新服务 `uid=2000 service_revision=11 pcm=running`；待机 `local_output=normal`，没有在没有远程通话时降低音量。实际通话最低档与恢复效果仍待用户复验。
 
@@ -36,4 +36,4 @@ Watchdog 对最低档目标检查实际档位漂移，最多沿用原有 3 次�
 
 新增生命周期回归先在旧代码失败，再验证 BLE／云端独立字符串 ID 可以触发最低音量、释放 owner 恢复原档位；不同通话不能接管，释放其他 owner 不能撤销当前策略。生命周期共 18 个场景。候选 91 的设备最低档和实际听感仍须真机确认，不将测试通过当作声学验证。
 
-91 的完整 `sh android-standalone/test.sh` 已退出成功（仍有既有 53 项 API／工具告警），包括原有 PCM、Shizuku、短信兼容、BLE 服务生命周期回归；本次修改复核无阻塞发现。2026-10-16 19:37（GMT+8）保留数据覆盖安装到三星 SM-F766U 成功，设备包信息确认 `versionCode=91`、应用已启动。未修改 iOS／Relay、未自动拨打电话，等待用户复验物理音量和通话双向语音。
+91 的完整 `sh apps/android/standalone/test.sh` 已退出成功（仍有既有 53 项 API／工具告警），包括原有 PCM、Shizuku、短信兼容、BLE 服务生命周期回归；本次修改复核无阻塞发现。2026-10-16 19:37（GMT+8）保留数据覆盖安装到三星 SM-F766U 成功，设备包信息确认 `versionCode=91`、应用已启动。未修改 iOS／Relay、未自动拨打电话，等待用户复验物理音量和通话双向语音。

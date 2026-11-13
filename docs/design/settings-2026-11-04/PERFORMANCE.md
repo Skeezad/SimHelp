@@ -4,7 +4,7 @@
 
 ## 证据与范围
 
-用户报告 iPhone 上设置页滚动卡顿。源码确认 `AirSIMSettingsView` 观察整个 `AppModel`，该模型还转发本地设备、蓝牙和音频对象的变化；这些事件并不都影响设置首页，但原首页直接位于观察者的页面构造函数中。首页还重复求取设备历史和连接状态。这里是源码级开销诊断，并非 Instruments 已定位的唯一掉帧原因。
+用户报告 iPhone 上设置页滚动卡顿。源码确认 `SimHelpSettingsView` 观察整个 `AppModel`，该模型还转发本地设备、蓝牙和音频对象的变化；这些事件并不都影响设置首页，但原首页直接位于观察者的页面构造函数中。首页还重复求取设备历史和连接状态。这里是源码级开销诊断，并非 Instruments 已定位的唯一掉帧原因。
 
 ## 修改
 
@@ -28,7 +28,7 @@
 
 - iOS Simulator 构建通过，`git diff --check` 通过。
 - iPhone Duo / iOS 27.2 两条 UI 回归全部通过：分类 → 连接 → 手动配对 → 返回 → 小组件教程／偏好；反馈输入 → 上传范围预览 → 返回保留草稿。
-- 结果：`/Users/kyle/Library/Caches/AirSIM/DuoSettings20261104/settings-perf-form.xcresult`，2 tests / 0 failures。
+- 结果：`/Users/kyle/Library/Caches/SimHelp/DuoSettings20261104/settings-perf-form.xcresult`，2 tests / 0 failures。
 - 初版将多个 Section 包在 Form 内部的比较视图中，导航回归失败；已调整为首页 Form 整体拥有比较边界，随后上述两条回归通过。
 - 没有执行真实拨号、上传反馈或云端自检。
 
