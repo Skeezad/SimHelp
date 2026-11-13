@@ -271,6 +271,7 @@ enum SamsungPairingClient {
             case configured
             case deviceIDHint = "device_id_hint"
             case agentID = "agent_id"
+            case gatewayHost = "gateway_host"
             case controlPort = "control_port", pcmPort = "pcm_port", routeProof = "route_proof"
         }
     }
