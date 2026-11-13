@@ -64,7 +64,7 @@ public final class SmsNotificationListenerService extends NotificationListenerSe
 
     private static boolean isActualMessageNotification(
             Notification notification, String sender, String body) {
-        if (sender.contains("正在运行") || body.contains("点按即可了解详情或停止应用")) {
+        if (sender.contains("Running") || body.contains("Tap to learn more or stop the app")) {
             return false;
         }
         String channel = notification.getChannelId();

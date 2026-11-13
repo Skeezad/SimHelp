@@ -248,18 +248,18 @@ final class StandaloneAgentGateway {
         }
         if (!commandID.matches("[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,36}")) {
             return new JSONObject().put("command_id", commandID).put("status", "failed")
-                    .put("error", "云端命令 ID 无效");
+                    .put("error", "Cloud command ID is invalid");
         }
         String expires = command.optString("expires_at", "");
         if (!expires.isEmpty()) {
             try {
                 if (Instant.now().isAfter(Instant.parse(expires))) {
                     return rememberCommand(commandKey, new JSONObject().put("command_id", commandID)
-                            .put("status", "failed").put("error", "云端命令已过期"));
+                            .put("status", "failed").put("error", "Cloud command has expired"));
                 }
             } catch (Exception invalidExpiry) {
                 return rememberCommand(commandKey, new JSONObject().put("command_id", commandID)
-                        .put("status", "failed").put("error", "云端命令有效期无效"));
+                        .put("status", "failed").put("error", "Cloud command validity period is invalid"));
             }
         }
         String type = command.optString("type", "");

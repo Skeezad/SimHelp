@@ -5,7 +5,7 @@ final class AppUpdateSession {
     record Result(AppUpdatePolicy.Candidate candidate, String message, boolean manual) {}
     private boolean checking;
     private Result result;
-    private String status = "每天最多自动检查一次；与 Linux Agent 更新分开";
+    private String status = "Automatically checked no more than once a day; separate from Linux Agent updates";
     synchronized boolean begin(long attempt, long now, boolean manual) {
         if (!AppUpdatePolicy.checkDue(attempt, now, manual, checking)) return false;
         checking = true;
@@ -20,5 +20,5 @@ final class AppUpdateSession {
                 ? result : null;
     }
     synchronized void consumed(Result result) { if (this.result == result) this.result = null; }
-    synchronized String status() { return checking ? "正在检查应用更新…" : status; }
+    synchronized String status() { return checking ? "Checking for app updates…" : status; }
 }

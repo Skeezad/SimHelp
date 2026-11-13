@@ -64,23 +64,23 @@ public final class StandaloneAgentService extends Service {
     /** Explicit user action; call off the UI thread. Never enables cloud or bypasses the gate. */
     static void sendManualHeartbeat() throws Exception {
         if (!manualHeartbeatRunning.compareAndSet(false, true))
-            throw new IllegalStateException("心跳正在发送，请稍候");
+            throw new IllegalStateException("Heartbeat is being sent, please wait.");
         try { performManualHeartbeat(); }
         finally { manualHeartbeatRunning.set(false); }
     }
 
     private static void performManualHeartbeat() throws Exception {
         StandaloneAgentService active = instance;
-        if (active == null || !active.running) throw new IllegalStateException("Agent 服务未运行，请返回首页启动后重试");
+        if (active == null || !active.running) throw new IllegalStateException("The Agent service is not running, please return to the homepage to start and try again.");
         var generation = RelayEgressGate.shared.generation();
-        if (!generation.isCurrent()) throw new IllegalStateException("纯本地模式已开启，禁止发送云端心跳");
+        if (!generation.isCurrent()) throw new IllegalStateException("Pure local mode is turned on, prohibiting sending cloud heartbeats");
         var snapshot = active.commandConfiguration.snapshot();
         if (snapshot.scope() == null || !active.store.cloudEnabled())
-            throw new IllegalStateException("云端未开启或尚未配对，请先检查云端配置");
+            throw new IllegalStateException("The cloud is not turned on or has not been paired. Please check the cloud configuration first.");
         active.relay.postJSON(snapshot.registration(), "/v1/devices/register",
                 new JSONObject(snapshot.registration().toString()), 15_000, generation);
         if (!generation.isCurrent() || !active.commandConfiguration.isCurrent(snapshot))
-            throw new IllegalStateException("连接配置已变更，请重新发送");
+            throw new IllegalStateException("The connection configuration has been changed, please resend.");
         try {
             active.sendHeartbeat(snapshot.registration(), generation);
             active.nextHeartbeatAttempt = 0;
@@ -90,7 +90,7 @@ public final class StandaloneAgentService extends Service {
             throw error;
         }
         if (!generation.isCurrent() || !active.commandConfiguration.isCurrent(snapshot))
-            throw new IllegalStateException("连接配置已变更，请重新自检");
+            throw new IllegalStateException("The connection configuration has been changed, please check yourself again.");
         BridgeLog.info("standalone_manual_heartbeat_accepted");
     }
 
@@ -106,7 +106,7 @@ public final class StandaloneAgentService extends Service {
         store = new StandaloneAgentStore(this);
         relay = new StandaloneRelayClient();
         startForeground(BridgeNotification.WATCHDOG_ID,
-                BridgeNotification.status(this, "内置 Agent 正在启动"),
+                BridgeNotification.status(this, "Built-in Agent is starting"),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING);
         running = true;
         instance = this;
@@ -145,7 +145,7 @@ public final class StandaloneAgentService extends Service {
                 var snapshot = commandConfiguration.snapshot();
                 JSONObject registration = snapshot.registration();
                 if (registration == null || !store.cloudEnabled()) {
-                    update(registration == null ? "内置 Agent 在线 · 等待 iPhone 配对" : "内置 Agent 在线 · 云端已关闭");
+                    update(registration == null ? "Built-in Agent online · Waiting for iPhone pairing" : "Built-in Agent is online · Cloud is closed");
                     Thread.sleep(2_000);
                     continue;
                 }
@@ -175,7 +175,7 @@ public final class StandaloneAgentService extends Service {
                     catch (Exception error) { if (commandConfiguration.isCurrent(snapshot)) commandFailure(snapshot.epoch(), -1, error); }
                 }
                 failures = 0;
-                update("内置 Agent 在线 · Relay 已连接");
+                update("Built-in Agent is online · Relay is connected");
                 Thread.sleep(2_000);
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
@@ -185,7 +185,7 @@ public final class StandaloneAgentService extends Service {
                 registrationRecovery.onFailure(error, android.os.SystemClock.elapsedRealtime());
                 store.recordError(error.getClass().getSimpleName() + ": " + error.getMessage());
                 BridgeLog.error("standalone_agent_cycle_failed failures=" + failures, error);
-                update("内置 Agent 正在重连 · " + failures);
+                update("The built-in Agent is reconnecting ·" + failures);
                 try { Thread.sleep(RelayRetryPolicy.delayMillis(failures, error)); }
                 catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); return; }
             }
@@ -251,7 +251,7 @@ public final class StandaloneAgentService extends Service {
                 String expires = command.optString("expires_at", "");
                 if (expires.isEmpty() || Instant.now().isAfter(Instant.parse(expires))) {
                     result = new JSONObject().put("command_id", commandID).put("status", "failed")
-                            .put("error", "云端命令已过期");
+                            .put("error", "Cloud command has expired");
                 } else {
                     if (!commandConfiguration.isCurrent(snapshot)) return;
                     result = StandaloneAgentGateway.get(this).executeCloudCommand(command,

@@ -41,7 +41,7 @@ public final class WireJson {
 
 	public static String smsEvent(String eventId, String deliveryId, String sender, String content,
 								 String timestamp, String simSlot) {
-		String displaySender = sender == null || sender.isBlank() ? "未知号码" : sender;
+		String displaySender = sender == null || sender.isBlank() ? "unknown number" : sender;
 		return "{" + field("event", "incoming_sms") + "," + field("event_id", eventId) + ","
 				+ field("delivery_id", deliveryId) + "," + field("sender", displaySender) + ","
 				+ field("content", content) + "," + field("timestamp", timestamp) + ","

@@ -52,7 +52,7 @@ public final class VoWLANGatewayService extends Service {
     private volatile long advertisementRetryAt;
     private String activeHotspot = "";
     private String lastDiagnosticState = "";
-    private static volatile String currentDiagnosticState = "尚未检查";
+    private static volatile String currentDiagnosticState = "Not checked yet";
 
     static String currentDiagnosticState() {
         return currentDiagnosticState;
@@ -66,9 +66,9 @@ public final class VoWLANGatewayService extends Service {
 
     @Override public void onCreate() {
         super.onCreate();
-        currentDiagnosticState = "服务正在启动";
+        currentDiagnosticState = "Service is starting";
         BridgeLog.info("vowlan_service_created");
-        startForeground(BridgeNotification.VOWLAN_ID, BridgeNotification.vowlan(this, "正在发现 VoWLAN 网络"),
+        startForeground(BridgeNotification.VOWLAN_ID, BridgeNotification.vowlan(this, "Discovering VoWLAN network"),
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_REMOTE_MESSAGING);
         running = true;
         observeWiFiNetworks();
@@ -159,24 +159,24 @@ public final class VoWLANGatewayService extends Service {
                     syncAdditionalGateways(extraAddresses, avf);
                     if (hotspot != null) ensureStarted(hotspot, avf);
                     else stopPrimaryGateway();
-                    update(hotspot != null ? "VoWLAN 就绪 · " + hotspot.getHostAddress()
-                            : "手动直连网关就绪 · 可通过 Tailscale 连接");
+                    update(hotspot != null ? "VoWLAN ready ·" + hotspot.getHostAddress()
+                            : "Manual Direct Connect Gateway Ready · Connectable via Tailscale");
                 } else {
                     stopGateways();
-                    update(!dialerRoleHeld ? "请将 AirSIM 设为默认电话应用"
-                            : !paired ? "VoWLAN 未配对"
-                            : hotspot == null ? "正在等待同网 Wi-Fi 或三星热点"
-                            : !agentReady ? RuntimeMode.agentLabel(this) + " 尚未就绪" : "PCM 音频桥尚未就绪");
+                    update(!dialerRoleHeld ? "Please make SimHelp your default phone app"
+                            : !paired ? "VoWLAN not paired"
+                            : hotspot == null ? "Waiting for same-network Wi-Fi or Samsung hotspot"
+                            : !agentReady ? RuntimeMode.agentLabel(this) + "Not ready yet" : "PCM audio bridge is not ready yet");
                 }
                 waitForNetworkCycle(networkRecovery.nextDelay(android.os.SystemClock.elapsedRealtime(), 5_000));
             } catch (InterruptedException interrupted) {
                 Thread.currentThread().interrupt();
                 return;
             } catch (Exception error) {
-                currentDiagnosticState = "服务异常：" + error.getClass().getSimpleName();
+                currentDiagnosticState = "Service exception:" + error.getClass().getSimpleName();
                 BridgeLog.error("vowlan_lifecycle_failed", error);
                 stopGateways();
-                update("VoWLAN 正在恢复");
+                update("VoWLAN is recovering");
                 try { Thread.sleep(2_000); }
                 catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); return; }
             }
@@ -471,7 +471,7 @@ public final class VoWLANGatewayService extends Service {
 
     @Override public void onDestroy() {
         BridgeLog.info("vowlan_service_destroyed");
-        currentDiagnosticState = "服务已停止";
+        currentDiagnosticState = "Service has stopped";
         running = false;
         networkRecovery.close();
         if (connectivity != null && networkCallback != null) {

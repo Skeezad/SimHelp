@@ -13,7 +13,7 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Xiaomi/HyperOS sometimes asks "是否发送短信" before the modem sends a
+ * Xiaomi/HyperOS sometimes asks "Whether to send SMS" before the modem sends a
  * non-default-SMS-app message. This service clicks only the positive button,
  * only while an AirSIM SmsManager attempt is pending. It never logs or stores
  * message text, numbers, or arbitrary screen content.
@@ -34,11 +34,11 @@ public final class SmsConfirmationAccessibilityService extends AccessibilityServ
             "com.android.settings"
     );
     private static final String[] DIALOG_MARKERS = {
-            "发送短信", "发送此短信", "是否发送", "确认发送", "短信发送"
+            "sending a text message", "Send this message", "Whether to send", "Confirm sending", "Send SMS"
     };
     private static final String[] POSITIVE_LABELS = {
-            "发送", "发送短信", "确认发送", "允许发送", "允许", "同意",
-            "同意并发送", "确定", "始终允许", "好的", "OK", "Send", "Allow"
+            "send", "sending a text message", "Confirm sending", "Allow sending", "allow", "agree",
+            "Agree and send", "Sure", "always allowed", "OK", "OK", "Send", "Allow"
     };
     private static final long CLICK_DEBOUNCE_MS = 800L;
     private long lastClickAt;
@@ -144,8 +144,8 @@ public final class SmsConfirmationAccessibilityService extends AccessibilityServ
             if (candidate.equalsIgnoreCase(label)) return true;
         }
         String lower = label.toLowerCase(Locale.ROOT);
-        return lower.startsWith("发送") || lower.startsWith("允许")
-                || lower.startsWith("同意") || lower.startsWith("确定")
+        return lower.startsWith("send") || lower.startsWith("allow")
+                || lower.startsWith("agree") || lower.startsWith("Sure")
                 || lower.startsWith("send") || lower.startsWith("allow");
     }
 

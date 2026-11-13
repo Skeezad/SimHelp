@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** Persian, no-root setup and pairing entry point. Never reports audio as tested
+/** English, no-root setup and pairing entry point. Never reports audio as tested
  * merely because a service, permission or transport is connected. */
 public final class SimHelpActivity extends Activity {
     private static final int BG = Color.rgb(10, 17, 28);
@@ -60,7 +60,7 @@ public final class SimHelpActivity extends Activity {
         scroll.setBackgroundColor(BG);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        page.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
         page.setPadding(dp(22), dp(28), dp(22), dp(32));
         scroll.addView(page);
         setContentView(scroll);
@@ -68,53 +68,53 @@ public final class SimHelpActivity extends Activity {
         TextView brand = text("SimHelp", 34, TEXT);
         brand.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         brand.setTextDirection(View.TEXT_DIRECTION_LTR);
-        brand.setGravity(Gravity.RIGHT);
+        brand.setGravity(Gravity.START);
         page.addView(brand);
-        page.addView(text("سیم‌کارت روی اندروید، تماس و پیام روی آیفون", 16, MUTED));
-        TextView badge = text("نسخهٔ شخصی • بدون روت", 12, ACCENT);
+        page.addView(text("SIM on Android. Calls and messages on iPhone.", 16, MUTED));
+        TextView badge = text("Personal build | No root required", 12, ACCENT);
         badge.setPadding(0, dp(12), 0, dp(18));
         page.addView(badge);
 
-        LinearLayout device = card(page, "گوشی میزبان");
+        LinearLayout device = card(page, "Android phone");
         device.addView(text(Build.MANUFACTURER + " " + Build.MODEL + " · Android " + Build.VERSION.RELEASE, 15, TEXT));
-        device.addView(text("سازگاری صدای A12 هنوز با تماس واقعی تأیید نشده. آماده بودن پل صدا به معنی موفق بودن مکالمه نیست.", 13, MUTED));
+        device.addView(text("Call audio on the Galaxy A12 has not been verified in a real call. A connected audio bridge does not confirm that two-way audio works.", 13, MUTED));
 
-        LinearLayout setup = card(page, "۱. آماده‌سازی اندروید");
+        LinearLayout setup = card(page, "1. Set up Android");
         roleStatus = text("", 14, TEXT); setup.addView(roleStatus);
-        button(setup, "انتخاب SimHelp به‌عنوان برنامهٔ تلفن", this::requestDialer);
+        button(setup, "Set SimHelp as the default phone app", this::requestDialer);
         permissionStatus = text("", 14, TEXT); setup.addView(permissionStatus);
-        button(setup, "اجازهٔ تماس و پیامک", this::requestNeededPermissions);
+        button(setup, "Grant call and SMS permissions", this::requestNeededPermissions);
         bridgeStatus = text("", 14, TEXT); setup.addView(bridgeStatus);
-        button(setup, "راه‌اندازی Shizuku", this::setupShizuku);
-        setup.addView(text("در Shizuku، Wireless debugging را فعال و Pairing را انجام بده؛ سپس به SimHelp برگرد و دسترسی را تأیید کن. بعد از راه‌اندازی مجدد گوشی ممکن است تکرارش لازم باشد.", 13, MUTED));
+        button(setup, "Set up Shizuku", this::setupShizuku);
+        setup.addView(text("Start Shizuku using Wireless debugging and complete its pairing steps. Then return to SimHelp and allow access. You may need to start Shizuku again after restarting your phone.", 13, MUTED));
 
-        LinearLayout connect = card(page, "۲. اتصال آیفون");
-        connect.addView(text("هر دو گوشی را به یک وای‌فای وصل کن یا آیفون را به هات‌اسپات اندروید وصل کن. در کلاینت آیفون، English و اتصال VoWLAN / Local را انتخاب کن.", 14, MUTED));
+        LinearLayout connect = card(page, "2. Connect your iPhone");
+        connect.addView(text("Connect both phones to the same Wi-Fi, or connect your iPhone to this Android phone's hotspot. In the iPhone app, choose Local / VoWLAN and enter the pairing code below.", 14, MUTED));
         peerStatus = text("", 14, TEXT); connect.addView(peerStatus);
         pairCode = text("— — — — — —", 30, ACCENT);
         pairCode.setGravity(Gravity.CENTER);
         pairCode.setTextDirection(View.TEXT_DIRECTION_LTR);
         pairCode.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
         connect.addView(pairCode);
-        pairDetail = text("برای دریافت کد، اتصال جدید را بزن.", 14, MUTED);
+        pairDetail = text("Tap Start pairing to generate a code.", 14, MUTED);
         pairDetail.setTextIsSelectable(true); connect.addView(pairDetail);
         expiry = text("", 12, MUTED); connect.addView(expiry);
-        button(connect, "اتصال جدید به آیفون", this::startPairing);
-        button(connect, "بستن پنجرهٔ اتصال", () -> { stopPairing(); pairCode.setText("— — — — — —"); pairDetail.setText("پنجرهٔ اتصال بسته شد."); });
+        button(connect, "Start pairing", this::startPairing);
+        button(connect, "Stop pairing", () -> { stopPairing(); pairCode.setText("— — — — — —"); pairDetail.setText("Pairing stopped."); });
 
-        LinearLayout test = card(page, "۳. تست واقعی تماس");
-        test.addView(text("پس از اتصال، با یک گوشی دیگر به سیم‌کارت A12 زنگ بزن. روی آیفون جواب بده و شنیده شدن صدا در هر دو جهت را بررسی کن. سپس تماس خروجی و یک پیامک آزمایشی را امتحان کن.", 14, TEXT));
-        button(test, "بررسی پل صدا", this::checkAudio);
-        button(test, "تنظیمات باتری برنامه", () -> open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))));
-        test.addView(text("آیفون: این IPA برای سایدلود است. تماس در پس‌زمینه و هنگام قفل بودن صفحه هنوز آزمایش نشده؛ برای تست اول اپ آیفون را باز نگه دار.", 13, MUTED));
+        LinearLayout test = card(page, "3. Check call audio");
+        test.addView(text("Make a short test call and check that both people can hear each other. The Galaxy A12's audio support must be verified during a real call; connection and permission checks alone cannot confirm it.", 14, TEXT));
+        button(test, "Check audio bridge", this::checkAudio);
+        button(test, "Open app settings", () -> open(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))));
+        test.addView(text("Install the iPhone IPA using Sideloadly. If the phones cannot find each other, check that both are on the same network and that local network access is allowed on the iPhone.", 13, MUTED));
 
-        LinearLayout help = card(page, "ابزارها و راهنما");
-        button(help, "تنظیمات فنی موتور AirSIM", () -> open(new Intent(this, MainActivity.class)));
-        button(help, "راهنمای نصب و مجوز سورس", () -> new AlertDialog.Builder(this)
-                .setTitle("SimHelp · نسخهٔ شخصی")
-                .setMessage("این نسخه از موتور AirSIM استفاده می‌کند و برای استفادهٔ غیرتجاری آماده شده. ابزارهای فنی موتور فعلاً رابط اصلی پروژه را دارند.\n\nآیفون: IPA را با Sideloadly و حساب خودت نصب کن. Local / VoWLAN را انتخاب کن و کد همین صفحه را وارد کن. در صورت نیاز آدرس نمایش‌داده‌شده را دستی وارد کن.\n\nترافیک تماس و پیامک از شبکهٔ گوشی میزبان عبور می‌کند و هزینهٔ معمول اپراتور را دارد.\n\nhttps://github.com/kai-wu-cortex/AirSIM\nPolyForm Noncommercial 1.0.0\nفایل‌های LICENSE، NOTICE و THIRD_PARTY_NOTICES در APK موجودند.")
-                .setPositiveButton("باشه", null).show());
-        TextView footer = text("SimHelp 0.1 • بر پایهٔ AirSIM\nآزمایشی — تأیید تماس روی A12 در انتظار تست", 12, MUTED);
+        LinearLayout help = card(page, "Help and advanced settings");
+        button(help, "Open advanced settings", () -> open(new Intent(this, MainActivity.class)));
+        button(help, "About SimHelp", () -> new AlertDialog.Builder(this)
+                .setTitle("SimHelp · Personal build · TheSkeezad")
+                .setMessage("SimHelp connects your iPhone to the SIM in your Android phone for calls and SMS.\n\nInstall the iPhone IPA using Sideloadly. Pair the phones using Local / VoWLAN on the same network. Shizuku must be running and authorized for the no-root audio bridge.\n\nAudio compatibility depends on your phone and must be checked in a real call.\n\nDeveloper: TheSkeezad\nLicense notices are included in the APK under assets/licenses.")
+                .setPositiveButton("OK", null).show());
+        TextView footer = text("SimHelp | TheSkeezad\nPersonal build | Test call audio on your phone before relying on it", 12, MUTED);
         footer.setGravity(Gravity.CENTER); footer.setPadding(0, dp(18), 0, 0); page.addView(footer);
         updateStatus();
     }
@@ -138,7 +138,7 @@ public final class SimHelpActivity extends Activity {
     private void requestDialer() {
         RoleManager manager = getSystemService(RoleManager.class);
         if (manager == null || !manager.isRoleAvailable(RoleManager.ROLE_DIALER)) {
-            message("نقش تلفن در دسترس نیست", "تنظیمات برنامه‌های پیش‌فرض گوشی را بررسی کن."); return;
+            message("Default phone app unavailable", "This device does not allow SimHelp to request the default phone app role."); return;
         }
         if (isDialer()) { updateStatus(); return; }
         startActivityForResult(manager.createRequestRoleIntent(RoleManager.ROLE_DIALER), 400);
@@ -162,34 +162,34 @@ public final class SimHelpActivity extends Activity {
 
     private void updateStatus() {
         if (roleStatus == null) return;
-        roleStatus.setText(isDialer() ? "✓ برنامهٔ تلفن انتخاب شده" : "○ برنامهٔ تلفن هنوز انتخاب نشده");
-        permissionStatus.setText(missingPermissions().isEmpty() ? "✓ مجوزهای ضروری داده شده" : "○ تماس و پیامک به مجوز نیاز دارند");
+        roleStatus.setText(isDialer() ? "Ready: SimHelp is the default phone app" : "Action needed: Set SimHelp as the default phone app");
+        permissionStatus.setText(missingPermissions().isEmpty() ? "Ready: Call and SMS permissions granted" : "Action needed: Grant call and SMS permissions");
         ShizukuBridgeManager bridge = ShizukuBridgeManager.get(this);
         ShizukuBridgeManager.StartupSnapshot snapshot = bridge.startupSnapshot();
-        String state = !snapshot.installed() ? "○ Shizuku نصب نیست" : !snapshot.running() ? "○ Shizuku فعال نیست"
-                : !snapshot.authorized() ? "○ منتظر اجازهٔ Shizuku" : bridge.privilegeConnected()
-                ? "✓ دسترسی Shizuku برقرار است؛ صدای دوطرفه هنوز نیاز به تست دارد" : "○ در حال اتصال به سرویس صدا";
+        String state = !snapshot.installed() ? "Shizuku is not installed" : !snapshot.running() ? "Shizuku is not running"
+                : !snapshot.authorized() ? "Allow SimHelp to use Shizuku" : bridge.privilegeConnected()
+                ? "Shizuku bridge connected; call audio still needs a real-call test" : "Waiting for the Shizuku bridge to connect";
         bridgeStatus.setText(state);
         int peers = VoWLANPairingStore.records(this).size();
-        peerStatus.setText(peers == 0 ? "هنوز آیفونی با این برنامه جفت نشده" : "✓ دستگاه جفت‌شده: " + peers + " · این عدد وضعیت آنلاین را نشان نمی‌دهد");
+        peerStatus.setText(peers == 0 ? "No iPhone has been paired yet" : "Paired devices: " + peers + " | Saved pairing does not confirm an active connection");
         if (pairingExpires > 0) {
             long seconds = Math.max(0, (pairingExpires - System.currentTimeMillis()) / 1000);
-            expiry.setText(seconds > 0 ? "اعتبار کد: " + seconds + " ثانیه" : "اعتبار کد تمام شد؛ اتصال جدید را بزن.");
+            expiry.setText(seconds > 0 ? "Code expires in: " + seconds + " seconds" : "Pairing code expired. Start pairing again.");
             if (seconds == 0) {
                 stopPairing(); pairCode.setText("— — — — — —");
-                pairDetail.setText("کد منقضی شد؛ برای تلاش دوباره اتصال جدید را بزن.");
-                expiry.setText("کد قبلی معتبر نیست.");
+                pairDetail.setText("The code has expired. Tap Start pairing to generate a new code.");
+                expiry.setText("Pairing session expired.");
             }
         }
     }
 
     private void startPairing() {
         if (!isDialer() || !missingPermissions().isEmpty()) {
-            message("اول آماده‌سازی", "ابتدا برنامهٔ تلفن و مجوزهای تماس و پیامک را تأیید کن."); return;
+            message("Complete Android setup", "Set SimHelp as the default phone app and grant the required permissions before pairing."); return;
         }
         stopPairing();
         final long generation = pairingGeneration;
-        pairDetail.setText("در حال ایجاد اتصال محلی…");
+        pairDetail.setText("Starting the pairing service...");
         pairCode.setText("…");
         pairing = new PairingServer(this, new PairingServer.Listener() {
             @Override public void onStarted(String code, String address, long expiresAt) {
@@ -197,7 +197,7 @@ public final class SimHelpActivity extends Activity {
                     if (generation != pairingGeneration || isDestroyed()) return;
                     pairingExpires = expiresAt;
                     pairCode.setText(code);
-                    pairDetail.setText("این کد را در آیفون وارد کن. آدرس اتصال دستی:\n" + address);
+                    pairDetail.setText("Enter this code in the iPhone app. Manual connection address:\n" + address);
                     updateStatus();
                 });
             }
@@ -206,7 +206,7 @@ public final class SimHelpActivity extends Activity {
                     if (generation != pairingGeneration || isDestroyed()) return;
                     stopPairing();
                     pairCode.setText("✓");
-                    pairDetail.setText("جفت‌سازی انجام شد. حالا تماس و پیامک آزمایشی را بررسی کن.");
+                    pairDetail.setText("Pairing complete. Open the iPhone app to check the connection and test calls and SMS.");
                     updateStatus();
                 });
             }
@@ -215,7 +215,7 @@ public final class SimHelpActivity extends Activity {
                     if (generation != pairingGeneration || isDestroyed()) return;
                     stopPairing();
                     pairCode.setText("—");
-                    pairDetail.setText("اتصال کامل نشد یا کد منقضی شد. شبکهٔ مشترک و باز بودن اپ آیفون را بررسی کن و دوباره تلاش کن.");
+                    pairDetail.setText("Pairing failed. Check the Wi-Fi connection and try again. Both phones must be on the same network.");
                 });
             }
         });
@@ -238,16 +238,16 @@ public final class SimHelpActivity extends Activity {
             try { report = bridge.freshAudioHealthReport(); }
             catch (RuntimeException error) { report = "Audio check failed: " + error.getClass().getSimpleName(); }
             final String result = report;
-            runOnUiThread(() -> { if (!isDestroyed()) message("گزارش پل صدا", "این گزارش فنی جای تست شنیدن صدا در هر دو جهت را نمی‌گیرد.\n\n" + result); });
+            runOnUiThread(() -> { if (!isDestroyed()) message("Audio bridge diagnostics", "This report checks the audio bridge. It does not confirm that both people can hear each other during a call.\n\n" + result); });
         });
     }
 
     private void open(Intent intent) {
         try { startActivity(intent); }
-        catch (android.content.ActivityNotFoundException error) { message("امکان باز کردن نیست", "این بخش در دستگاه در دسترس نیست."); }
+        catch (android.content.ActivityNotFoundException error) { message("Cannot open this screen", "The required app or settings screen is not available on this device."); }
     }
     private void message(String title, String body) {
-        new AlertDialog.Builder(this).setTitle(title).setMessage(body).setPositiveButton("باشه", null).show();
+        new AlertDialog.Builder(this).setTitle(title).setMessage(body).setPositiveButton("OK", null).show();
     }
     private LinearLayout card(LinearLayout parent, String title) {
         LinearLayout box = new LinearLayout(this);
@@ -262,7 +262,7 @@ public final class SimHelpActivity extends Activity {
     }
     private TextView text(String value, int size, int color) {
         TextView view = new TextView(this); view.setText(value); view.setTextSize(size); view.setTextColor(color);
-        view.setGravity(Gravity.RIGHT); view.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG_RTL);
+        view.setGravity(Gravity.START); view.setTextDirection(View.TEXT_DIRECTION_LTR);
         view.setLineSpacing(dp(3), 1); view.setPadding(0, dp(4), 0, dp(4)); return view;
     }
     private void button(LinearLayout parent, String label, Runnable action) {

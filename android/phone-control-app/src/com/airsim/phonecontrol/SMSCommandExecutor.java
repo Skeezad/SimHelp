@@ -45,13 +45,13 @@ public final class SMSCommandExecutor {
     static AgentCommandDispatcher.Result execute(Context context, AgentCommand command) {
         String destination = SMSPayloadPolicy.normalizeDestination(command.number);
         if (destination.isEmpty() || !SMSPayloadPolicy.validBody(command.message)) {
-            return AgentCommandDispatcher.Result.failure("号码或短信内容无效");
+            return AgentCommandDispatcher.Result.failure("Invalid number or text message content");
         }
         if (context.checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
-            return AgentCommandDispatcher.Result.failure("AirSIM 缺少短信发送权限；请在三星应用权限中允许短信");
+            return AgentCommandDispatcher.Result.failure("SimHelp lacks permission to send text messages; please allow text messages in Samsung app permissions");
         }
         if (!context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY_MESSAGING)) {
-            return AgentCommandDispatcher.Result.failure("此设备不支持系统短信发送");
+            return AgentCommandDispatcher.Result.failure("This device does not support system SMS sending");
         }
 
         try {
@@ -70,11 +70,11 @@ public final class SMSCommandExecutor {
                     }
                 }
                 if (subscriptionID == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
-                    return AgentCommandDispatcher.Result.failure("所选短信卡槽已移除，请重新选择");
+                    return AgentCommandDispatcher.Result.failure("The selected SMS card slot has been removed, please select again");
                 }
             }
             if (subscriptionID == SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
-                return AgentCommandDispatcher.Result.failure("请在三星 SIM 卡设置中选择默认短信 SIM");
+                return AgentCommandDispatcher.Result.failure("Please select the default SMS SIM in Samsung SIM card settings");
             }
             // Arm before every sender path: Shizuku/root may run SmsManager in
             // another process, but the MIUI confirmation window is handled here.
@@ -107,12 +107,12 @@ public final class SMSCommandExecutor {
             SmsManager manager = managerForSubscription(context, subscriptionID);
             if (manager == null) {
                 SmsSendConfirmationGate.disarm();
-                return AgentCommandDispatcher.Result.failure("系统短信服务不可用");
+                return AgentCommandDispatcher.Result.failure("System SMS service is unavailable");
             }
             ArrayList<String> parts = manager.divideMessage(command.message);
             if (parts == null || parts.isEmpty()) {
                 SmsSendConfirmationGate.disarm();
-                return AgentCommandDispatcher.Result.failure("短信分段失败");
+                return AgentCommandDispatcher.Result.failure("SMS segmentation failed");
             }
 
             SMSConfirmation confirmation = new SMSConfirmation(parts.size());
@@ -162,7 +162,7 @@ public final class SMSCommandExecutor {
                     SmsSendConfirmationGate.disarm();
                     BridgeLog.info("sms_send_timeout trace=" + trace + " confirmed="
                             + outcome.confirmedSegments() + " total=" + parts.size());
-                    return AgentCommandDispatcher.Result.failure("等待系统短信发送回执超时；请先确认短信是否发出，勿立即重试");
+                    return AgentCommandDispatcher.Result.failure("Timeout waiting for the system SMS sending receipt; please confirm whether the SMS has been sent and do not try again immediately.");
                 }
                 if (!outcome.success()) {
                     SmsSendConfirmationGate.disarm();
@@ -170,9 +170,9 @@ public final class SMSCommandExecutor {
                     BridgeLog.info("sms_send_rejected trace=" + trace + " result=" + errorCode
                             + " result_text=" + SMSResultCode.describe(errorCode));
                     String hint = SMSResultCode.isModemError(errorCode)
-                            ? "；请检查默认短信 SIM 和信号，并允许小米的短信发送确认弹窗" : "";
+                            ? "; Please check the default SMS SIM and signal, and allow Xiaomi's SMS sending confirmation pop-up window" : "";
                     return AgentCommandDispatcher.Result.failure(
-                            "系统短信发送失败（" + SMSResultCode.describe(errorCode) + hint + "）");
+                            "System SMS failed to be sent (" + SMSResultCode.describe(errorCode) + hint + "）");
                 }
                 SmsSendConfirmationGate.disarm();
                 BridgeLog.info("sms_send_confirmed trace=" + trace + " segments=" + parts.size());
@@ -185,11 +185,11 @@ public final class SMSCommandExecutor {
         } catch (InterruptedException error) {
             SmsSendConfirmationGate.disarm();
             Thread.currentThread().interrupt();
-            return AgentCommandDispatcher.Result.failure("短信发送等待被中断；请先确认短信是否发出，勿立即重试");
+            return AgentCommandDispatcher.Result.failure("The SMS sending was interrupted; please confirm whether the SMS has been sent and do not try again immediately.");
         } catch (RuntimeException error) {
             SmsSendConfirmationGate.disarm();
             BridgeLog.error("sms_send_failed", error);
-            return AgentCommandDispatcher.Result.failure("Android 短信发送失败：" + error.getClass().getSimpleName());
+            return AgentCommandDispatcher.Result.failure("Android SMS sending failed:" + error.getClass().getSimpleName());
         }
     }
 

@@ -29,8 +29,8 @@ final class PrivilegeChannelPreference {
     }
 
     static String label(Channel channel) {
-        if (channel == Channel.SHIZUKU) return "仅 Shizuku";
-        if (channel == Channel.ROOT) return "仅 Root（KernelSU）";
-        return "自动（Root 优先，失败回 Shizuku）";
+        if (channel == Channel.SHIZUKU) return "Shizuku only";
+        if (channel == Channel.ROOT) return "Root only (KernelSU)";
+        return "Automatic (Root takes priority, return to Shizuku if failed)";
     }
 }

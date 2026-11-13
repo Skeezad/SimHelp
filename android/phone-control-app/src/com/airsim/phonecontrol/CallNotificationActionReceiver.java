@@ -65,7 +65,7 @@ public final class CallNotificationActionReceiver extends BroadcastReceiver {
         DefaultCallAccount.Snapshot snapshot = DefaultCallAccount.snapshot(context);
         if (!snapshot.error().isEmpty() || snapshot.accounts().size() < 2) {
             BridgeNotification.notifyStatus(context, snapshot.error().isEmpty()
-                    ? "只有一张可通话 SIM" : snapshot.error());
+                    ? "Only one SIM can be used for calling" : snapshot.error());
             return;
         }
         String selected = DefaultCallAccount.selectedKey(context);
@@ -78,7 +78,7 @@ public final class CallNotificationActionReceiver extends BroadcastReceiver {
         }
         DefaultCallAccount.Account next = snapshot.accounts().get((current + 1) % snapshot.accounts().size());
         DefaultCallAccount.select(context, next);
-        BridgeNotification.notifyStatus(context, "默认通话卡：" + next.label());
+        BridgeNotification.notifyStatus(context, "Default calling card:" + next.label());
         BridgeLog.info("default_call_account_switched label=" + next.label());
     }
 }

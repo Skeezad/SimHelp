@@ -172,8 +172,8 @@ public final class VoBLEGatewayService extends Service implements VoBLEGattServe
         createNotificationChannel();
         Notification notification = new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-                .setContentTitle("AirSIM 蓝牙通话")
-                .setContentText("等待已认证的 iPhone")
+                .setContentTitle("SimHelp Bluetooth calling")
+                .setContentText("Waiting for certified iPhone")
                 .setGroup(com.airsim.phonecontrol.BridgeNotification.GROUP)
                 .setOnlyAlertOnce(true)
                 .setOngoing(true).build();
@@ -682,7 +682,7 @@ public final class VoBLEGatewayService extends Service implements VoBLEGattServe
     private void createNotificationChannel() {
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) manager.createNotificationChannel(new NotificationChannel(
-                CHANNEL_ID, "AirSIM 蓝牙通话", NotificationManager.IMPORTANCE_LOW));
+                CHANNEL_ID, "SimHelp Bluetooth calling", NotificationManager.IMPORTANCE_LOW));
     }
 
     private void showPairingCode(String sas) {
@@ -691,8 +691,8 @@ public final class VoBLEGatewayService extends Service implements VoBLEGattServe
         if (manager == null) return;
         manager.notify(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-                .setContentTitle("AirSIM 蓝牙配对")
-                .setContentText("安全码 " + sas + " · 请与 iPhone 核对")
+                .setContentTitle("SimHelp Bluetooth pairing")
+                .setContentText("security code" + sas + "· Please check with iPhone")
                 .setGroup(com.airsim.phonecontrol.BridgeNotification.GROUP)
                 .setOnlyAlertOnce(true)
                 .setOngoing(true).build());
@@ -704,8 +704,8 @@ public final class VoBLEGatewayService extends Service implements VoBLEGattServe
         if (manager == null) return;
         manager.notify(NOTIFICATION_ID, new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
-                .setContentTitle("AirSIM 蓝牙通话")
-                .setContentText("已连接经过认证的 iPhone")
+                .setContentTitle("SimHelp Bluetooth calling")
+                .setContentText("Certified iPhone connected")
                 .setGroup(com.airsim.phonecontrol.BridgeNotification.GROUP)
                 .setOnlyAlertOnce(true)
                 .setOngoing(true).build());

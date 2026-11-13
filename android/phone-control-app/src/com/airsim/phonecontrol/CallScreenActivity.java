@@ -57,9 +57,9 @@ public final class CallScreenActivity extends Activity {
         detailLayout.topMargin = dp(16);
         root.addView(detail, detailLayout);
 
-        answer = button("接听", Color.rgb(38, 202, 93), "answer");
-        reject = button("拒接", Color.rgb(225, 63, 66), "reject");
-        end = button("挂断", Color.rgb(225, 63, 66), "end");
+        answer = button("Answer", Color.rgb(38, 202, 93), "answer");
+        reject = button("Reject", Color.rgb(225, 63, 66), "reject");
+        end = button("hang up", Color.rgb(225, 63, 66), "end");
         root.addView(answer, buttonLayout());
         root.addView(reject, buttonLayout());
         root.addView(end, buttonLayout());
@@ -95,13 +95,13 @@ public final class CallScreenActivity extends Activity {
         boolean ringing = "incoming".equals(TelecomStateMapper.toWireState(state));
         String number = CallRepository.number(callId);
         title.setText(ringing
-                ? (number.isEmpty() ? "AirSIM 来电" : number)
-                : "AirSIM 通话中");
+                ? (number.isEmpty() ? "SimHelp incoming call" : number)
+                : "SimHelp call in progress");
         String modeLabel = AppConfig.MODE_REMOTE_SILENT.equals(AppConfig.mode(this))
-                ? "远端静默" : "本机显示";
+                ? "remote silence" : "local display";
         detail.setText(ringing
-                ? modeLabel + " · 可直接在 Android 接听或拒接；iPhone 也在响时可在任一端处理"
-                : modeLabel + " · 点按下方按钮挂断");
+                ? modeLabel + "· Can answer or reject directly on Android; iPhone can also handle it on either end when ringing"
+                : modeLabel + "· Click the button below to hang up");
         answer.setVisibility(ringing ? View.VISIBLE : View.GONE);
         reject.setVisibility(ringing ? View.VISIBLE : View.GONE);
         end.setVisibility(ringing ? View.GONE : View.VISIBLE);
@@ -113,7 +113,7 @@ public final class CallScreenActivity extends Activity {
         button.setTextColor(Color.WHITE);
         button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
         button.setOnClickListener(ignored -> {
-            detail.setText("正在处理…");
+            detail.setText("Processing…");
             sendBroadcast(CallNotificationActionReceiver.actionIntent(this, callId, action));
         });
         return button;

@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
  */
 final class NotificationForwarder {
     private static final ExecutorService WORKERS = Executors.newSingleThreadExecutor(r -> {
-        Thread thread = new Thread(r, "AirSIMForwarder");
+        Thread thread = new Thread(r, "SimHelpForwarder");
         thread.setDaemon(true);
         return thread;
     });
@@ -105,7 +105,7 @@ final class NotificationForwarder {
                     body.put("device_key", target[1])
                             .put("title", barkTitle(sms, missed))
                             .put("body", text)
-                            .put("group", "AirSIM")
+                            .put("group", "SimHelp")
                             // timeSensitive can be suppressed by Focus; use active
                             // for reliable call alerts, matching SMS behavior.
                             .put("level", "active")
@@ -158,7 +158,7 @@ final class NotificationForwarder {
     }
 
     private static String barkTitle(boolean sms, boolean missed) {
-        return sms ? "AirSIM 短信" : missed ? "AirSIM 未接来电" : "AirSIM 来电";
+        return sms ? "SimHelp SMS" : missed ? "SimHelp missed calls" : "SimHelp incoming call";
     }
 
     private static String[] barkTarget(String configured, String key) throws Exception {
@@ -195,7 +195,7 @@ final class NotificationForwarder {
                 ? event.optString("number", "") : "";
         String content = destination.optBoolean("includeBody", true)
                 ? event.optString("content", "") : "";
-        String eventName = sms ? "短信" : missed ? "未接来电" : "来电";
+        String eventName = sms ? "Short message" : missed ? "missed call" : "incoming call";
         String device = deviceName();
         return template
                 .replace("{event}", eventName)

@@ -30,10 +30,10 @@ public final class VoBLEDiagnostics {
     }
 
     public static String summary(Snapshot value) {
-        if (value == null) return "VoBLE 待启动";
-        if (!value.authenticated()) return "VoBLE 等待认证";
-        if (!value.pcmReady()) return "VoBLE 已认证 · PCM 待启动";
-        return "VoBLE 已认证 · PCM 运行中 · 丢帧 " + Math.max(0, value.droppedFrames());
+        if (value == null) return "VoBLE to be started";
+        if (!value.authenticated()) return "VoBLE waiting for certification";
+        if (!value.pcmReady()) return "VoBLE certified · PCM to be started";
+        return "VoBLE certified · PCM running · Frame dropped" + Math.max(0, value.droppedFrames());
     }
 
     public static Map<String, String> sanitize(Map<String, String> input) {
@@ -52,10 +52,10 @@ public final class VoBLEDiagnostics {
     private static String categorize(String error) {
         String value = error == null ? "" : error.toLowerCase(Locale.ROOT);
         if (value.isBlank()) return "none";
-        if (value.contains("auth") || value.contains("认证") || value.contains("key")) return "authentication";
+        if (value.contains("auth") || value.contains("Certification") || value.contains("key")) return "authentication";
         if (value.contains("pcm") || value.contains("media")) return "pcm";
-        if (value.contains("timeout") || value.contains("超时")) return "timeout";
-        if (value.contains("bluetooth") || value.contains("蓝牙")) return "bluetooth";
+        if (value.contains("timeout") || value.contains("time out")) return "timeout";
+        if (value.contains("bluetooth") || value.contains("Bluetooth")) return "bluetooth";
         return "unknown";
     }
 

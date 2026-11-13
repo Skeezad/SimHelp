@@ -25,7 +25,7 @@ final class StandaloneRelayClient {
         URI target = URI.create(base + path);
         if (!"https".equalsIgnoreCase(target.getScheme()) || target.getHost() == null
                 || target.getRawUserInfo() != null) {
-            throw new IllegalArgumentException("Relay 必须使用无凭据 HTTPS 地址");
+            throw new IllegalArgumentException("Relay must use a credentialless HTTPS address");
         }
         HttpURLConnection connection = (HttpURLConnection) new URL(target.toString()).openConnection();
         RelayEgressGate.Lease lease = null;

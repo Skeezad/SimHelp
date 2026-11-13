@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class BoundedAudioOperation implements AutoCloseable {
     private final AtomicBoolean busy = new AtomicBoolean();
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
-        Thread thread = new Thread(task, "AirSIM-OEM-audio"); thread.setDaemon(true); return thread;
+        Thread thread = new Thread(task, "SimHelp-OEM-audio"); thread.setDaemon(true); return thread;
     });
     private final long timeoutMillis;
     BoundedAudioOperation(long timeoutMillis) { this.timeoutMillis = timeoutMillis; }

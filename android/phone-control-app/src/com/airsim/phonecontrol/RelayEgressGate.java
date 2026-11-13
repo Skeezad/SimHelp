@@ -12,7 +12,7 @@ public final class RelayEgressGate {
     public static final RelayEgressGate shared = new RelayEgressGate(true);
     private static final java.util.concurrent.ExecutorService CANCELLATIONS =
             java.util.concurrent.Executors.newFixedThreadPool(2, runnable -> {
-                Thread thread = new Thread(runnable, "AirSIMRelayCancel");
+                Thread thread = new Thread(runnable, "SimHelpRelayCancel");
                 thread.setDaemon(true);
                 return thread;
             });

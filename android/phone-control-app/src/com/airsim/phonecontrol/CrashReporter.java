@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Installs a last-chance handler that saves one private, sanitized crash report. */
 public final class CrashReporter {
-    private static final String TAG = "AirSIMCrash";
+    private static final String TAG = "SimHelpCrash";
     private static boolean installed;
 
     private CrashReporter() {}

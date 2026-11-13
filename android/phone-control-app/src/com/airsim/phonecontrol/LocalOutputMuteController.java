@@ -88,7 +88,7 @@ final class LocalOutputMuteController {
                 } else if (previousMuted && !backend.isMuted()) backend.setMuted(true);
                 if (backend.volume() != targetMinimum || (requiresUnmutedCapture()
                         ? backend.isMuted() : previousMuted && !backend.isMuted()))
-                    throw new IOException("系统未接受最低通话音量");
+                    throw new IOException("Minimum call volume not accepted");
                 verifiedMinimum = true;
                 return "local_output_" + policyName() + " minimum_volume=" + targetMinimum
                     + (requiresUnmutedCapture() ? " capture_stream_unmuted=true" : "")
@@ -98,7 +98,7 @@ final class LocalOutputMuteController {
             backend.setMuted(true);
             backend.applyOutputMute();
             verifiedMuted = backend.isMuted();
-            if (!verifiedMuted) throw new IOException("系统不支持已验证的本机通话静音");
+            if (!verifiedMuted) throw new IOException("The system does not support authenticated local call muting.");
             return "local_output_muted previous_muted=" + previousMuted + " framework_verified=true acoustic_check=unavailable";
         } catch (Exception failure) {
             verifiedMuted = false;
@@ -139,7 +139,7 @@ final class LocalOutputMuteController {
             else policyFailure.addSuppressed(error);
         }
         if (backend.isMuted() != previousMuted || backend.volume() != previousVolume) {
-            throw new IOException("本机通话声音状态恢复未通过校验");
+            throw new IOException("The local call sound status recovery failed to pass the verification");
         }
         if (policyFailure != null) throw policyFailure;
         boolean restoredMuted = previousMuted;

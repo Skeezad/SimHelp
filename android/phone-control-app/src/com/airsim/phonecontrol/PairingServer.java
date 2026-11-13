@@ -63,7 +63,7 @@ public final class PairingServer implements Closeable {
                 String address = manualAddresses(server.getLocalPort());
                 listener.onStarted(created.code(), address, created.expiresAtMillis());
                 timer.schedule(() -> {
-                    listener.onFailed("配对窗口已过期");
+                    listener.onFailed("Matching window has expired");
                     closeQuietly();
                 }, PairingSession.LIFETIME_MILLIS, TimeUnit.MILLISECONDS);
                 while (!server.isClosed() && System.currentTimeMillis() <= created.expiresAtMillis()) {
@@ -174,8 +174,8 @@ public final class PairingServer implements Closeable {
                     BridgeLog.info("pairing_direct_gateway_unavailable state="
                             + VoWLANGatewayService.currentDiagnosticState());
                     respond(peer, 200, response.toString());
-                    listener.onFailed("密钥已保存，但直连网关未就绪，尚未完成手动配对。"
-                            + "请检查默认电话应用和 Shizuku/PCM 桥，待网关就绪后重新打开配对窗口。\n"
+                    listener.onFailed("The key has been saved, but the direct-connect gateway is not ready and manual pairing has not been completed."
+                            + "Please check the default phone app and Shizuku/PCM bridge and reopen the pairing window when the gateway is ready. \\n"
                             + VoWLANGatewayService.currentDiagnosticState());
                     return true;
                 }
@@ -247,7 +247,7 @@ public final class PairingServer implements Closeable {
         int state = 0;
         while (output.size() < MAX_HEADERS) {
             int value = input.read();
-            if (value < 0) throw new IOException("请求头不完整");
+            if (value < 0) throw new IOException("Request header is incomplete");
             output.write(value);
             state = (state == 0 && value == '\r') ? 1
                     : (state == 1 && value == '\n') ? 2
@@ -255,7 +255,7 @@ public final class PairingServer implements Closeable {
                     : (state == 3 && value == '\n') ? 4 : 0;
             if (state == 4) return output.toByteArray();
         }
-        throw new IOException("请求头过大");
+        throw new IOException("Request header is too large");
     }
 
     private static int contentLength(String[] lines) throws IOException {
@@ -263,12 +263,12 @@ public final class PairingServer implements Closeable {
             if (line.regionMatches(true, 0, "Content-Length:", 0, 15)) {
                 int value;
                 try { value = Integer.parseInt(line.substring(15).trim()); }
-                catch (NumberFormatException error) { throw new IOException("Content-Length 无效", error); }
-                if (value < 1 || value > MAX_BODY) throw new IOException("请求体大小无效");
+                catch (NumberFormatException error) { throw new IOException("Content-Length is invalid", error); }
+                if (value < 1 || value > MAX_BODY) throw new IOException("Invalid request body size");
                 return value;
             }
         }
-        throw new IOException("缺少 Content-Length");
+        throw new IOException("Content-Length is missing");
     }
 
     private static byte[] readExactly(BufferedInputStream input, int length) throws IOException {
@@ -276,7 +276,7 @@ public final class PairingServer implements Closeable {
         int offset = 0;
         while (offset < length) {
             int count = input.read(output, offset, length - offset);
-            if (count < 0) throw new IOException("请求体不完整");
+            if (count < 0) throw new IOException("The request body is incomplete");
             offset += count;
         }
         return output;
@@ -307,7 +307,7 @@ public final class PairingServer implements Closeable {
                 if (address instanceof Inet4Address && address.isSiteLocalAddress() && !host.startsWith("10.185.5.")) return host;
             }
         }
-        throw new IOException("未找到 VoWLAN IPv4 地址，请连接 Wi-Fi 或开启移动热点");
+        throw new IOException("VoWLAN IPv4 address not found, please connect to Wi-Fi or turn on mobile hotspot");
     }
 
     private static DirectGatewayRoutes.Ports awaitDirectRoute(String localHost) throws InterruptedException {
@@ -331,12 +331,12 @@ public final class PairingServer implements Closeable {
                 InetAddress value = addresses.nextElement();
                 if (!(value instanceof Inet4Address)) continue;
                 String host = value.getHostAddress();
-                if (VoWLANNetworkPolicy.isVoWLANInterface(item.getName(), host)) values.add("局域网 " + host + ":" + port);
-                else if (VoWLANNetworkPolicy.isCustomPrivate(host)) values.add("自定义网段 " + host + ":" + port);
+                if (VoWLANNetworkPolicy.isVoWLANInterface(item.getName(), host)) values.add("local area network" + host + ":" + port);
+                else if (VoWLANNetworkPolicy.isCustomPrivate(host)) values.add("Custom network segment" + host + ":" + port);
                 else if (VoWLANNetworkPolicy.isOverlayInterface(item.getName(), host)) values.add("VPN " + host + ":" + port);
             }
         }
-        values.add("Tailscale：填写本机在 Tailscale 中的 IPv4；配对端口 " + port);
+        values.add("Tailscale: Fill in the IPv4 of the machine in Tailscale; pairing port" + port);
         return String.join("\n", values);
     }
 

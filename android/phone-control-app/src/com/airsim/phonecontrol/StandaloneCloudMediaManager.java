@@ -439,7 +439,7 @@ final class StandaloneCloudMediaManager implements Closeable {
         private byte[] decodePCM(byte[] wire) throws Exception {
             if (wire.length < 4 || wire[0] != 'A' || wire[1] != 'S' || wire[2] != 'P' || wire[3] != 'M') return wire;
             if (wire.length != 340 || wire[4] != 1 || ByteBuffer.wrap(wire, 6, 2).order(ByteOrder.BIG_ENDIAN).getShort() != 20) {
-                throw new java.io.IOException("AirSIM PCM frame invalid");
+                throw new java.io.IOException("SimHelp PCM frame invalid");
             }
             return java.util.Arrays.copyOfRange(wire, 20, wire.length);
         }
@@ -506,12 +506,12 @@ final class StandaloneCloudMediaManager implements Closeable {
 
         private void validate() {
             if (callID.isBlank() || callUUID.isBlank() || secret.isBlank()) {
-                throw new IllegalArgumentException("云端通话描述缺少身份或密钥");
+                throw new IllegalArgumentException("Cloud call description missing identity or key");
             }
             URI relay = URI.create(relayURL);
             if (!"https".equalsIgnoreCase(relay.getScheme()) || relay.getHost() == null
                     || relay.getRawUserInfo() != null) {
-                throw new IllegalArgumentException("云端通话 Relay 必须是无凭据的 HTTPS 地址");
+                throw new IllegalArgumentException("Cloud Call Relay must be a credential-free HTTPS address");
             }
         }
 

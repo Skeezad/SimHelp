@@ -4,7 +4,7 @@ import android.os.SystemClock;
 
 /**
  * Short-lived window opened only while AirSIM's own SmsManager call is pending.
- * The accessibility service must never click a generic "发送" button outside it.
+ * The accessibility service must never click a generic "send" button outside it.
  */
 final class SmsSendConfirmationGate {
     private static volatile long armedUntilMillis;

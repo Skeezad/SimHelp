@@ -19,7 +19,7 @@ public final class BridgeNotification {
     private BridgeNotification() {}
 
     public static void createChannel(Context context) {
-        NotificationChannel channel = new NotificationChannel(CHANNEL, "AirSIM 通话桥", NotificationManager.IMPORTANCE_LOW);
+        NotificationChannel channel = new NotificationChannel(CHANNEL, "SimHelp Talking Bridge", NotificationManager.IMPORTANCE_LOW);
         channel.setSound(null, null);
         channel.enableVibration(false);
         context.getSystemService(NotificationManager.class).createNotificationChannel(channel);
@@ -27,7 +27,7 @@ public final class BridgeNotification {
 
     private static void createCallChannel(Context context) {
         NotificationChannel channel = new NotificationChannel(
-                CALL_CHANNEL, "AirSIM 来电（全屏）", NotificationManager.IMPORTANCE_MAX);
+                CALL_CHANNEL, "SimHelp incoming call (full screen)", NotificationManager.IMPORTANCE_MAX);
         // The iPhone is the primary ringer in remote_silent mode. Android still
         // needs a visible, actionable call surface when the phone is locked.
         channel.setSound(null, null);
@@ -41,12 +41,12 @@ public final class BridgeNotification {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Builder(context, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
-                .setContentTitle("AirSIM 通话桥")
+                .setContentTitle("SimHelp Talking Bridge")
                 .setContentText(detail)
-                .setSubText("默认卡：" + DefaultCallAccount.selectedLabel(context))
+                .setSubText("Default card:" + DefaultCallAccount.selectedLabel(context))
                 .setContentIntent(open)
                 .setGroup(GROUP)
-                .addAction(android.R.drawable.ic_menu_manage, "切换默认卡",
+                .addAction(android.R.drawable.ic_menu_manage, "Switch default card",
                         CallNotificationActionReceiver.switchSimIntent(context))
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -65,10 +65,10 @@ public final class BridgeNotification {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Builder(context, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
-                .setContentTitle("AirSIM 需要恢复 Linux VM")
-                .setContentText("点按打开 Terminal 恢复连接")
+                .setContentTitle("SimHelp requires Linux VM recovery")
+                .setContentText("Click to open Terminal to resume the connection")
                 .setContentIntent(open)
-                .addAction(android.R.drawable.ic_menu_view, "打开 Terminal", open)
+                .addAction(android.R.drawable.ic_menu_view, "Open Terminal", open)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .build();
@@ -80,7 +80,7 @@ public final class BridgeNotification {
                 PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         return new Notification.Builder(context, CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
-                .setContentTitle("AirSIM VoWLAN")
+                .setContentTitle("SimHelp VoWLAN")
                 .setContentText(detail)
                 .setContentIntent(open)
                 .setGroup(GROUP)
@@ -105,32 +105,32 @@ public final class BridgeNotification {
         String displayNumber = number == null ? "" : number.trim();
         String text = incoming
                 ? (displayNumber.isEmpty()
-                    ? "未知号码 · 可直接接听或拒接"
-                    : "可直接在 Android 接听或拒接")
-                : "通话进行中 · 点按查看";
+                    ? "Unknown number · Can answer or reject directly"
+                    : "You can answer or reject calls directly on Android")
+                : "Call in progress · Click to view";
         Notification.Builder builder = new Notification.Builder(context, incoming ? CALL_CHANNEL : CHANNEL)
                 .setSmallIcon(android.R.drawable.stat_sys_phone_call)
                 .setContentTitle(incoming
-                        ? (displayNumber.isEmpty() ? "AirSIM 来电" : displayNumber)
-                        : "AirSIM 通话")
+                        ? (displayNumber.isEmpty() ? "SimHelp incoming call" : displayNumber)
+                        : "SimHelp calls")
                 .setContentText(text)
                 .setContentIntent(screen)
                 .setCategory(Notification.CATEGORY_CALL)
                 .setSubText(incoming
-                        ? "AirSIM · " + (AppConfig.MODE_REMOTE_SILENT.equals(mode) ? "远端静默" : "本机显示") + " · 来电"
-                        : "AirSIM · 通话")
+                        ? "SimHelp · " + (AppConfig.MODE_REMOTE_SILENT.equals(mode) ? "remote silence" : "local display") + "·Incoming calls"
+                        : "SimHelp · Call")
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true);
         if (incoming) {
             builder.setPriority(Notification.PRIORITY_HIGH)
                     .setFullScreenIntent(screen, true)
-                    .addAction(android.R.drawable.sym_action_call, "接听",
+                    .addAction(android.R.drawable.sym_action_call, "Answer",
                             CallNotificationActionReceiver.pendingIntent(context, callId, "answer"))
-                    .addAction(android.R.drawable.ic_menu_close_clear_cancel, "拒接",
+                    .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Reject",
                             CallNotificationActionReceiver.pendingIntent(context, callId, "reject"));
         } else {
-            builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "挂断",
+            builder.addAction(android.R.drawable.ic_menu_close_clear_cancel, "hang up",
                     CallNotificationActionReceiver.pendingIntent(context, callId, "end"));
         }
         context.getSystemService(NotificationManager.class).notify(callId, CALL_ID, builder.build());

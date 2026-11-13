@@ -16,7 +16,7 @@ public final class AppUpdatePolicy {
         return installed != null && !installed.isEmpty() && !installed.equals(seen);
     }
     public static boolean checkDue(long lastAttempt, long now, boolean manual, boolean checking) {
-        return !checking && (manual || lastAttempt == 0 || (now >= lastAttempt && now - lastAttempt >= 86_400_000L));
+        return false;
     }
     public static Candidate select(List<Release> releases, String installed, long build, boolean standalone) {
         if (parts(installed) == null) return null;

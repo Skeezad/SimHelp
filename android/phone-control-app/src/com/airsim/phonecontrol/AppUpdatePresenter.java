@@ -50,14 +50,14 @@ final class AppUpdatePresenter {
     void showNotes(Runnable after) {
         Activity activity = liveOwner();
         if (activity == null || dialog != null) return;
-        String notes = "• 修复 Android 10 的 SIM 订阅监听兼容性，避免启动 Service 时调用高版本接口崩溃。\n\n"
-                + "• 上报设备电量，供兼容的 iPhone 小组件显示；无有效采样时不会伪造电量。\n\n"
-                + "• 配套 iPhone build 162 新增小组件、未读短信／未接来电标记与试验性 TLS 公网配对教程。\n\n"
-                + "• 改善 Shizuku 短信收件箱兼容性；首次追平只补转近 15 分钟短信，旧短信仅推进游标。\n\n"
-                + "• U30Air 客户端与通话收尾改进需要兼容设备端；本 APK 不安装或更新 U30Air 固件。\n\n"
-                + "• 反馈仍由用户手动上传；配对和已有数据保留。";
-        AlertDialog next = new AlertDialog.Builder(activity).setTitle("当前版本更新内容 · " + version + "（" + build + "）")
-                .setMessage(notes).setPositiveButton("知道了", (ignored, which) -> {
+        String notes = "• Fixed SIM subscription listening compatibility in Android 10 to avoid crash when calling higher version interface when starting Service. \\n\\n"
+                + "• Report the device power for display by compatible iPhone widgets; the power will not be faked when there is no valid sampling. \\n\\n"
+                + "• Companion with iPhone build 162 adds new widgets, unread text messages/missed call flags and experimental TLS public network pairing tutorial. \\n\\n"
+                + "• Improved Shizuku SMS inbox compatibility; only the last 15 minutes of SMS will be forwarded for the first time, and the cursor will only be advanced for old SMS. \\n\\n"
+                + "• U30Air client and call closing improvements require compatible devices; this APK does not install or update U30Air firmware. \\n\\n"
+                + "• Feedback is still manually uploaded by the user; pairings and existing data are retained.";
+        AlertDialog next = new AlertDialog.Builder(activity).setTitle("Updates to the current version ·" + version + "（" + build + "）")
+                .setMessage(notes).setPositiveButton("knew", (ignored, which) -> {
                     preferences.edit().putString(NOTES_SEEN, version + "#" + build).apply();
                 }).create();
         next.setCancelable(false);
@@ -77,15 +77,15 @@ final class AppUpdatePresenter {
         if (activity == null || !SESSION.begin(preferences.getLong(ATTEMPT, 0), System.currentTimeMillis(), manual)) return;
         foregroundOwner = new WeakReference<>(this);
         preferences.edit().putLong(ATTEMPT, System.currentTimeMillis()).apply();
-        if (manual) Toast.makeText(activity, "正在检查应用更新…", Toast.LENGTH_SHORT).show();
+        if (manual) Toast.makeText(activity, "Checking for app updates…", Toast.LENGTH_SHORT).show();
         WORKER.execute(() -> {
             AppUpdatePolicy.Candidate candidate = null;
             String message;
             try {
                 candidate = AppUpdatePolicy.select(AppReleaseClient.fetch(), version, build, standalone);
-                message = candidate == null ? "未发现比当前更新的公开应用版本" : "发现应用新版 " + candidate.version();
+                message = candidate == null ? "No public app version newer than the current one found" : "Discover new versions of apps" + candidate.version();
             } catch (Exception ignored) {
-                message = "检查失败，请检查网络或稍后重试；这不表示当前已是最新版。";
+                message = "Check failed, please check the network or try again later; this does not mean you are up to date.";
             }
             SESSION.finish(new AppUpdateSession.Result(candidate, message, manual));
             new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
@@ -102,14 +102,14 @@ final class AppUpdatePresenter {
         AppUpdatePolicy.Candidate candidate = result.candidate();
         String message = result.message();
         if (candidate != null) message += "\n\n" + candidate.notes()
-                + "\n\n将打开此应用的发布页，请选择 " + (standalone ? "Standalone APK" : "AVF Bridge APK")
-                + "。同包名、同签名才能保留数据覆盖升级；Debug／第三方重签包可能不能直接覆盖，请勿为绕过签名错误先卸载。不会自动下载或安装。";
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("应用更新").setMessage(message)
-                .setNegativeButton("关闭", null);
-        if (candidate != null) builder.setPositiveButton("查看发布页", (ignored, which) -> {
+                + "\\n\\nThe publishing page for this application will open, please select" + (standalone ? "Standalone APK" : "AVF Bridge APK")
+                + ". Only data with the same package name and signature can be retained for overwriting and upgrading; Debug/third-party re-signed packages may not be directly overwritten, so please do not uninstall them first to bypass signature errors. It will not download or install automatically.";
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity).setTitle("Apply updates").setMessage(message)
+                .setNegativeButton("closure", null);
+        if (candidate != null) builder.setPositiveButton("View release page", (ignored, which) -> {
             try { activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(candidate.page()))); }
             catch (android.content.ActivityNotFoundException ignoredError) {
-                Toast.makeText(activity, "没有可打开网页的浏览器", Toast.LENGTH_LONG).show();
+                Toast.makeText(activity, "There is no browser that can open the web page", Toast.LENGTH_LONG).show();
             }
         });
         AlertDialog next = builder.create();

@@ -37,7 +37,7 @@ final class ShizukuBridgeManager {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Object roleLock = new Object();
     private final Shizuku.UserServiceArgs serviceArgs;
-    private volatile String status = "等待权限通道";
+    private volatile String status = "Waiting for permission channel";
     private volatile boolean binding;
     private final ServiceBindAttempt bindAttempt = new ServiceBindAttempt();
     private volatile ServiceConnection connection;
@@ -64,9 +64,9 @@ final class ShizukuBridgeManager {
             BridgeLog.info("shizuku_permission_granted");
             bindPrivilegedService();
         } else {
-            status = "Shizuku 授权被拒绝";
+            status = "Shizuku authorization denied";
             BridgeLog.info("shizuku_permission_denied");
-            finishDialerRoleRequest(false, "Shizuku 授权被拒绝");
+            finishDialerRoleRequest(false, "Shizuku authorization denied");
         }
     };
 
@@ -80,15 +80,15 @@ final class ShizukuBridgeManager {
                     PrivilegedBridgeClient client = new PrivilegedBridgeClient(binder);
                     privilegedClient = client;
                     coordinator.connect(client);
-                    status = "Shizuku 已连接 · " + client.status();
+                    status = "Shizuku contact ·" + client.status();
                     BridgeLog.info("shizuku_user_service_connected " + status);
                     runPendingDialerRoleRequest(client);
                 } catch (Exception error) {
-                    status = "Shizuku 服务启动失败";
+                    status = "Shizuku service failed to start";
                     privilegedClient = null;
                     coordinator.disconnect();
                     BridgeLog.error("shizuku_user_service_connect_failed", error);
-                    finishDialerRoleRequest(false, "Shizuku 服务启动失败");
+                    finishDialerRoleRequest(false, "Shizuku service failed to start");
                 }
             });
         }
@@ -101,9 +101,9 @@ final class ShizukuBridgeManager {
                 if (generation != privilegeGeneration.get() || channel == PrivilegeChannelPreference.Channel.ROOT || rootTransport != null) return;
                 privilegedClient = null;
                 coordinator.disconnect();
-                status = "Shizuku 服务已断开";
+                status = "Shizuku service has been disconnected";
                 BridgeLog.info("shizuku_user_service_disconnected");
-                finishDialerRoleRequest(false, "Shizuku 服务已断开");
+                finishDialerRoleRequest(false, "Shizuku service has been disconnected");
             });
         }
     }; }
@@ -118,11 +118,11 @@ final class ShizukuBridgeManager {
         }, coordinator::setLocalOutputMuted, (muted, error) -> {
 
             if (error != null) {
-                status = "本机通话音量控制失败";
+                status = "Local call volume control failed";
                 BridgeLog.error("shizuku_local_output_failed target_muted=" + muted, error);
             } else if (coordinator.connected()) {
                 String channel = rootTransport != null ? "Root" : "Shizuku";
-                status = channel + " 已连接 · " + coordinator.lastResult();
+                status = channel + "Connected ·" + coordinator.lastResult();
                 BridgeLog.info((rootTransport != null ? "root" : "shizuku")
                         + "_local_output target_muted=" + muted
                         + " result=" + coordinator.lastResult());
@@ -190,7 +190,7 @@ final class ShizukuBridgeManager {
                 worker.execute(() -> {
                     rootStartInFlight.set(false);
                     if (generation == privilegeGeneration.get()) status = channel == PrivilegeChannelPreference.Channel.ROOT
-                            ? "Root 未授权或不可用" : "Root 不可用，等待 Shizuku";
+                            ? "Root is not authorized or available" : "Root is not available, waiting for Shizuku";
                     resumeSelectedChannel(generation);
                 });
             }
@@ -228,14 +228,14 @@ final class ShizukuBridgeManager {
                 disconnectShizuku();
                 rootTransport = root;
                 coordinator.connect(root);
-                status = "Root 已连接 · " + root.status();
+                status = "Root is connected ·" + root.status();
                 BridgeLog.info("root_bridge_connected " + status);
                 runPendingRootDialerRoleRequest(root);
             } catch (Exception error) {
                 rootTransport = null;
                 coordinator.disconnect();
                 root.close();
-                status = "Root PCM 启动失败";
+                status = "Root PCM startup failed";
                 BridgeLog.error("root_bridge_connect_failed", error);
             }
         }
@@ -254,7 +254,7 @@ final class ShizukuBridgeManager {
         bindAttempt.cancel();
         binding = false;
         PrivilegeChannelPreference.set(app, value);
-        status = "正在切换权限通道…";
+        status = "Switching permission channels...";
         BridgeLog.info("privilege_channel=" + value.name().toLowerCase());
         worker.execute(() -> {
             if (generation != privilegeGeneration.get()) return;
@@ -265,7 +265,7 @@ final class ShizukuBridgeManager {
                             && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                         bindPrivilegedService();
                     } else {
-                        status = "等待 Shizuku 授权";
+                        status = "Waiting for Shizuku authorization";
                     }
                 } else if (value == PrivilegeChannelPreference.Channel.ROOT) {
                     disconnectShizuku();
@@ -279,7 +279,7 @@ final class ShizukuBridgeManager {
                     }
                 }
             } catch (Throwable error) {
-                status = "权限通道切换失败";
+                status = "Permission channel switching failed";
                 BridgeLog.error("privilege_channel_switch_failed", error);
             }
         });
@@ -325,23 +325,23 @@ final class ShizukuBridgeManager {
         try {
             int uid = Shizuku.getUid();
             int version = Shizuku.getVersion();
-            status = "Shizuku 在线 · UID " + uid;
+            status = "Shizuku in line · UID" + uid;
             BridgeLog.info("shizuku_binder_received uid=" + uid + " version=" + version);
             if (Shizuku.isPreV11() || version < 13) {
-                status = "Shizuku 版本过低，需要 v13+";
+                status = "The Shizuku version is too low and requires v13+";
                 return;
             }
             if (!PrivilegedBridgeProtocol.supportsUid(uid)) {
-                status = "Shizuku 权限身份无效";
+                status = "Shizuku permission identity is invalid";
                 return;
             }
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 bindPrivilegedService();
             } else {
-                status = "Shizuku 在线，等待授权";
+                status = "Shizuku is online, waiting for authorization";
             }
         } catch (RuntimeException error) {
-            status = "Shizuku 检测失败";
+            status = "Shizuku detection failed";
             BridgeLog.error("shizuku_binder_check_failed", error);
         }
     }
@@ -354,9 +354,9 @@ final class ShizukuBridgeManager {
             if (generation != privilegeGeneration.get() || channel == PrivilegeChannelPreference.Channel.ROOT || rootTransport != null) return;
             privilegedClient = null;
             coordinator.disconnect();
-            status = "Shizuku 未运行";
+            status = "Shizuku is not running";
             BridgeLog.info("shizuku_binder_dead");
-            finishDialerRoleRequest(false, "Shizuku 未运行");
+            finishDialerRoleRequest(false, "Shizuku is not running");
         });
     }
 
@@ -368,24 +368,24 @@ final class ShizukuBridgeManager {
             return;
         }
         if (rootTransport != null) {
-            status = "Root 已连接";
+            status = "Root is connected";
             return;
         }
         try {
             if (!Shizuku.pingBinder()) {
-                status = "请先启动 Shizuku";
+                status = "Please start Shizuku first";
                 return;
             }
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
                 bindPrivilegedService();
             } else if (Shizuku.shouldShowRequestPermissionRationale()) {
-                status = "请在 Shizuku 中允许 AirSIM";
+                status = "Please allow SimHelp in Shizuku";
             } else {
                 Shizuku.requestPermission(PERMISSION_REQUEST);
-                status = "等待 Shizuku 授权";
+                status = "Waiting for Shizuku authorization";
             }
         } catch (RuntimeException error) {
-            status = "Shizuku 请求失败";
+            status = "Shizuku request failed";
             BridgeLog.error("shizuku_permission_request_failed", error);
         }
     }
@@ -396,15 +396,15 @@ final class ShizukuBridgeManager {
             return;
         }
         if (rootTransport != null) {
-            status = "Root 已连接";
+            status = "Root is connected";
             return;
         }
         if (!Shizuku.pingBinder()) {
-            status = "Shizuku 未运行";
+            status = "Shizuku is not running";
             return;
         }
         if (Shizuku.checkSelfPermission() != PackageManager.PERMISSION_GRANTED) {
-            status = "Shizuku 在线，等待授权";
+            status = "Shizuku is online, waiting for authorization";
             return;
         }
         bindPrivilegedService();
@@ -489,12 +489,12 @@ final class ShizukuBridgeManager {
             return;
         }
         if (channel == PrivilegeChannelPreference.Channel.ROOT) {
-            finishDialerRoleRequest(false, "Root 未授权或不可用");
+            finishDialerRoleRequest(false, "Root is not authorized or available");
             return;
         }
         try {
             if (!Shizuku.pingBinder()) {
-                finishDialerRoleRequest(false, "Shizuku 未运行");
+                finishDialerRoleRequest(false, "Shizuku is not running");
                 return;
             }
             if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
@@ -504,16 +504,16 @@ final class ShizukuBridgeManager {
                 return;
             }
             if (!requestPermission) {
-                finishDialerRoleRequest(false, "Shizuku 尚未授权");
+                finishDialerRoleRequest(false, "Shizuku has not yet authorized");
             } else if (Shizuku.shouldShowRequestPermissionRationale()) {
-                finishDialerRoleRequest(false, "请在 Shizuku 中允许 AirSIM");
+                finishDialerRoleRequest(false, "Please allow SimHelp in Shizuku");
             } else {
-                status = "等待 Shizuku 授权";
+                status = "Waiting for Shizuku authorization";
                 Shizuku.requestPermission(PERMISSION_REQUEST);
             }
         } catch (RuntimeException error) {
             BridgeLog.error("shizuku_dialer_role_prepare_failed", error);
-            finishDialerRoleRequest(false, "Shizuku 请求失败");
+            finishDialerRoleRequest(false, "Shizuku request failed");
         }
     }
 
@@ -531,7 +531,7 @@ final class ShizukuBridgeManager {
                 finishDialerRoleRequest(callback, true, result);
             } catch (Exception error) {
                 BridgeLog.error("root_dialer_role_failed", error);
-                finishDialerRoleRequest(callback, false, "系统未接受默认电话角色");
+                finishDialerRoleRequest(callback, false, "Default phone role not accepted by system");
             }
         });
     }
@@ -550,7 +550,7 @@ final class ShizukuBridgeManager {
                 finishDialerRoleRequest(callback, true, result);
             } catch (Exception error) {
                 BridgeLog.error("shizuku_dialer_role_failed", error);
-                finishDialerRoleRequest(callback, false, "系统未接受默认电话角色");
+                finishDialerRoleRequest(callback, false, "Default phone role not accepted by system");
             }
         });
     }
@@ -669,26 +669,26 @@ final class ShizukuBridgeManager {
         ServiceConnection pending = newConnection(attempt, generation);
         connection = pending;
         binding = true;
-        status = "正在启动 Shizuku PCM 服务";
+        status = "Starting Shizuku PCM service";
         mainHandler.postDelayed(() -> worker.execute(() -> {
             if (connection != pending || generation != privilegeGeneration.get()
                     || !bindAttempt.expire(attempt, android.os.SystemClock.elapsedRealtime())) return;
             binding = false;
             connection = null;
-            status = "Shizuku PCM 启动超时，请点击授权并启动重试，或切换 Root";
+            status = "Shizuku PCM startup timeout, please click Authorization and Start to try again, or switch Root";
             BridgeLog.info("shizuku_user_service_bind_timeout");
             try {
                 Shizuku.unbindUserService(serviceArgs, pending, true);
                 Shizuku.unbindUserService(serviceArgs, pending, false);
             } catch (RuntimeException error) { BridgeLog.error("shizuku_timeout_detach_failed", error); }
-            finishDialerRoleRequest(false, "Shizuku PCM 启动超时");
+            finishDialerRoleRequest(false, "Shizuku PCM startup timeout");
         }), 35_000);
         try {
             Shizuku.bindUserService(serviceArgs, pending);
         } catch (RuntimeException error) {
             bindAttempt.cancel();
             binding = false;
-            status = "Shizuku PCM 服务启动失败";
+            status = "Shizuku PCM service failed to start";
             BridgeLog.error("shizuku_user_service_bind_failed", error);
         }
     }
@@ -698,7 +698,7 @@ final class ShizukuBridgeManager {
     }
 
     boolean privilegeConnected() { return coordinator.connected(); }
-    String activePrivilegeLabel() { return rootTransport != null ? "Root" : privilegedClient != null ? "Shizuku" : "权限通道"; }
+    String activePrivilegeLabel() { return rootTransport != null ? "Root" : privilegedClient != null ? "Shizuku" : "Permission channel"; }
 
     boolean bridgeRunning() {
         return coordinator.bridgeRunning();
@@ -712,7 +712,7 @@ final class ShizukuBridgeManager {
                     long generation = coordinator.connectionGeneration();
                     String report = coordinator.refreshStatus();
                     audioHealthReport.update(report, generation, android.os.SystemClock.elapsedRealtime());
-                    status = (rootTransport != null ? "Root" : "Shizuku") + " 已连接 · " + report;
+                    status = (rootTransport != null ? "Root" : "Shizuku") + "Connected ·" + report;
                     // Idle PCM stays at bridge_listening / initialized=false by design.
                     // Log every probe only during a call (where it is diagnostic); when
                     // idle, log state changes and a 30s heartbeat instead of every second.
@@ -729,7 +729,7 @@ final class ShizukuBridgeManager {
                 }
             } catch (Exception error) {
                 audioHealthReport.clear();
-                status = (rootTransport != null ? "Root" : "Shizuku") + " PCM 状态检查失败";
+                status = (rootTransport != null ? "Root" : "Shizuku") + "PCM status check failed";
                 BridgeLog.error("pcm_status_refresh_failed", error);
             } finally {
                 statusRefreshInFlight.set(false);
@@ -751,13 +751,13 @@ final class ShizukuBridgeManager {
     void openShizuku() {
         Intent launch = app.getPackageManager().getLaunchIntentForPackage(MANAGER_PACKAGE);
         if (launch == null) {
-            status = "未安装 Shizuku";
+            status = "Shizuku is not installed";
             return;
         }
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         try { app.startActivity(launch); }
         catch (RuntimeException error) {
-            status = "无法打开 Shizuku";
+            status = "Unable to open Shizuku";
             BridgeLog.error("shizuku_open_failed", error);
         }
     }

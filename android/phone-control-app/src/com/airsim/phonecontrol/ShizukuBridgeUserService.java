@@ -29,7 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public final class ShizukuBridgeUserService extends Binder {
-    private static final String TAG = "AirSIMShizuku";
+    private static final String TAG = "SimHelpShizuku";
     private static final int DESTROY_TRANSACTION = 16777115;
     private static final int DESTROY_TRANSACTION_AIDL = 16777114;
 
@@ -468,7 +468,7 @@ public final class ShizukuBridgeUserService extends Binder {
         // Attribute public AudioManager operations to the actual shell UID, not the APK UID.
         Context shell = context.createPackageContext("com.android.shell", 0);
         AudioManager audio = shell.getSystemService(AudioManager.class);
-        if (audio == null) throw new IOException("系统通话音频服务不可用");
+        if (audio == null) throw new IOException("System call audio service is unavailable");
         return audio;
     }
 

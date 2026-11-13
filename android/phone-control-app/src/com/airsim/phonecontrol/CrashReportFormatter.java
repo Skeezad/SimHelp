@@ -16,7 +16,7 @@ public final class CrashReportFormatter {
             int sdk, String threadName, Throwable error) {
         StringWriter stack = new StringWriter();
         if (error != null) error.printStackTrace(new PrintWriter(stack));
-        String report = "AirSIM Android Crash Report\n"
+        String report = "SimHelp Android Crash Report\n"
                 + "captured_at=" + Instant.now() + "\n"
                 + "app_version=" + DebugRedactor.safeIdentifier(version) + "\n"
                 + "package=" + DebugRedactor.safeIdentifier(packageName) + "\n"
