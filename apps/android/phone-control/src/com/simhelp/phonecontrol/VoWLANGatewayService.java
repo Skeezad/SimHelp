@@ -116,7 +116,10 @@ public final class VoWLANGatewayService extends Service {
                     BridgeLog.watchdog("vowlan_network_recovery action=republish_discovery sockets=preserved");
                 }
                 Inet4Address hotspot = findAddress(true);
-                List<Inet4Address> extraAddresses = additionalAddresses();
+                // The pairing listener accepts connections on any private interface, while the
+                // old gateway setup only opened the primary hotspot address plus Tailscale.
+                // Keep a gateway route for every eligible private interface.
+                List<Inet4Address> extraAddresses = additionalAddresses(hotspot);
                 Inet4Address avf = RuntimeMode.isStandalone(this)
                         ? (Inet4Address) InetAddress.getByName("127.0.0.1") : findAddress(false);
                 if (!activeHotspot.isEmpty() && (hotspot == null || !hotspot.getHostAddress().equals(activeHotspot))
@@ -395,7 +398,7 @@ public final class VoWLANGatewayService extends Service {
                 || extraGateways.values().stream().anyMatch(g -> g.control().ownsCall() || g.pcm().hasActiveSession());
     }
 
-    private static List<Inet4Address> additionalAddresses() throws Exception {
+    private static List<Inet4Address> additionalAddresses(Inet4Address primary) throws Exception {
         List<Inet4Address> addresses = new ArrayList<>();
         // Required for Tailscale's userspace TCP proxy; not a wildcard listener.
         addresses.add((Inet4Address) InetAddress.getByName("127.0.0.1"));
@@ -406,8 +409,15 @@ public final class VoWLANGatewayService extends Service {
             Enumeration<InetAddress> values = item.getInetAddresses();
             while (values.hasMoreElements()) {
                 InetAddress value = values.nextElement();
-                if (value instanceof Inet4Address ipv4
-                        && VoWLANNetworkPolicy.isOverlayInterface(item.getName(), ipv4.getHostAddress())) addresses.add(ipv4);
+                if (!(value instanceof Inet4Address ipv4)) continue;
+                String host = ipv4.getHostAddress();
+                if (primary != null && host.equals(primary.getHostAddress())) continue;
+                if (VoWLANNetworkPolicy.isVoWLANInterface(item.getName(), host)
+                        || VoWLANNetworkPolicy.isOverlayInterface(item.getName(), host)) {
+                    if (addresses.stream().noneMatch(existing -> existing.getHostAddress().equals(host))) {
+                        addresses.add(ipv4);
+                    }
+                }
             }
         }
         return addresses;
