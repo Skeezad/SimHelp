@@ -2,8 +2,6 @@
 import re, json
 ROOT=Path(__file__).resolve().parents[1]
 CJK=re.compile('[\u3400-\u9fff\u3040-\u30ff]')
-cachepath=ROOT/'scripts/english_segments.json'
-cache=json.loads(cachepath.read_text(encoding='utf8')) if cachepath.exists() else {}
 
 def spans(s):
     out=[]
