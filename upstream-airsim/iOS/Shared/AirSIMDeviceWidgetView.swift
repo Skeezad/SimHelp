@@ -277,7 +277,7 @@ struct AirSIMDeviceWidgetView: View {
                 .foregroundStyle(.white).padding(.horizontal, 4)
                 .frame(minWidth: 18, minHeight: 18)
                 .background(Color.red, in: Capsule()).fixedSize()
-                .accessibilityLabel("\(count) items\(missed?"Unviewed missed calls" : "unread text messages")")
+                .accessibilityLabel("\(count) items\(missed ? "Unviewed missed calls" : "unread text messages")")
         }
     }
 
@@ -430,7 +430,7 @@ struct AirSIMDeviceWidgetView: View {
             Text(reading.map { "\($0.percent)%" } ?? "—")
         }
             .font(.subheadline.weight(.semibold))
-            .accessibilityLabel(reading.map { "Android battery \($0.percent)%,\($0.charging?"Charging" : "Not charged"), sampled from \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "Android battery needs to be refreshed")
+            .accessibilityLabel(reading.map { "Android battery \($0.percent)%,\($0.charging ? "Charging" : "Not charged"), sampled from \($0.observedAt.formatted(date: .omitted, time: .shortened))" } ?? "Android battery needs to be refreshed")
     }
     private func transportSymbol(_ d: AirSIMWidgetSnapshot.Device) -> String {
         d.transport == "Cloud" ? "cloud" : d.transport == "VoBLE" ? "antenna.radiowaves.left.and.right" : "wifi"
