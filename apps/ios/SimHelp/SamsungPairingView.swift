@@ -239,7 +239,7 @@ struct SamsungPairingView: View {
                         code: code,
                         registration: registration
                     )
-                try await model.completeLocalPairing(agentID: paired.agentID, registration: registration)
+                try await model.completeLocalPairing(agentID: paired.agentID, registration: registration, endpoint: paired.endpoint)
                 if !localPairingOnly { model.setCloudSignalingEnabled(true) }
                 // Android starts the VoWLAN foreground service after accepting
                 // the claim. Bonjour can publish the call gateway a few seconds
