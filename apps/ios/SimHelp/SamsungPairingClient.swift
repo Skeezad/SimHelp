@@ -263,6 +263,7 @@ enum SamsungPairingClient {
         let configured: Bool
         let deviceIDHint: String?
         let agentID: String?
+        let gatewayHost: String?
         let controlPort: UInt16?
         let pcmPort: UInt16?
         let routeProof: String?
@@ -277,14 +278,27 @@ enum SamsungPairingClient {
     struct PairedDeviceResult {
         let agentID: String
         let message: String
+        let endpoint: VoWLANEndpoint?
     }
     static func pairDevice(service: SamsungPairingService, code: String,
                            registration: AgentPushRegistration) async throws -> PairedDeviceResult {
-        let (response, _) = try await claim(service: service, code: code, registration: registration, direct: false)
+        let (response, clientKey) = try await claim(service: service, code: code, registration: registration, direct: true)
         guard let agentID = response.agentID, !agentID.isEmpty else { throw SamsungPairingClientError.directGatewayUnavailable }
         PairedAndroidDeviceStore.allowPairing(agentID)
-        return PairedDeviceResult(agentID: agentID,
-            message: response.deviceIDHint.map { "Pairing successful (device … \($0) )" } ?? "Pairing successful")
+        var endpoint: VoWLANEndpoint?
+        if let host = response.gatewayHost,
+           let controlPort = response.controlPort,
+           let pcmPort = response.pcmPort,
+           let proof = response.routeProof,
+           let encodedSecret = registration.vowlanSecret,
+           let secret = Data(base64URL: encodedSecret) {
+            guard SamsungDirectRouteProof.verify(proof, secret: secret, sessionID: service.sessionID,
+                clientKey: clientKey, agentID: agentID, controlPort: controlPort, pcmPort: pcmPort) else {
+                throw SamsungPairingClientError.directGatewayUnavailable
+            }
+            endpoint = try? VoWLANEndpoint(host: host, controlPort: controlPort, pcmPort: pcmPort)
+        }
+        return PairedDeviceResult(agentID: agentID, message: "Pairing successful", endpoint: endpoint)
     }
     static func pair(service: SamsungPairingService, code: String, registration: AgentPushRegistration) async throws -> String {
         try await pairDevice(service: service, code: code, registration: registration).message
