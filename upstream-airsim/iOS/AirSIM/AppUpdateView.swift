@@ -144,17 +144,7 @@ struct NewFeatureOnboardingView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color.black,
-                    selected.accent.opacity(0.34),
-                    Color.black,
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            .animation(reduceMotion ? nil : .easeInOut(duration: 0.45), value: page)
+            Color.black.ignoresSafeArea()
 
             TabView(selection: $page) {
                 ForEach(Array(NewFeatureCatalog.pages.enumerated()), id: \.element.id) { index, item in

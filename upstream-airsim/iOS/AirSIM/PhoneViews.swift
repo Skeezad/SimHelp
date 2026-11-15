@@ -2589,22 +2589,7 @@ private struct CallCircleButton: View {
 
 private struct CallBackdrop: View {
     var body: some View {
-        ZStack {
-            Color(red: 0.008, green: 0.012, blue: 0.025)
-            RadialGradient(
-                colors: [Color.blue.opacity(0.24), .clear],
-                center: .topTrailing,
-                startRadius: 10,
-                endRadius: 420
-            )
-            RadialGradient(
-                colors: [Color.cyan.opacity(0.12), .clear],
-                center: .bottomLeading,
-                startRadius: 20,
-                endRadius: 360
-            )
-        }
-        .ignoresSafeArea()
+        Color.black.ignoresSafeArea()
     }
 }
 

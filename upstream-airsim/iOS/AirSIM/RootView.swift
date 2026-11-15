@@ -38,11 +38,11 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .dial: return "phone"
-        case .recents: return "clock"
-        case .messages: return "bubble.left.and.bubble.right"
-        case .contacts: return "person.crop.rectangle"
-        case .settings: return "slider.horizontal.3"
+        case .dial: return "circle.grid.3x3.fill"
+        case .recents: return "clock.fill"
+        case .messages: return "bubble.right.fill"
+        case .contacts: return "person.crop.circle.fill"
+        case .settings: return "gearshape.fill"
         }
     }
 
@@ -58,6 +58,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 
     var tabTitle: String {
         switch self {
+        case .dial: return "Keypad"
         case .recents: return "recent"
         case .contacts: return "Contact person"
         default: return rawValue
@@ -358,28 +359,10 @@ struct RootView: View {
     }
 }
 
-/// Light mode uses system phone style pure white background；Dark mode only draws dark blue and black bottom ambient light。
+/// Neutral system background shared by all phone pages.
 struct PhoneBackdrop: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        ZStack {
-            if colorScheme == .dark {
-                Color(red: 0.008, green: 0.016, blue: 0.035)
-                LinearGradient(
-                    colors: [
-                        Color.clear,
-                        Color(red: 0.018, green: 0.075, blue: 0.16).opacity(0.72),
-                        Color(red: 0.025, green: 0.20, blue: 0.48).opacity(0.62),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            } else {
-                Color.white
-            }
-        }
-        .ignoresSafeArea()
+        Color(uiColor: .systemBackground).ignoresSafeArea()
     }
 }
 
