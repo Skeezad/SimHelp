@@ -954,12 +954,16 @@ struct RecentsView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
-                            Button("All Calls", systemImage: "phone") { missedOnly = false }
-                            Button("Missed Calls", systemImage: "phone.badge.exclamationmark") { missedOnly = true }
+                            Button { missedOnly = false } label: {
+                                Label("All Calls", systemImage: "phone")
+                            }
+                            Button { missedOnly = true } label: {
+                                Label("Missed Calls", systemImage: "phone.badge.exclamationmark")
+                            }
                             if !model.unseenMissedCallIDs.isEmpty {
-                                Button("Mark All as Read", systemImage: "checkmark.circle") {
+                                Button {
                                     model.markMissedCallsSeen()
-                                }
+                                } label: { Label("Mark All as Read", systemImage: "checkmark.circle") }
                             }
                         } label: { Image(systemName: "line.3.horizontal.decrease") }
                         .accessibilityLabel("Filter calls")
