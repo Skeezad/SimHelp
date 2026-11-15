@@ -159,7 +159,7 @@ struct NewFeatureOnboardingView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SimHelp")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .phoneFont(size: 20, weight: .bold, design: .rounded)
                         .foregroundStyle(.white)
                     Text("Version \(version)")
                         .font(.caption)
@@ -224,7 +224,7 @@ private struct NewFeaturePageView: View {
                 .foregroundStyle(item.accent)
 
             Text(item.title)
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .phoneFont(size: 36, weight: .bold, design: .rounded)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.8)

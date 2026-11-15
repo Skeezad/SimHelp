@@ -13,7 +13,7 @@ struct AirSIMFirstConnectionView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 24) {
                 Image(systemName: "iphone.radiowaves.left.and.right")
-                    .font(.system(size: 42, weight: .medium))
+                    .phoneFont(size: 42, weight: .medium)
                     .foregroundStyle(.blue)
                     .frame(width: 76, height: 76)
                     .background(.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 22))
@@ -183,7 +183,7 @@ private struct PureLocalSlideControl: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(systemName: enabled ? "network.badge.shield.half.filled" : "network")
-                    .font(.system(size: 17, weight: .semibold))
+                    .phoneFont(size: 17, weight: .semibold)
                     .foregroundStyle(tint)
                     .frame(width: 30, height: 30)
                     .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -303,7 +303,7 @@ private struct PureLocalSlideControl: View {
                 if busy { ProgressView().tint(.white) }
                 else {
                     Image(systemName: enabled ? "chevron.left.2" : "chevron.right.2")
-                        .font(.system(size: 15, weight: .bold))
+                        .phoneFont(size: 15, weight: .bold)
                         .foregroundStyle(.white)
                 }
             }
@@ -558,10 +558,6 @@ private struct AirSIMSettingsHomeContent: View, Equatable {
                 link(.widgets, "rectangle.on.rectangle", detail: "Desktop and lock screen display")
                 link(.preferences, "paintpalette")
             }
-            Section {
-                link(.help, "questionmark.circle")
-                link(.about, "info.circle", detail: snapshot.version)
-            }
         }
     }
 }
@@ -634,10 +630,6 @@ struct AirSIMSettingsView: View {
         // Keep lifecycle ownership outside the root Form: pushing a detail must
         // not cancel a diagnostic or discard the user's pending update result.
         .task { await model.refreshPairedDeviceInformation() }
-        .fullScreenCover(item: $appUpdatePresentation, onDismiss: presentManualAppUpdateIfIdle) { presentation in
-            AppUpdateSheet(presentation: presentation, updates: appUpdates)
-        }
-        .onAppear { updateViewVisible = true; presentManualAppUpdateIfIdle() }
         .onChange(of: requestedPureLocalMode) { requested in
             guard let requested else { return }
             requestedPureLocalMode = nil
@@ -729,7 +721,7 @@ struct AirSIMSettingsView: View {
             Section("After opening") {
                 Label("Only direct connection via VoWLAN, Bluetooth or VPN", systemImage: "checkmark.shield")
                 Label("Prevent SimHelp cloud notifications, Relay and feedback uploads", systemImage: "cloud.slash")
-                Text("There is no fallback to Relay when the local link is unavailable. GitHub version checking is unaffected, and Android third-party notification forwarding is still controlled by their independent settings.")
+                Text("There is no fallback to Relay when the local link is unavailable. Android third-party notification forwarding is controlled by its own settings.")
                 Text("When Android is offline, it cannot be confirmed that the cross-terminal policy has been synchronized. Please check the Android status after reconnecting.")
             }
         case .connections:
@@ -1310,21 +1302,6 @@ struct AirSIMSettingsView: View {
         Section("about") {
             LabeledContent("project", value: "SimHelp")
             LabeledContent("Version", value: AppInformation.version)
-                .textSelection(.enabled)
-            Button("Updates to the current version") { appUpdatePresentation = .notes }
-            Button(appUpdates.checking ? "Checking for app updates…" : "Check for app updates") {
-                Task {
-                    if let result = await appUpdates.check(manual: true) {
-                        appUpdateInbox.receive(result)
-                        presentManualAppUpdateIfIdle()
-                    }
-                }
-            }
-            .disabled(appUpdates.checking)
-            Text(appUpdates.status).font(.footnote).foregroundStyle(.secondary)
-            LabeledContent("Update channel", value: AppUpdateChannel.title)
-            Link("GitHub repository", destination: AppInformation.repositoryURL)
-            Link("Version release and download", destination: AppInformation.releasesURL)
         }
     }
 
@@ -1740,7 +1717,7 @@ private struct NotificationForwardingEditor: View {
                 Section {
                     TextEditor(text: $destination.template)
                         .frame(minHeight: 150)
-                        .font(.system(.footnote, design: .monospaced))
+                        .phoneFont(.footnote, design: .monospaced)
                     Text("Available placeholders: {event} {device} {number} {sender} {content} {time}")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -1753,7 +1730,7 @@ private struct NotificationForwardingEditor: View {
                         set: { destination.missedTemplate = $0 }
                     ))
                         .frame(minHeight: 100)
-                        .font(.system(.footnote, design: .monospaced))
+                        .phoneFont(.footnote, design: .monospaced)
                 } header: {
                     Text("Missed call format")
                 }

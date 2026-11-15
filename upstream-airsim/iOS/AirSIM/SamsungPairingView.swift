@@ -374,7 +374,7 @@ struct RemoteDirectGuideView: View {
                         Text("The following is an example of stunnel server. Please replace the domain name certificate path, Android address and actual port, and then load the configuration according to the gateway's service management method.")
                             .font(.subheadline)
                         Text(gatewayExample)
-                            .font(.system(.caption, design: .monospaced))
+                            .phoneFont(.caption, design: .monospaced)
                             .textSelection(.enabled)
                             .fixedSize(horizontal: false, vertical: true)
                         Button {

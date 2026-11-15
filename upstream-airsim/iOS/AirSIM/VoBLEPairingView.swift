@@ -36,7 +36,7 @@ struct VoBLEPairingView: View {
             if let sas = model.voble.pendingSAS {
                 Section("Check security code") {
                     Text(sas)
-                        .font(.system(size: 38, weight: .semibold, design: .rounded))
+                        .phoneFont(size: 38, weight: .semibold, design: .rounded)
                         .monospacedDigit()
                         .frame(maxWidth: .infinity)
                         .accessibilityLabel("Bluetooth pairing security code \(sas)")

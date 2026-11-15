@@ -51,7 +51,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
     private static let tabImages: [PhoneTab: UIImage] = Dictionary(uniqueKeysWithValues:
         allCases.map { tab in
             (tab, UIImage(systemName: tab.icon, withConfiguration:
-                UIImage.SymbolConfiguration(pointSize: 20.57, weight: .regular, scale: .small)) ?? UIImage())
+                UIImage.SymbolConfiguration(pointSize: 28, weight: .regular, scale: .default)) ?? UIImage())
         })
 
     var tabImage: UIImage { Self.tabImages[self] ?? UIImage() }
@@ -72,16 +72,13 @@ enum PhoneTab: String, CaseIterable, Identifiable {
 struct RootView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var settings: AppSettings
-    @EnvironmentObject private var appUpdates: AppUpdateController
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var appUpdatePresentation: AppUpdatePresentation?
     @AppStorage("airsim.selected-tab") private var selectedTabRawValue = PhoneTab.dial.rawValue
     @State private var pendingSMSRecipient: String?
     @State private var messageListState = SMSConversationListState()
     @State private var conversationSender: String?
     @State private var showingConversation = false
-    @AppStorage("airsim.first-connection-complete") private var firstConnectionComplete = false
 
     private var presentedCall: CallRecord? {
 #if DEBUG && targetEnvironment(simulator)
@@ -96,16 +93,12 @@ struct RootView: View {
                 TabView(selection: selectedTabBinding) {
                     DialPadView()
                         .tag(PhoneTab.dial)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.dial.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.dial.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.dial.tabTitle), systemImage: PhoneTab.dial.icon) }
 
 
                     RecentsView(onCall: dial, onMessage: composeMessage)
                         .tag(PhoneTab.recents)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.recents.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.recents.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.recents.tabTitle), systemImage: PhoneTab.recents.icon) }
 
                         .badge(AirSIMWidgetSnapshot.badgeText(model.unseenMissedCallIDs.count))
 
@@ -136,24 +129,18 @@ struct RootView: View {
                         }
                     }
                         .tag(PhoneTab.messages)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.messages.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.messages.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.messages.tabTitle), systemImage: PhoneTab.messages.icon) }
 
                         .badge(AirSIMWidgetSnapshot.badgeText(model.unreadMessageIDs.count))
 
                     ContactsView(onCall: dial, onMessage: composeMessage)
                         .tag(PhoneTab.contacts)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.contacts.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.contacts.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.contacts.tabTitle), systemImage: PhoneTab.contacts.icon) }
 
 
                     AirSIMSettingsView()
                         .tag(PhoneTab.settings)
-                        .tabItem { Label { Text(L10n.t(PhoneTab.settings.tabTitle)) } icon: {
-                            Image(uiImage: PhoneTab.settings.tabImage)
-                        }.environment(\.symbolVariants, .none) }
+                        .tabItem { Label(L10n.t(PhoneTab.settings.tabTitle), systemImage: PhoneTab.settings.icon) }
 
                 }
                 // Keep navigation state, but remove the underlying native tab
@@ -188,43 +175,10 @@ struct RootView: View {
                 .buttonStyle(.plain).padding(.horizontal)
             }
         }
-        .sheet(item: $model.focusedOtherDeviceCall, onDismiss: presentAppUpdateIfIdle) { reminder in
+        .sheet(item: $model.focusedOtherDeviceCall) { reminder in
             OtherDeviceCallSheet(reminder: reminder).environmentObject(model)
         }
-        .fullScreenCover(isPresented: Binding(
-            get: { !firstConnectionComplete && !appUpdates.needsNotes && appUpdatePresentation == nil && appUpdateCallIdle },
-            // Completion is written only by explicit actions in the onboarding view.
-            // A call can temporarily dismiss this cover without completing pairing.
-            set: { _ in }
-        )) {
-            AirSIMFirstConnectionView()
-                .environmentObject(model)
-        }
         .onOpenURL(perform: handleSystemCommunicationURL)
-        .fullScreenCover(item: $appUpdatePresentation, onDismiss: presentAppUpdateIfIdle) { presentation in
-            AppUpdateSheet(presentation: presentation, updates: appUpdates)
-        }
-        .task(id: scenePhase) {
-            guard scenePhase == .active else { return }
-            presentAppUpdateIfIdle()
-            if firstConnectionComplete && appUpdateCallIdle {
-                _ = await appUpdates.check(manual: false)
-                presentAppUpdateIfIdle()
-            }
-        }
-        .onChange(of: appUpdates.needsNotes) { _ in presentAppUpdateIfIdle() }
-        .onChange(of: appUpdates.pendingUpdate) { _ in presentAppUpdateIfIdle() }
-        .onChange(of: selectedTabRawValue) { _ in presentAppUpdateIfIdle() }
-        .onChange(of: firstConnectionComplete) { complete in
-            if complete && scenePhase == .active && appUpdateCallIdle {
-                Task { _ = await appUpdates.check(manual: false); presentAppUpdateIfIdle() }
-            }
-        }
-        .onChange(of: model.inAppPresentedCall?.id) { _ in handleAppUpdateCallChange() }
-        .onChange(of: model.activeCall?.id) { _ in handleAppUpdateCallChange() }
-        .onChange(of: model.remoteCall?.id) { _ in handleAppUpdateCallChange() }
-        .onChange(of: model.pendingOutgoingCall?.id) { _ in handleAppUpdateCallChange() }
-        .onChange(of: model.errorMessage) { _ in presentAppUpdateIfIdle() }
         .onAppear {
             if let info = OtherAndroidCallPresentationRequest.consume() { _ = model.openOtherDeviceCallNotification(info) }
             if let sender = IncomingSMSPresentationRequest.consume() {
@@ -262,28 +216,6 @@ struct RootView: View {
             get: { model.errorMessage?.isEmpty == false },
             set: { if !$0 { model.errorMessage = nil } }
         )
-    }
-
-    private func presentAppUpdateIfIdle() {
-        guard scenePhase == .active, appUpdatePresentation == nil,
-              appUpdateCallIdle, model.focusedOtherDeviceCall == nil,
-              model.errorMessage == nil else { return }
-        if appUpdates.needsNotes {
-            appUpdatePresentation = .notes
-        } else if firstConnectionComplete && selectedTabRawValue == PhoneTab.dial.rawValue,
-                  let candidate = appUpdates.pendingUpdate {
-            appUpdatePresentation = .result(.init(message: "Discover new app versions", candidate: candidate))
-        }
-    }
-
-    private var appUpdateCallIdle: Bool {
-        model.inAppPresentedCall == nil && model.activeCall == nil
-            && model.remoteCall == nil && model.pendingOutgoingCall == nil
-    }
-
-    private func handleAppUpdateCallChange() {
-        if !appUpdateCallIdle { appUpdatePresentation = nil }
-        else { presentAppUpdateIfIdle() }
     }
 
     private var selectedTabBinding: Binding<PhoneTab> {
@@ -622,5 +554,57 @@ private struct AdaptiveMessagesView: View {
             }
         }
         .onAppear { compactColumn = showingConversation ? .detail : .sidebar }
+    }
+}
+
+
+/// Inherit the system Bold Text preference for semantic text throughout the app.
+struct PhoneBoldText: ViewModifier {
+    @Environment(\.legibilityWeight) private var legibilityWeight
+
+    func body(content: Content) -> some View {
+        content.fontWeight(legibilityWeight == .bold ? .bold : nil)
+    }
+}
+
+/// Explicit point-size fonts need to respond to Bold Text as well.
+private struct PhoneAccessibleFont: ViewModifier {
+    @Environment(\.legibilityWeight) private var legibilityWeight
+    var size: CGFloat? = nil
+    var style: Font.TextStyle? = nil
+    var weight: Font.Weight = .regular
+    var design: Font.Design = .default
+
+    private var effectiveWeight: Font.Weight {
+        guard legibilityWeight == .bold else { return weight }
+        switch weight {
+        case .ultraLight, .thin, .light: return .medium
+        case .regular: return .semibold
+        case .medium: return .bold
+        case .semibold, .bold: return .heavy
+        default: return .black
+        }
+    }
+
+    func body(content: Content) -> some View {
+        if let size {
+            content.font(.system(size: size, weight: effectiveWeight, design: design))
+        } else if let style {
+            content.font(.system(style, design: design)
+                .weight(legibilityWeight == .bold ? .bold : weight))
+        } else {
+            content.font(.body)
+        }
+    }
+}
+
+extension View {
+    func phoneFont(size: CGFloat, weight: Font.Weight = .regular,
+                   design: Font.Design = .default) -> some View {
+        modifier(PhoneAccessibleFont(size: size, weight: weight, design: design))
+    }
+
+    func phoneFont(_ style: Font.TextStyle, design: Font.Design = .default) -> some View {
+        modifier(PhoneAccessibleFont(style: style, design: design))
     }
 }

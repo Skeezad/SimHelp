@@ -438,7 +438,7 @@ struct DialPadView: View {
                     .frame(width: metrics.keySize, height: metrics.keySize)
                     .overlay {
                         Image(systemName: "phone.fill")
-                            .font(.system(size: metrics.callIconSize, weight: .semibold))
+                            .phoneFont(size: metrics.callIconSize, weight: .semibold)
                             .foregroundStyle(.white)
                     }
             }
@@ -451,7 +451,7 @@ struct DialPadView: View {
             .opacity(model.numberInput.isEmpty || !model.canStartOutgoingCommand ? 0.4 : 1)
 
             Image(systemName: "delete.left")
-                .font(.system(size: metrics.deleteIconSize))
+                .phoneFont(size: metrics.deleteIconSize)
                 .foregroundStyle(.secondary)
                 .frame(width: metrics.keySize, height: metrics.keySize)
                 .contentShape(Rectangle())
@@ -526,9 +526,9 @@ struct DialPadView: View {
         } label: {
             VStack(spacing: 0) {
                 Text(digit)
-                    .font(.system(size: metrics.digitFontSize, weight: .regular, design: .rounded))
+                    .phoneFont(size: metrics.digitFontSize, weight: .regular, design: .rounded)
                 Text(letters)
-                    .font(.system(size: metrics.letterFontSize, weight: .semibold))
+                    .phoneFont(size: metrics.letterFontSize, weight: .semibold)
                     .tracking(1.4)
             }
             .foregroundStyle(.primary)
@@ -750,7 +750,7 @@ private struct PairedAndroidAgentsView: View {
                 if agents.isEmpty {
                     VStack(spacing: 10) {
                         Image(systemName: "smartphone.slash")
-                            .font(.system(size: 34))
+                            .phoneFont(size: 34)
                             .foregroundStyle(.secondary)
                         Text("No paired Android Agent yet")
                             .font(.headline)
@@ -1033,7 +1033,7 @@ struct RecentsView: View {
                     .frame(width: PhoneListMetrics.timeColumnWidth, alignment: .trailing)
 
                 Image(systemName: "phone.fill")
-                    .font(.system(size: 17, weight: .semibold))
+                    .phoneFont(size: 17, weight: .semibold)
                     .foregroundStyle(.blue)
                     .frame(width: PhoneListMetrics.actionSize, height: PhoneListMetrics.actionSize)
                     .background(Color(uiColor: .secondarySystemBackground), in: Circle())
@@ -1365,7 +1365,7 @@ struct MessageThreadView: View {
             if !trimmedReply.isEmpty {
                 Button(action: sendReply) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 15, weight: .bold))
+                        .phoneFont(size: 15, weight: .bold)
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
                         .background(Circle().fill(Color.accentColor))
@@ -1507,7 +1507,7 @@ struct MessageThreadView: View {
                 showingDeleteConfirmation = true
             } label: {
                 Image(systemName: "trash")
-                    .font(.system(size: 22))
+                    .phoneFont(size: 22)
                     .frame(width: 44, height: 44)
             }
             .accessibilityLabel(L10n.t("Delete selected text messages"))
@@ -1771,7 +1771,7 @@ private struct MessageComposer: View {
 
                 Button(action: sendNow) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 16, weight: .bold))
+                        .phoneFont(size: 16, weight: .bold)
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
                         .background(
@@ -2129,17 +2129,17 @@ struct InitialAvatar: View {
                 switch resolvedFallback {
                 case .person:
                     Image(systemName: "person.fill")
-                        .font(.system(size: size * 0.52, weight: .semibold))
+                        .phoneFont(size: size * 0.52, weight: .semibold)
                         .foregroundStyle(.white)
                         .offset(y: size * 0.08)
                 case let .initial(initial):
                     Text(initial)
-                        .font(.system(size: size * 0.46, weight: .bold, design: .rounded))
+                        .phoneFont(size: size * 0.46, weight: .bold, design: .rounded)
                         .foregroundStyle(.white)
                         .shadow(color: Color.indigo.opacity(0.55), radius: 1.4, x: 0, y: 1.2)
                         .overlay {
                             Text(initial)
-                                .font(.system(size: size * 0.46, weight: .bold, design: .rounded))
+                                .phoneFont(size: size * 0.46, weight: .bold, design: .rounded)
                                 .foregroundStyle(.white.opacity(0.28))
                                 .offset(y: -0.8)
                         }
@@ -2197,7 +2197,7 @@ private struct EmptyStateView: View {
         } else {
             VStack(spacing: 14) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 42))
+                    .phoneFont(size: 42)
                     .foregroundStyle(.secondary)
                 Text(title)
                     .font(.headline)
@@ -2431,7 +2431,7 @@ struct ActiveCallView: View {
                     Task { await model.toggleRecording() }
                 } label: {
                     Image(systemName: model.isRecording ? "record.circle.fill" : "record.circle")
-                        .font(.system(size: 18, weight: .semibold))
+                        .phoneFont(size: 18, weight: .semibold)
                         .foregroundStyle(model.isRecording ? .red : .white)
                         .frame(width: 44, height: 44)
                 }
@@ -2544,7 +2544,7 @@ private struct CallDecisionButton: View {
                     .frame(width: 76, height: 76)
                     .overlay {
                         Image(systemName: icon)
-                            .font(.system(size: 28, weight: .semibold))
+                            .phoneFont(size: 28, weight: .semibold)
                             .foregroundStyle(.white)
                     }
                     .shadow(color: color.opacity(0.28), radius: 16, y: 8)
@@ -2642,7 +2642,7 @@ private struct DTMFKeypadView: View {
             ScrollView {
               VStack(spacing: 20) {
                 Text(enteredDigits.isEmpty ? "Press the button to send dual tone multi-frequency" : enteredDigits)
-                    .font(.system(.title3, design: .rounded).monospacedDigit())
+                    .phoneFont(.title3, design: .rounded).monospacedDigit()
                     .foregroundStyle(enteredDigits.isEmpty ? .secondary : .primary)
                     .lineLimit(1)
                     .contentTransition(.numericText())
@@ -2674,7 +2674,7 @@ private struct DTMFKeypadView: View {
                             Task { await model.sendDTMF(digit) }
                         } label: {
                             Text(digit)
-                                .font(.system(size: 29, weight: .medium, design: .rounded))
+                                .phoneFont(size: 29, weight: .medium, design: .rounded)
                                 .frame(width: keySize, height: keySize)
                                 .contentShape(Circle())
                         }

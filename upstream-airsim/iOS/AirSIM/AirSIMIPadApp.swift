@@ -38,6 +38,7 @@ struct AirSIMIPadApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .modifier(PhoneBoldText())
                 .environmentObject(model)
                 .environmentObject(model.contacts)
                 .environmentObject(model.audio)

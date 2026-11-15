@@ -480,11 +480,11 @@ private struct AgentVerboseTraceDetailView: View {
                     LabeledContent("time", value: item.timestamp.formatted(.iso8601))
                 }
                 Section("Order") {
-                    Text(item.title).font(.system(.body, design: .monospaced)).textSelection(.enabled)
+                    Text(item.title).phoneFont(.body, design: .monospaced).textSelection(.enabled)
                 }
                 if !item.detail.isEmpty {
                     Section("full content") {
-                        Text(item.detail).font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                        Text(item.detail).phoneFont(.caption, design: .monospaced).textSelection(.enabled)
                     }
                 }
             }
