@@ -86,6 +86,10 @@ final class SMSConversationTimelineController: UIViewController, UICollectionVie
         tap.delegate = self
         outsideTap = tap
         let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: UIAccessibility.boldTextStatusDidChangeNotification,
+                                            object: nil, queue: .main) { [weak self] _ in
+            self?.refreshMetrics()
+        })
         for name in [UIApplication.willEnterForegroundNotification, UIApplication.significantTimeChangeNotification,
                      NSNotification.Name.NSCalendarDayChanged, NSNotification.Name.NSSystemTimeZoneDidChange] {
             observers.append(center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
@@ -469,7 +473,7 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         self.item = item
         measuredWidth = 0
         messageID = item.id
-        body.font = UIFont.preferredFont(forTextStyle: .body)
+        body.font = Self.messageFont
         body.text = item.message.content
         body.textAlignment = .natural
         body.accessibilityLanguage = locale.identifier
@@ -482,11 +486,9 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         bubble.hasTail = item.showsTail
         dateLabel.text = date
         dateLabel.isHidden = !item.showsTimestamp
-        var details: [String] = []
-        details.append(item.message.simDeliveryLabel)
-        if outgoing && item.showsTail { details.append(L10n.t("Sent")) }
-        detailLabel.text = details.joined(separator: " · ")
-        detailLabel.isHidden = details.isEmpty
+        detailLabel.text = item.message.simDeliveryLabel
+        detailLabel.isHidden = true
+        body.accessibilityValue = item.message.simDeliveryLabel
         detailLabel.textAlignment = outgoing ? .right : .left
         updateSelection(isSelecting: isSelecting, selected: selected)
     }
@@ -527,9 +529,16 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         return true
     }
 
-    private static func bubbleWidth(for text: String, width: CGFloat, selecting: Bool) -> CGFloat {
-        let maximum = max(40, min(width * 0.80, width - (selecting ? 72 : 40)))
+    private static var messageFont: UIFont {
         let font = UIFont.preferredFont(forTextStyle: .body)
+        guard UIAccessibility.isBoldTextEnabled,
+              let descriptor = font.fontDescriptor.withSymbolicTraits(.traitBold) else { return font }
+        return UIFont(descriptor: descriptor, size: 0)
+    }
+
+    private static func bubbleWidth(for text: String, width: CGFloat, selecting: Bool) -> CGFloat {
+        let maximum = max(40, min(width * 0.80, width - (selecting ? 72 : 32)))
+        let font = Self.messageFont
         let rect = (text as NSString).boundingRect(with: CGSize(width: maximum - 28, height: .greatestFiniteMagnitude),
                                                   options: [.usesLineFragmentOrigin, .usesFontLeading],
                                                   attributes: [.font: font], context: nil)
@@ -546,13 +555,13 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
 
     static func height(for item: SMSTimelineItem, date: String?, width: CGFloat, selecting: Bool) -> CGFloat {
         let bubbleWidth = Self.bubbleWidth(for: item.message.content, width: width, selecting: selecting)
-        let font = UIFont.preferredFont(forTextStyle: .body)
+        let font = Self.messageFont
         let rect = (item.message.content as NSString).boundingRect(with: CGSize(width: bubbleWidth - 28, height: .greatestFiniteMagnitude),
                                                                   options: [.usesLineFragmentOrigin, .usesFontLeading],
                                                                   attributes: [.font: font], context: nil)
         let dateHeight = Self.dateHeight(for: date, width: width)
-        let detailHeight: CGFloat = ceil(UIFont.preferredFont(forTextStyle: .caption2).lineHeight) + 5
-        return dateHeight + max(font.lineHeight, ceil(rect.height)) + 20 + detailHeight + (item.showsTail ? 10 : 3)
+        let detailHeight: CGFloat = 0
+        return dateHeight + max(font.lineHeight, ceil(rect.height)) + 18 + detailHeight + (item.showsTail ? 10 : 3)
     }
 
     override func layoutSubviews() {
@@ -574,7 +583,7 @@ private final class SMSConversationCell: UICollectionViewCell, UIEditMenuInterac
         let left: CGFloat = selecting ? 48 : 16
         let x = item.message.isOutgoing ? max(left, width - 16 - bubbleWidth) : left
         bubble.frame = CGRect(x: x, y: dateHeight, width: bubbleWidth, height: bubbleHeight)
-        body.frame = bubble.bounds.insetBy(dx: 14, dy: 10)
+        body.frame = bubble.bounds.insetBy(dx: 14, dy: 9)
         // Keep the receiving/sending line readable even for a one-character bubble.
         let detailWidth = max(0, width - left - 16)
         detailLabel.frame = CGRect(x: left, y: bubble.frame.maxY + 3, width: detailWidth, height: max(0, detailHeight - 3))
@@ -628,6 +637,10 @@ private final class SMSReadOnlyTextView: UITextView {
 }
 
 private final class SMSBubbleView: UIView {
+    private static let incomingColor = UIColor { traits in
+        traits.userInterfaceStyle == .dark ? UIColor.systemGray5
+            : UIColor(red: 233.0 / 255, green: 233.0 / 255, blue: 235.0 / 255, alpha: 1)
+    }
     var outgoing = false { didSet { if oldValue != outgoing { needsPath = true; setNeedsLayout() } } }
     var hasTail = false { didSet { if oldValue != hasTail { needsPath = true; setNeedsLayout() } } }
     private let shape = CAShapeLayer()
@@ -644,7 +657,7 @@ private final class SMSBubbleView: UIView {
     func bubblePath() -> UIBezierPath {
         let inset: CGFloat = hasTail ? 5 : 0
         let rect = bounds.inset(by: UIEdgeInsets(top: 0, left: outgoing ? 0 : inset, bottom: 0, right: outgoing ? inset : 0))
-        let path = UIBezierPath(roundedRect: rect, cornerRadius: min(19, rect.height / 2))
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: min(22, rect.height / 2))
         if hasTail {
             let tail = UIBezierPath()
             if outgoing {
@@ -667,7 +680,7 @@ private final class SMSBubbleView: UIView {
         if needsPath || shape.frame != bounds {
             shape.frame = bounds
             shape.path = bubblePath().cgPath
-            shape.fillColor = (outgoing ? UIColor.systemGreen : UIColor.systemGray5).resolvedColor(with: traitCollection).cgColor
+            shape.fillColor = (outgoing ? UIColor(red: 0.20, green: 0.81, blue: 0.34, alpha: 1) : Self.incomingColor).resolvedColor(with: traitCollection).cgColor
             needsPath = false
         }
     }

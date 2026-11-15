@@ -115,12 +115,12 @@ struct RootView: View {
                                     state: $messageListState,
                                     openConversation: showSMSConversation
                                 )
-                                .navigationTitle(L10n.t("Short message"))
+                                .navigationTitle("Messages")
                                 .navigationBarTitleDisplayMode(.large)
                                 .toolbar { SMSConversationListToolbar(state: $messageListState) }
                                 .navigationDestination(isPresented: $showingConversation) {
                                     if let sender = conversationSender {
-                                        MessageThreadView(sender: sender)
+                                        MessageThreadView(onBack: { showingConversation = false }, sender: sender)
                                             .id(sender)
                                             .toolbar(.hidden, for: .tabBar)
                                     }
@@ -530,13 +530,13 @@ private struct AdaptiveMessagesView: View {
         NavigationSplitView(preferredCompactColumn: $compactColumn) {
             MessagesView(pendingRecipient: $pendingRecipient, state: $state,
                          openConversation: openConversation)
-                .navigationTitle(L10n.t("Short message"))
+                .navigationTitle("Messages")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar { SMSConversationListToolbar(state: $state) }
                 .navigationSplitViewColumnWidth(min: 280, ideal: 320, max: 400)
         } detail: {
             if let sender, showingConversation {
-                MessageThreadView(sender: sender)
+                MessageThreadView(onBack: { showingConversation = false }, sender: sender)
                     .id(sender)
             } else {
                 ContentUnavailableView("Select a conversation", systemImage: "message",

@@ -1130,6 +1130,7 @@ struct RecentsView: View {
 
 struct SMSConversationListState {
     var searchText = ""
+    var unreadOnly = false
     var showingComposer = false
     var showingClearConfirmation = false
     var editMode: EditMode = .inactive
@@ -1151,48 +1152,49 @@ struct SMSConversationListToolbar: ToolbarContent {
     @Binding var state: SMSConversationListState
 
     var body: some ToolbarContent {
-        phoneMorphingToolbarItem(placement: .topBarLeading, id: "top-action-leading-more") {
-            Menu {
-                Button(L10n.t(state.editMode.isEditing ? "Complete selection" : "Select session")) {
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button(state.editMode.isEditing ? "Done" : "Edit") {
+                withAnimation {
                     state.editMode = state.editMode.isEditing ? .inactive : .active
                     state.selectedConversations = []
                 }
+            }
+            .foregroundStyle(.primary)
+            .accessibilityIdentifier("sms-list-actions")
+        }
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Menu {
+                Button { state.unreadOnly = false } label: {
+                    Label("All Messages", systemImage: state.unreadOnly ? "message" : "checkmark")
+                }
+                Button { state.unreadOnly = true } label: {
+                    Label("Unread Messages", systemImage: state.unreadOnly ? "checkmark" : "message.badge")
+                }
+                Button { Task { await model.refreshMessages() } } label: {
+                    Label("Refresh", systemImage: "arrow.clockwise")
+                }
                 if state.editMode.isEditing {
-                    Button(L10n.t("Delete selected conversations"), role: .destructive) {
+                    Button("Delete Selected", role: .destructive) {
                         state.requestDelete(Set(model.messages.filter {
                             state.selectedConversations.contains($0.sender)
                         }.map(\.id)))
                     }
                     .disabled(state.selectedConversations.isEmpty)
                 }
-                Button { Task { await model.refreshMessages() } } label: {
-                    Label(L10n.t("refresh"), systemImage: "arrow.clockwise")
-                }
                 Button(role: .destructive) {
                     state.pendingDeletion = Set(model.messages.map(\.id))
                     state.showingClearConfirmation = true
-                } label: {
-                    Label(L10n.t("Clear all text messages"), systemImage: "trash")
-                }
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.semibold))
-            }
-            .accessibilityLabel(L10n.t("SMS operation"))
-            .accessibilityIdentifier("sms-list-actions")
-        }
-        phoneMorphingToolbarItem(placement: .topBarTrailing, id: "top-action-trailing-primary") {
-            Button { state.showingComposer = true } label: {
-                Image(systemName: "square.and.pencil")
-            }
-            .accessibilityLabel(L10n.t("new information"))
-            .accessibilityIdentifier("sms-compose")
+                } label: { Label("Clear All Messages", systemImage: "trash") }
+            } label: { Image(systemName: "line.3.horizontal.decrease") }
+            .foregroundStyle(.primary)
+            .accessibilityLabel("Filter Messages")
         }
     }
 }
 
 struct MessagesView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var contacts: ContactStore
     @Binding var pendingRecipient: String?
     @Binding var state: SMSConversationListState
     let openConversation: (String) -> Void
@@ -1200,8 +1202,9 @@ struct MessagesView: View {
     private var conversations: [(sender: String, messages: [SMSMessage])] {
         Dictionary(grouping: model.messages, by: \.sender)
             .map { ($0.key, $0.value.sorted { $0.timestamp < $1.timestamp }) }
-            .filter { SMSConversationSearch.matches(state.searchText, sender: $0.0,
-                contactName: model.contacts.contact(for: $0.0)?.name, contents: $0.1.map(\.content)) }
+            .filter { (!state.unreadOnly || $0.1.contains { model.unreadMessageIDs.contains($0.id) })
+                && SMSConversationSearch.matches(state.searchText, sender: $0.0,
+                    contactName: model.contacts.contact(for: $0.0)?.name, contents: $0.1.map(\.content)) }
             .sorted { ($0.messages.last?.timestamp ?? .distantPast) > ($1.messages.last?.timestamp ?? .distantPast) }
     }
 
@@ -1222,12 +1225,7 @@ struct MessagesView: View {
                                 Button {
                                     openConversation(conversation.sender)
                                 } label: {
-                                    HStack(spacing: 8) {
-                                        MessageConversationRow(sender: conversation.sender, messages: conversation.messages, searchQuery: state.searchText)
-                                        Image(systemName: "chevron.right")
-                                            .font(.footnote.weight(.semibold))
-                                            .foregroundStyle(.tertiary)
-                                    }
+                                    MessageConversationRow(sender: conversation.sender, messages: conversation.messages, searchQuery: state.searchText)
                                     .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
@@ -1236,12 +1234,12 @@ struct MessagesView: View {
                         .listRowBackground(Color.clear)
                         .listRowInsets(.init(
                             top: 0,
-                            leading: PhoneListMetrics.horizontalInset,
+                            leading: 8,
                             bottom: 0,
                             trailing: PhoneListMetrics.horizontalInset
                         ))
                         .alignmentGuide(.listRowSeparatorLeading) { _ in
-                            PhoneListMetrics.separatorLeading
+                            83
                         }
                         .tag(conversation.sender)
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -1253,8 +1251,8 @@ struct MessagesView: View {
                 }
             }
             .listStyle(.plain)
-            .searchable(text: $state.searchText, placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: L10n.t("Search names, numbers or text messages"))
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom, spacing: 0) { searchBar }
             .onChange(of: state.searchText) { _ in state.selectedConversations = [] }
             .environment(\.editMode, $state.editMode)
             .scrollContentBackground(.hidden)
@@ -1294,6 +1292,39 @@ struct MessagesView: View {
         }
     }
 
+    private var searchBar: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass").font(.title3.weight(.semibold))
+                TextField("Search", text: $state.searchText)
+                    .textFieldStyle(.plain)
+                    .font(.body)
+                    .submitLabel(.search)
+                    .accessibilityIdentifier("sms.search")
+                if !state.searchText.isEmpty {
+                    Button { state.searchText = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .accessibilityLabel("Clear Search")
+                }
+            }
+            .padding(.horizontal, 15)
+            .frame(minHeight: 48)
+            .smsComposerGlass()
+            Button { state.showingComposer = true } label: {
+                Image(systemName: "square.and.pencil")
+                    .phoneFont(size: 24, weight: .medium)
+                    .frame(width: 48, height: 48)
+                    .smsComposerGlass()
+            }
+            .accessibilityLabel("New Message")
+            .accessibilityIdentifier("sms-compose")
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
     private struct MessageConversationRow: View {
         @EnvironmentObject private var model: AppModel
         let sender: String
@@ -1317,49 +1348,45 @@ struct MessagesView: View {
         }
 
         var body: some View {
-            HStack(spacing: PhoneListMetrics.avatarSpacing) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(unreadCount > 0 ? Color.blue : Color.clear)
+                    .frame(width: 10, height: 10)
+                    .accessibilityLabel(unreadCount > 0 ? "Unread" : "")
+                    .accessibilityHidden(unreadCount == 0)
+                    .accessibilityIdentifier("smsConversation.unread.\(sender)")
                 InitialAvatar(
-                    name: displayName,
-                    photoData: contact?.photoData,
-                    fallbackContent: contact == nil
-                        ? .person
-                        : RecentAvatarPolicy.content(contactName: contact?.name),
-                    size: PhoneListMetrics.avatarSize
+                    name: displayName, photoData: contact?.photoData,
+                    fallbackContent: contact == nil ? .person : RecentAvatarPolicy.content(contactName: contact?.name),
+                    size: 45
                 )
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(displayName)
                             .font(.body.weight(.semibold))
+                            .foregroundStyle(.primary)
                             .lineLimit(1)
-                        if unreadCount > 0 {
-                            Text(unreadCount > 99 ? "99+" : String(unreadCount))
-                                .font(.caption2.weight(.bold).monospacedDigit())
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 6)
-                                .frame(minWidth: 20, minHeight: 20)
-                                .background(Color(uiColor: .systemBlue), in: Capsule())
-                                .fixedSize()
-                                .accessibilityLabel(String(format: L10n.t("%d unread text messages"), unreadCount))
-                                .accessibilityIdentifier("smsConversation.unread.\(sender)")
-                        }
+                            .layoutPriority(1)
+                        Spacer(minLength: 0)
+                        Text(RecentCallTimeFormatter.string(for: messages.last?.timestamp ?? .now))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
                     }
                     Text(previewMessage?.content ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                    if let latest = messages.last {
-                        Text(latest.simDeliveryLabel).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
-                    }
+                        .lineLimit(2, reservesSpace: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(previewMessage?.timestamp ?? .now, style: .time)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .frame(width: PhoneListMetrics.timeColumnWidth, alignment: .trailing)
+                .padding(.leading, 3)
+                .padding(.vertical, 14)
             }
-            .frame(minHeight: PhoneListMetrics.rowHeight)
+            .frame(minHeight: 92)
+            .accessibilityElement(children: .combine)
         }
     }
 }
@@ -1401,14 +1428,17 @@ private struct SMSAccountPicker: View {
 
 struct MessageThreadView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var contacts: ContactStore
     @EnvironmentObject private var settings: AppSettings
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
+    var onBack: (() -> Void)? = nil
+    @State private var showingContactDetails = false
     @State private var isVisible = false
     let sender: String
     @State private var reply = ""
     @State private var pendingDeletion: Set<String> = []
     @State private var showingDeleteConfirmation = false
-    @State private var copiedVerificationCode: String?
     @State private var selection = SMSMessageSelection()
     @FocusState private var composerFocused: Bool
 
@@ -1435,36 +1465,112 @@ struct MessageThreadView: View {
         reply.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var unreadConversationCount: Int {
+        Set(model.messages.filter { model.unreadMessageIDs.contains($0.id) }.map(\.sender)).count
+    }
+
     private var replyBar: some View {
-        HStack(alignment: .bottom, spacing: 6) {
-            TextField(L10n.t("Short message"), text: $reply, axis: .vertical)
-                .accessibilityIdentifier("sms.reply")
-                .focused($composerFocused)
-                .textFieldStyle(.plain)
-                .lineLimit(1...5)
-                .padding(.leading, 14)
-                .padding(.trailing, trimmedReply.isEmpty ? 14 : 2)
-                .padding(.vertical, 8)
-            if !trimmedReply.isEmpty {
-                Button(action: sendReply) {
-                    Image(systemName: "arrow.up")
-                        .phoneFont(size: 15, weight: .bold)
-                        .foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(Circle().fill(Color.accentColor))
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+        HStack(alignment: .bottom, spacing: 10) {
+            Menu {
+                SMSAccountPicker(recipient: sender)
+                Button("Paste") {
+                    if let text = UIPasteboard.general.string { reply.append(text) }
                 }
-                .buttonStyle(.plain)
-                .padding(.trailing, 5)
-                .padding(.bottom, 3)
-                .accessibilityLabel(L10n.t("send"))
+                Button("Contact Details") { showingContactDetails = true }
+                if let code = latestVerificationCode {
+                    Button("Copy Verification Code") { UIPasteboard.general.string = code }
+                }
+                Button("Copy Conversation") {
+                    UIPasteboard.general.string = messages.map(\.content).joined(separator: "\n\n")
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .phoneFont(size: 26, weight: .medium)
+                    .foregroundStyle(.primary)
+                    .frame(width: 44, height: 44)
+                    .smsComposerGlass()
             }
+            .accessibilityLabel("Message Actions and SIM")
+            HStack(alignment: .bottom, spacing: 2) {
+                TextField("Text Message · SMS", text: $reply, axis: .vertical)
+                    .font(.body)
+                    .accessibilityIdentifier("sms.reply")
+                    .focused($composerFocused)
+                    .textFieldStyle(.plain)
+                    .lineLimit(1...5)
+                    .padding(.leading, 16)
+                    .padding(.trailing, trimmedReply.isEmpty ? 16 : 2)
+                    .padding(.vertical, 11)
+                if !trimmedReply.isEmpty {
+                    Button(action: sendReply) {
+                        Image(systemName: "arrow.up")
+                            .phoneFont(size: 18, weight: .bold)
+                            .foregroundStyle(.white)
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(Color(uiColor: .systemGreen)))
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 2)
+                    .accessibilityLabel("Send Message")
+                }
+            }
+            .frame(minHeight: 44)
+            .smsComposerGlass()
         }
-        .smsComposerGlass()
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .systemBackground))
+    }
+
+    private var threadHeader: some View {
+        ZStack(alignment: .topLeading) {
+            HStack {
+                Button {
+                    if let onBack { onBack() } else { dismiss() }
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "chevron.left").font(.title2.weight(.semibold))
+                        if unreadConversationCount > 0 {
+                            Text(String(unreadConversationCount))
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color(uiColor: .systemBackground))
+                                .padding(.horizontal, 7).padding(.vertical, 4)
+                                .background(Color.primary, in: Capsule())
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
+                    .smsComposerGlass()
+                }
+                .accessibilityLabel("Back to Messages")
+                Spacer()
+                if selection.isSelecting {
+                    Button("Done") { selection.cancel() }
+                }
+            }
+            VStack(spacing: 1) {
+                let contact = model.contacts.contact(for: sender)
+                InitialAvatar(name: model.contacts.displayName(for: sender), photoData: contact?.photoData,
+                    fallbackContent: contact == nil ? .person : RecentAvatarPolicy.content(contactName: contact?.name), size: 60)
+                Button { showingContactDetails = true } label: {
+                    HStack(spacing: 5) {
+                        Text(model.contacts.displayName(for: sender)).font(.body.weight(.semibold)).lineLimit(1)
+                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .smsComposerGlass()
+                }
+                .frame(maxWidth: 210)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 80)
+            .allowsHitTesting(!selection.isSelecting)
+        }
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 16)
+        .padding(.top, 3)
+        .padding(.bottom, 5)
+        .background(.ultraThinMaterial)
     }
 
     private func sendReply() {
@@ -1476,26 +1582,6 @@ struct MessageThreadView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if !selection.isSelecting, let code = latestVerificationCode {
-                HStack(spacing: 10) {
-                    Image(systemName: "number.square.fill")
-                        .foregroundStyle(.blue)
-                    Text("Verification code (code)")
-                        .font(.subheadline.weight(.semibold))
-                        .monospacedDigit()
-                    Spacer()
-                    Button(copiedVerificationCode == code ? "Copied" : "Copy verification code") {
-                        UIPasteboard.general.string = code
-                        copiedVerificationCode = code
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
-                .background(.thinMaterial)
-            }
-
             SMSConversationTimelineView(
                 messages: messages,
                 selection: selection,
@@ -1510,6 +1596,7 @@ struct MessageThreadView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(PhoneBackdrop())
+        .safeAreaInset(edge: .top, spacing: 0) { threadHeader }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if selection.isSelecting { selectionBar } else { replyBar }
         }
@@ -1518,47 +1605,33 @@ struct MessageThreadView: View {
         .onDisappear { isVisible = false }
         .onChange(of: scenePhase) { _ in acknowledgeVisibleMessages() }
         .onChange(of: model.inAppPresentedCall?.id) { _ in acknowledgeVisibleMessages() }
-        .navigationTitle(model.contacts.displayName(for: sender))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 2) {
-                    Text(model.contacts.displayName(for: sender)).font(.headline).lineLimit(1)
-                    SMSAccountPicker(recipient: sender)
+        .toolbar(.hidden, for: .navigationBar)
+        .sheet(isPresented: $showingContactDetails) {
+            NavigationStack {
+                Form {
+                    Section {
+                        Text(model.contacts.displayName(for: sender)).font(.title2.weight(.semibold))
+                        Text(sender).textSelection(.enabled)
+                        Button {
+                            showingContactDetails = false
+                            model.numberInput = sender
+                            Task { await model.dial() }
+                        } label: { Label("Call", systemImage: "phone") }
+                    }
+                    Section("Send Using") { SMSAccountPicker(recipient: sender) }
+                    Section {
+                        Button("Copy Number") { UIPasteboard.general.string = sender }
+                    }
+                }
+                .navigationTitle("Contact Details")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { showingContactDetails = false }
+                    }
                 }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                if selection.isSelecting {
-                    Button {
-                        selection.cancel()
-                        composerFocused = false
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                    .accessibilityLabel(L10n.t("Deselect"))
-                } else {
-                    Menu {
-                        Button {
-                            if let latest = messages.last?.content {
-                                UIPasteboard.general.string = latest
-                            }
-                        } label: {
-                            Label(L10n.t("Copy latest text message"), systemImage: "doc.on.doc")
-                        }
-                        .disabled(messages.isEmpty)
-
-                        Button {
-                            UIPasteboard.general.string = messages.map(\.content).joined(separator: "\n\n")
-                        } label: {
-                            Label(L10n.t("Copy entire conversation"), systemImage: "doc.on.doc.fill")
-                        }
-                        .disabled(messages.isEmpty)
-                    } label: {
-                        Image(systemName: "doc.on.doc")
-                    }
-                    .accessibilityLabel(L10n.t("Copy SMS"))
-                }
-            }
+            .presentationDetents([.medium, .large])
         }
         .confirmationDialog(
             String(format: L10n.t("Delete selected %d text messages?"), pendingDeletion.count),
