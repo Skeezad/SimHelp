@@ -40,7 +40,7 @@ enum PhoneTab: String, CaseIterable, Identifiable {
         switch self {
         case .dial: return "circle.grid.3x3.fill"
         case .recents: return "clock.fill"
-        case .messages: return "bubble.right.fill"
+        case .messages: return "message.fill"
         case .contacts: return "person.crop.circle.fill"
         case .settings: return "gearshape.fill"
         }
