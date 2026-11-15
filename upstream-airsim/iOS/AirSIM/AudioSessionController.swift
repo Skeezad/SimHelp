@@ -1046,7 +1046,7 @@ final class NetworkPCMTransport: @unchecked Sendable {
         tcp.enableKeepalive = true
         tcp.keepaliveIdle = 2
         let parameters = NWParameters(tls: usesTLS ? NWProtocolTLS.Options() : nil, tcp: tcp)
-        if requiresWiFi {
+        if requiresWiFi && !fallbackAttempted {
             parameters.requiredInterfaceType = .wifi
         }
         let connection = NWConnection(host: host, port: port, using: parameters)
