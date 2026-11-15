@@ -65,10 +65,10 @@ public final class MainActivity extends Activity {
     private static final java.util.concurrent.ExecutorService SMS_SCAN_WORKER =
             Executors.newSingleThreadExecutor();
 
-    private static final int BG = Color.rgb(8, 14, 20);
-    private static final int SURFACE = Color.rgb(17, 28, 39);
-    private static final int SURFACE_HIGH = Color.rgb(23, 36, 49);
-    private static final int BORDER = Color.rgb(42, 58, 73);
+    private static final int BG = Color.rgb(12, 12, 12);
+    private static final int SURFACE = Color.rgb(24, 24, 24);
+    private static final int SURFACE_HIGH = Color.rgb(32, 32, 32);
+    private static final int BORDER = Color.rgb(54, 54, 54);
     private static final int PRIMARY = Color.rgb(52, 229, 170);
     private static final int CYAN = Color.rgb(73, 231, 224);
     private static final int BLUE = Color.rgb(47, 128, 237);
@@ -899,28 +899,9 @@ public final class MainActivity extends Activity {
             toast(enabled ? "Debug log is enabled" : "Debug log is closed");
         });
         root.addView(debugEnabled, matchWithTop(14));
-        root.addView(sectionTitle("about"), matchWithTop(22));
-        LinearLayout aboutCard = card(SURFACE, 22);
-        aboutCard.setOrientation(LinearLayout.VERTICAL);
-        aboutCard.setPadding(dp(16), dp(16), dp(16), dp(16));
-        aboutCard.addView(label("SimHelp · " + RuntimeMode.agentLabel(this), 16, TEXT, Gravity.START));
-        TextView version = label("Version" + AppInformation.version(this), 14, MUTED, Gravity.START);
+        TextView version = label("SimHelp · Version " + AppInformation.version(this), 14, MUTED, Gravity.START);
         version.setTextIsSelectable(true);
-        aboutCard.addView(version, matchWithTop(6));
-        TextView notes = secondaryButton("Updates to the current version");
-        notes.setOnClickListener(ignored -> appUpdates.showNotes(() -> {}));
-        aboutCard.addView(notes, matchWithTop(10));
-        TextView appCheck = secondaryButton("Check for app updates");
-        appCheck.setOnClickListener(ignored -> appUpdates.check(true));
-        aboutCard.addView(appCheck, matchWithTop(10));
-        aboutCard.addView(description(appUpdates.status()), matchWithTop(6));
-        TextView repository = secondaryButton("GitHub repository");
-        repository.setOnClickListener(ignored -> openProjectURL(AppInformation.REPOSITORY_URL));
-        aboutCard.addView(repository, matchWithTop(12));
-        TextView releases = secondaryButton("Version release and download");
-        releases.setOnClickListener(ignored -> openProjectURL(AppInformation.RELEASES_URL));
-        aboutCard.addView(releases, matchWithTop(10));
-        root.addView(aboutCard, matchWithTop(10));
+        root.addView(version, matchWithTop(22));
 
         root.addView(sectionTitle("feedback"), matchWithTop(22));
         LinearLayout feedbackCard = card(SURFACE, 22);
@@ -1456,8 +1437,8 @@ public final class MainActivity extends Activity {
             }
             case START -> {
                 title = "Shizuku is not running yet";
-                message = "Shizuku is installed, but the service has not started yet. Please open Shizuku, use wireless debugging or Root to start the service, and then return to AirSIM."
-                        + "Call audio cannot be transferred to iPhone when \n\n is not ready.";
+                message = "Shizuku is installed but is not running. Open Shizuku, start its service using wireless debugging or Root, then return to SimHelp."
+                        + "\n\nCall audio cannot be transferred to iPhone until Shizuku is ready.";
                 action = "Open Shizuku";
             }
             case AUTHORIZE -> {
@@ -1914,7 +1895,7 @@ public final class MainActivity extends Activity {
 					? "Currently, domestic ROMs do not provide the AOSP Linux Terminal component; SimHelp cannot be forcibly reinstalled or opened with ordinary application permissions."
 					: "The system declares support for AVF, but the AOSP Linux Terminal component is not installed.";
 			case AVF_UNSUPPORTED -> snapshot.restrictedChinaOEM()
-					? "Currently, domestic ROMs do not expose AVF Linux capabilities to third-party applications and cannot be forcibly turned on by AirSIM."
+					? "This Android system does not expose AVF Linux capabilities to third-party apps. SimHelp cannot enable them."
 					: "The current system does not expose AVF capabilities, please check the system version and manufacturer support.";
 		};
 	}
