@@ -1,5 +1,7 @@
 import SwiftUI
 import UIKit
+import Contacts
+import ContactsUI
 import LinkPresentation
 import UniformTypeIdentifiers
 
@@ -70,7 +72,16 @@ enum RecentCallTimeFormatter {
         }
         if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
            day == calendar.dateComponents([.year, .month, .day], from: yesterday) {
-            return "yesterday"
+            return "Yesterday"
+        }
+        if let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date),
+                                               to: calendar.startOfDay(for: now)).day,
+           (2...6).contains(days) {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US")
+            formatter.calendar = calendar
+            formatter.dateFormat = "EEEE"
+            return formatter.string(from: date)
         }
         if day.year == currentDay.year {
             return String(format: "%02d/%02d", day.month ?? 0, day.day ?? 0)
@@ -179,16 +190,16 @@ struct DialPadLayoutMetrics {
     let contactHeight: CGFloat
 
     var keypadWidth: CGFloat { keySize * 3 + keySpacing * 2 }
-    var digitFontSize: CGFloat { min(31, max(23, keySize * 0.34)) }
+    var digitFontSize: CGFloat { min(38, max(27, keySize * 0.47)) }
     var letterFontSize: CGFloat { min(10, max(8, keySize * 0.115)) }
     var callIconSize: CGFloat { min(30, max(23, keySize * 0.33)) }
     var deleteIconSize: CGFloat { min(24, max(19, keySize * 0.27)) }
 
     init(availableHeight: CGFloat, availableWidth: CGFloat, compactWidth: Bool, twoColumns: Bool = false) {
         let compactHeight = availableHeight < 700
-        let desiredKeySize: CGFloat = compactWidth ? 84 : 90
-        let desiredKeySpacing: CGFloat = compactWidth ? 28 : 34
-        let reservedHeight: CGFloat = twoColumns ? 64 : (compactHeight ? 205 : 220)
+        let desiredKeySize: CGFloat = compactWidth ? 80 : 90
+        let desiredKeySpacing: CGFloat = compactWidth ? 22 : 30
+        let reservedHeight: CGFloat = twoColumns ? 64 : (compactHeight ? 200 : 240)
         let verticalKeySize = (availableHeight - reservedHeight) / 5
         let contentWidth = min(520, max(0, availableWidth - 32))
         let horizontalKeySize = (contentWidth - desiredKeySpacing * 2) / 3
@@ -198,8 +209,8 @@ struct DialPadLayoutMetrics {
             desiredKeySpacing,
             max(14, (contentWidth - keySize * 3) / 2)
         )
-        rowSpacing = compactHeight ? 8 : (compactWidth ? 12 : 16)
-        sectionSpacing = compactHeight ? 8 : (compactWidth ? 12 : 16)
+        rowSpacing = compactHeight ? 14 : 18
+        sectionSpacing = compactHeight ? 18 : 20
         verticalPadding = compactHeight ? 6 : 10
         numberFontSize = compactHeight ? 32 : (compactWidth ? 36 : 42)
         numberHeight = compactHeight ? 40 : 46
@@ -211,6 +222,7 @@ struct DialPadLayoutMetrics {
 
 struct DialPadView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var contacts: ContactStore
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var deleteRepeatTask: Task<Void, Never>?
@@ -225,8 +237,30 @@ struct DialPadView: View {
         [("*", ""), ("0", "+"), ("#", "")],
     ]
 
-    private var matchedName: String? {
-        model.contacts.contact(for: model.numberInput)?.name
+    @State private var showingMatches = false
+    @State private var showingContactEditor = false
+
+    private struct NumberMatch: Identifiable {
+        let contact: ContactStore.Contact
+        let number: String
+        var id: String { contact.id + number }
+    }
+
+    private var numberMatches: [NumberMatch] {
+        let query = model.numberInput.filter(\.isNumber)
+        guard !query.isEmpty else { return [] }
+        return contacts.contacts.flatMap { contact in
+            contact.phones.compactMap { phone -> NumberMatch? in
+                let digits = phone.filter(\.isNumber)
+                return digits.contains(query) ? NumberMatch(contact: contact, number: phone) : nil
+            }
+        }.sorted { left, right in
+            let a = left.number.filter(\.isNumber)
+            let b = right.number.filter(\.isNumber)
+            if (a == query) != (b == query) { return a == query }
+            if a.hasPrefix(query) != b.hasPrefix(query) { return a.hasPrefix(query) }
+            return left.contact.name.localizedStandardCompare(right.contact.name) == .orderedAscending
+        }
     }
 
     private var isCompact: Bool { horizontalSizeClass == .compact }
@@ -245,139 +279,107 @@ struct DialPadView: View {
                     compactWidth: isCompact,
                     twoColumns: twoColumns
                 )
-                let pairedAgents = model.pairedAndroidAgents
-                let currentAgent = pairedAgents.first(where: \.isCurrent)
-                let agentSection = DialPadAgentSection.make(mode: ConnectionModePreference.selected(),
-                    hasCurrent: currentAgent != nil, pairedCount: pairedAgents.count)
-
                 ScrollView {
                     layout {
-                        VStack(spacing: metrics.sectionSpacing) {
-                            VStack(spacing: 2) {
-                                Text(model.numberInput.isEmpty ? L10n.t("Enter number") : model.numberInput)
-                                    .font(
-                                        .system(
-                                            size: metrics.numberFontSize,
-                                            weight: .light,
-                                            design: .rounded
-                                        )
-                                    )
-                                    .monospacedDigit()
-                                    .foregroundStyle(model.numberInput.isEmpty ? .secondary : .primary)
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.45)
-                                    .frame(minHeight: metrics.numberHeight)
-                                    .accessibilityIdentifier("dialpad.number")
-
-                                Text(matchedName ?? " ")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(.green)
-                                    .frame(minHeight: metrics.contactHeight)
-
-                            }
-                            .padding(.horizontal, 12)
-                            .contextMenu {
-                                Button {
-                                    UIPasteboard.general.string = model.numberInput
-                                } label: {
-                                    Label("copy number", systemImage: "doc.on.doc")
+                        VStack(spacing: 6) {
+                            HStack {
+                                if !model.pairedAndroidAgents.isEmpty {
+                                    Button {
+                                        pairedAgentListPresentation = PairedAgentListPresentation()
+                                    } label: {
+                                        Image(systemName: "simcard")
+                                            .frame(width: 44, height: 44)
+                                    }
+                                    .accessibilityLabel("Calling device and SIM")
                                 }
-                                .disabled(model.numberInput.isEmpty)
-                                Button {
-                                    guard let raw = UIPasteboard.general.string else { return }
-                                    model.numberInput = DialPadPasteSanitizer.sanitize(raw)
-                                } label: {
-                                    Label("Paste number", systemImage: "doc.on.clipboard")
+                                Spacer()
+                                if !model.numberInput.isEmpty {
+                                    Button { showingContactEditor = true } label: {
+                                        Image(systemName: "person.crop.circle.badge.plus")
+                                            .phoneFont(size: 25)
+                                            .frame(width: 44, height: 44)
+                                    }
+                                    .accessibilityLabel("Add to Contacts")
                                 }
                             }
-
-                            if agentSection == .current, let currentAgent {
-                                DialPadCurrentAgentCard(
-                                    agent: currentAgent,
-                                    agentCount: pairedAgents.count,
-                                    cloudModeEnabled: CloudModePreference.isEnabled(),
-                                    simSlots: model.simSlots(for: currentAgent.id),
-                                    selectedSIMSlotID: model.selectedSIMSlotID(for: currentAgent.id),
-                                    selectSIMSlot: { slot in
-                                        model.selectSIMSlot(slot.id, for: currentAgent.id)
+                            .foregroundStyle(.primary)
+                            .frame(height: 30)
+                            Text(model.numberInput)
+                                .phoneFont(size: metrics.numberFontSize)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.45)
+                                .frame(maxWidth: .infinity, minHeight: metrics.numberHeight)
+                                .accessibilityIdentifier("dialpad.number")
+                                .contextMenu {
+                                    Button("Copy number") { UIPasteboard.general.string = model.numberInput }
+                                        .disabled(model.numberInput.isEmpty)
+                                    Button("Paste number") {
+                                        guard let raw = UIPasteboard.general.string else { return }
+                                        model.numberInput = DialPadPasteSanitizer.sanitize(raw)
                                     }
-                                ) {
-                                    pairedAgentListPresentation = PairedAgentListPresentation()
                                 }
-                            } else if agentSection == .bluetooth {
-                                HStack(spacing: 10) {
-                                    Image(systemName: "wave.3.right")
-                                        .foregroundStyle(model.voble.state == .ready ? .green : .orange)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("VoBLE Bluetooth mode")
-                                            .font(.subheadline.weight(.semibold))
-                                        Text(
-                                            model.voble.state == .ready
-                                                ? "Authenticated · The call does not go through Relay"
-                                                : "Waiting for Android Bluetooth Agent"
-                                        )
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                            if let match = numberMatches.first {
+                                VStack(spacing: 0) {
+                                    Button { model.numberInput = match.number } label: {
+                                        matchLabel(match)
+                                            .padding(14)
                                     }
-                                    Spacer()
-                                    Text(model.voble.state == .ready ? "online" : "Connecting")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(model.voble.state == .ready ? .green : .orange)
-                                }
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    .thinMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            } else if agentSection == .selection {
-                                Button {
-                                    pairedAgentListPresentation = PairedAgentListPresentation()
-                                } label: {
-                                    HStack(spacing: 10) {
-                                        Image(
-                                            systemName: ConnectionModePreference.selected() == .bluetooth
-                                                ? "wave.3.right" : "smartphone"
-                                        )
-                                        .foregroundStyle(.secondary)
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Paired Android Agent · \(pairedAgents.count)")
-                                                .font(.subheadline.weight(.semibold))
-                                            Text(pairedAgents.count > 1 ? "Please select a dialing device" : "Select the device and check the dial-up link")
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
+                                    if numberMatches.count > 1 {
+                                        Divider().padding(.horizontal, 16)
+                                        Button { showingMatches = true } label: {
+                                            Label("\(numberMatches.count - 1) More Results", systemImage: "magnifyingglass")
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(14)
                                         }
-                                        Spacer()
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(.tertiary)
                                     }
-                                    .padding(12)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(
-                                        .thinMaterial,
-                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 }
+                                .font(.body)
                                 .buttonStyle(.plain)
-                                .accessibilityIdentifier("dial-pad-device-selector")
+                                .phoneGlassSurface(cornerRadius: 24)
+                                .frame(width: metrics.keypadWidth)
                             }
-
+                            Spacer(minLength: 0)
                         }
                         .frame(maxWidth: twoColumns ? 420 : 520)
+                        .frame(height: twoColumns ? nil : max(150, proxy.size.height - (metrics.keySize * 5 + metrics.rowSpacing * 3 + metrics.sectionSpacing + 40)))
 
                         VStack(spacing: metrics.sectionSpacing) {
                             dialKeyGrid(metrics: metrics)
                             dialActions(metrics: metrics)
                         }
+                        .padding(.bottom, 32)
                     }
-                    .frame(maxWidth: twoColumns ? 1000 : 520)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, metrics.verticalPadding)
-                    .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+                    .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .bottom)
                 }
-                .scrollDisabled(true)
                 .scrollIndicators(.hidden)
             }
             .background(PhoneBackdrop())
             .toolbar(.hidden, for: .navigationBar)
+            .sheet(isPresented: $showingContactEditor) {
+                PhoneContactEditor(number: model.numberInput) {
+                    Task { await model.contacts.loadIfAuthorized(force: true) }
+                }
+            }
+            .sheet(isPresented: $showingMatches) {
+                NavigationStack {
+                    List(numberMatches) { match in
+                        Button {
+                            model.numberInput = match.number
+                            showingMatches = false
+                        } label: { matchLabel(match) }
+                        .foregroundStyle(.primary)
+                    }
+                    .navigationTitle("Matching Contacts")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showingMatches = false }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
+            }
             .sheet(item: $pairedAgentListPresentation) { _ in
                 PairedAndroidAgentsView(
                     agents: model.pairedAndroidAgents,
@@ -386,9 +388,49 @@ struct DialPadView: View {
                         model.bindAndroidAgent(agentID)
                     }
                 )
+                .safeAreaInset(edge: .top) {
+                    if let current = model.pairedAndroidAgents.first(where: \.isCurrent) {
+                        DialPadCurrentAgentCard(
+                            agent: current, agentCount: model.pairedAndroidAgents.count,
+                            cloudModeEnabled: CloudModePreference.isEnabled(),
+                            simSlots: model.simSlots(for: current.id),
+                            selectedSIMSlotID: model.selectedSIMSlotID(for: current.id),
+                            selectSIMSlot: { model.selectSIMSlot($0.id, for: current.id) }
+                        ) { }
+                        .padding()
+                    }
+                }
             }
+            .task { await model.contacts.loadIfAuthorized() }
             .onDisappear(perform: stopRepeatingDelete)
         }
+    }
+
+    private func matchLabel(_ match: NumberMatch) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "person.crop.circle")
+            Text(match.contact.name).foregroundStyle(.secondary).lineLimit(1)
+            highlightedNumber(match.number)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func highlightedNumber(_ number: String) -> Text {
+        let query = model.numberInput.filter(\.isNumber)
+        let digits = number.filter(\.isNumber)
+        guard !query.isEmpty, let range = digits.range(of: query) else {
+            return Text(number).foregroundColor(.secondary)
+        }
+        let offset = digits.distance(from: digits.startIndex, to: range.lowerBound)
+        let positions = number.indices.filter { number[$0].isNumber }
+        guard positions.count >= offset + query.count else { return Text(number) }
+        let lower = positions[offset]
+        let upper = number.index(after: positions[offset + query.count - 1])
+        return Text(String(number[..<lower])).foregroundColor(.secondary)
+            + Text(String(number[lower..<upper])).foregroundColor(.primary)
+            + Text(String(number[upper...])).foregroundColor(.secondary)
     }
 
     @ViewBuilder
@@ -418,18 +460,8 @@ struct DialPadView: View {
 
     private func dialActions(metrics: DialPadLayoutMetrics) -> some View {
         HStack(spacing: metrics.keySpacing) {
-            Button(action: clearNumber) {
-                Text(L10n.t("Clear"))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(width: metrics.keySize, height: metrics.keySize)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(model.numberInput.isEmpty)
-            .opacity(model.numberInput.isEmpty ? 0.4 : 1)
-            .accessibilityLabel(L10n.t("Clear number"))
-            .accessibilityIdentifier("dialpad.clear")
+            Color.clear.frame(width: metrics.keySize, height: metrics.keySize)
+                .accessibilityHidden(true)
             Button {
                 Task { await model.dial() }
             } label: {
@@ -448,16 +480,16 @@ struct DialPadView: View {
                     || model.isBusy
                     || !model.canStartOutgoingCommand
             )
-            .opacity(model.numberInput.isEmpty || !model.canStartOutgoingCommand ? 0.4 : 1)
 
-            Image(systemName: "delete.left")
+            Image(systemName: "delete.left.fill")
                 .phoneFont(size: metrics.deleteIconSize)
                 .foregroundStyle(.secondary)
                 .frame(width: metrics.keySize, height: metrics.keySize)
                 .contentShape(Rectangle())
                 .gesture(deleteGesture)
                 .allowsHitTesting(!model.numberInput.isEmpty)
-                .opacity(model.numberInput.isEmpty ? 0.4 : 1)
+                .opacity(model.numberInput.isEmpty ? 0 : 1)
+                .accessibilityHidden(model.numberInput.isEmpty)
                 .accessibilityLabel(L10n.t("delete"))
                 .accessibilityHint(L10n.t("Tap to delete one digit, long press to delete continuously"))
                 .accessibilityAddTraits(.isButton)
@@ -526,7 +558,7 @@ struct DialPadView: View {
         } label: {
             VStack(spacing: 0) {
                 Text(digit)
-                    .phoneFont(size: metrics.digitFontSize, weight: .regular, design: .rounded)
+                    .phoneFont(size: metrics.digitFontSize, weight: .regular, design: .default)
                 Text(letters)
                     .phoneFont(size: metrics.letterFontSize, weight: .semibold)
                     .tracking(1.4)
@@ -786,6 +818,18 @@ struct RecentsView: View {
     @State private var selectedCall: CallRecord?
     @State private var suppressNextCallTap = false
 
+    @State private var search = ""
+    @State private var missedOnly = false
+    @State private var editing = false
+
+    private var visibleCalls: [CallRecord] {
+        model.callHistory.filter { call in
+            (!missedOnly || call.missed) && (search.isEmpty
+                || contacts.displayName(for: call.number).localizedCaseInsensitiveContains(search)
+                || (call.number ?? "").localizedCaseInsensitiveContains(search))
+        }
+    }
+
     var body: some View {
         ZStack {
             NavigationStack {
@@ -796,28 +840,29 @@ struct RecentsView: View {
                             systemImage: "phone.arrow.up.right"
                         )
                     } else {
-                        List(model.callHistory) { call in
+                        List {
+                        ForEach(visibleCalls) { call in
                             let contact = call.number.flatMap { contacts.contact(for: $0) }
-                            Button {
-                                if suppressNextCallTap {
-                                    suppressNextCallTap = false
-                                    return
-                                }
-                                if let number = RecentCallDialPolicy.numberToDial(call.number) {
+                            CallHistoryRow(
+                                call: call,
+                                isUnseen: model.unseenMissedCallIDs.contains(call.id),
+                                contact: contact,
+                                displayName: contact?.name ?? contacts.displayName(for: call.number),
+                                onCall: {
+                                    if suppressNextCallTap {
+                                        suppressNextCallTap = false
+                                        return
+                                    }
+                                    if let number = RecentCallDialPolicy.numberToDial(call.number) {
+                                        model.markMissedCallsSeen([call])
+                                        onCall(number)
+                                    }
+                                },
+                                onInfo: {
                                     model.markMissedCallsSeen([call])
-                                    onCall(number)
+                                    withAnimation { selectedCall = call }
                                 }
-                            } label: {
-                                CallHistoryRow(
-                                    call: call,
-                                    isUnseen: model.unseenMissedCallIDs.contains(call.id),
-                                    contact: contact,
-                                    displayName: contact?.name ?? contacts.displayName(for: call.number)
-                                )
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(RecentCallDialPolicy.numberToDial(call.number) == nil)
+                            )
                             .simultaneousGesture(
                                 LongPressGesture(minimumDuration: 0.38).onEnded { _ in
                                     guard call.number?.isEmpty == false else { return }
@@ -872,6 +917,12 @@ struct RecentsView: View {
                                 }
                             }
                         }
+                        .onDelete { offsets in
+                            let calls = visibleCalls
+                            model.deleteCallHistory(ids: Set(offsets.map { calls[$0].id }))
+                        }
+                        }
+                        .environment(\.editMode, .constant(editing ? .active : .inactive))
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
                         .environment(\.defaultMinListRowHeight, PhoneListMetrics.rowHeight)
@@ -879,15 +930,32 @@ struct RecentsView: View {
                     }
                 }
                 .background(PhoneBackdrop())
-                .navigationTitle(L10n.t("recent calls"))
+                .navigationTitle("Recents")
+                .navigationBarTitleDisplayMode(.large)
+                .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        if !model.unseenMissedCallIDs.isEmpty {
-                            Button { model.markMissedCallsSeen() } label: {
-                                Label(L10n.t("Mark all as read"), systemImage: "checkmark.circle")
-                            }
-                            .accessibilityIdentifier("recents.markAllSeen")
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button(editing ? "Done" : "Edit") { withAnimation { editing.toggle() } }
+                    }
+                    ToolbarItem(placement: .principal) {
+                        Picker("Calls", selection: $missedOnly) {
+                            Text("All").tag(false)
+                            Text("Missed").tag(true)
                         }
+                        .pickerStyle(.segmented)
+                        .frame(width: 156)
+                    }
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Menu {
+                            Button("All Calls", systemImage: "phone") { missedOnly = false }
+                            Button("Missed Calls", systemImage: "phone.badge.exclamationmark") { missedOnly = true }
+                            if !model.unseenMissedCallIDs.isEmpty {
+                                Button("Mark All as Read", systemImage: "checkmark.circle") {
+                                    model.markMissedCallsSeen()
+                                }
+                            }
+                        } label: { Image(systemName: "line.3.horizontal.decrease") }
+                        .accessibilityLabel("Filter calls")
                     }
                 }
             }
@@ -989,38 +1057,32 @@ struct RecentsView: View {
         let isUnseen: Bool
         let contact: ContactStore.Contact?
         let displayName: String
+        let onCall: () -> Void
+        let onInfo: () -> Void
 
         var body: some View {
-            HStack(spacing: PhoneListMetrics.avatarSpacing) {
+            HStack(spacing: 8) {
+                Button(action: onCall) {
+                HStack(spacing: 9) {
                 InitialAvatar(
                     name: displayName,
                     photoData: contact?.photoData,
                     fallbackContent: RecentAvatarPolicy.content(contactName: contact?.name),
-                    size: PhoneListMetrics.avatarSize
+                    size: 45
                 )
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(displayName)
                             .font(.body.weight(.semibold))
                             .foregroundStyle(call.missed ? .red : .primary)
-                        if isUnseen {
-                            Text(L10n.t("Not viewed"))
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.red)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.red.opacity(0.12), in: Capsule())
-                                .fixedSize()
-                                .accessibilityIdentifier("recentCall.unseen.\(call.id)")
-                        }
                     }
                     HStack(spacing: 4) {
                         Image(systemName: call.direction == "incoming" ? "arrow.down.left" : "arrow.up.right")
                             .font(.caption2.weight(.semibold))
-                        Text(call.missed ? L10n.t("Missed") : "SimHelp audio")
+                        Text("phone")
                     }
                     .font(.subheadline)
-                    .foregroundStyle(call.missed ? .red : .secondary)
+                    .foregroundStyle(.secondary)
                 }
                 .lineLimit(1)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -1032,11 +1094,21 @@ struct RecentsView: View {
                     .minimumScaleFactor(0.78)
                     .frame(width: PhoneListMetrics.timeColumnWidth, alignment: .trailing)
 
-                Image(systemName: "phone.fill")
-                    .phoneFont(size: 17, weight: .semibold)
+                }
+                .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(RecentCallDialPolicy.numberToDial(call.number) == nil)
+
+                Button(action: onInfo) {
+                Image(systemName: "info")
+                    .phoneFont(size: 23, weight: .bold)
                     .foregroundStyle(.blue)
                     .frame(width: PhoneListMetrics.actionSize, height: PhoneListMetrics.actionSize)
                     .background(Color(uiColor: .secondarySystemBackground), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Call information for " + displayName)
             }
             .frame(minHeight: PhoneListMetrics.rowHeight)
         }
@@ -1896,10 +1968,28 @@ private struct MessageContactPicker: View {
 
 struct ContactsView: View {
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var contacts: ContactStore
     @Environment(\.openURL) private var openURL
     let onCall: (String) -> Void
     let onMessage: (String) -> Void
     @State private var search = ""
+    @State private var showingContactEditor = false
+
+    private var sections: [(title: String, contacts: [ContactStore.Contact])] {
+        let groups = Dictionary(grouping: filtered) { contact in
+            let initial = String(contact.name.folding(options: [.diacriticInsensitive], locale: .current).prefix(1)).uppercased()
+            return initial.rangeOfCharacter(from: .letters) == nil ? "#" : initial
+        }
+        return groups.keys.sorted { lhs, rhs in
+            if lhs == "#" { return false }
+            if rhs == "#" { return true }
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }.map { key in
+            (title: key, contacts: groups[key]!.sorted {
+                $0.name.localizedStandardCompare($1.name) == .orderedAscending
+            })
+        }
+    }
 
     private var filtered: [ContactStore.Contact] {
         guard !search.isEmpty else { return model.contacts.contacts }
@@ -1930,54 +2020,71 @@ struct ContactsView: View {
                 } else if filtered.isEmpty {
                     EmptyStateView(title: L10n.t("Address book is empty"), systemImage: "person.2")
                 } else {
-                    List(filtered) { contact in
-                        NavigationLink {
-                            ContactDetailView(contact: contact, onCall: onCall, onMessage: onMessage)
-                        } label: {
-                            HStack(spacing: PhoneListMetrics.avatarSpacing) {
-                                InitialAvatar(
-                                    name: contact.name,
-                                    photoData: contact.photoData,
-                                    fallbackContent: RecentAvatarPolicy.content(contactName: contact.name),
-                                    size: PhoneListMetrics.avatarSize
-                                )
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(contact.name)
-                                        .font(.body.weight(.semibold))
-                                        .lineLimit(1)
-                                    Text(contact.phones.first ?? "")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
+                    ScrollViewReader { proxy in
+                        List {
+                            ForEach(sections, id: \.title) { section in
+                                Section {
+                                    ForEach(section.contacts) { contact in
+                                        NavigationLink {
+                                            ContactDetailView(contact: contact, onCall: onCall, onMessage: onMessage)
+                                        } label: {
+                                            HStack(spacing: 11) {
+                                                InitialAvatar(name: contact.name, photoData: contact.photoData,
+                                                    fallbackContent: RecentAvatarPolicy.content(contactName: contact.name), size: 45)
+                                                Text(contact.name)
+                                                    .font(.body.weight(.semibold))
+                                                    .foregroundStyle(.primary)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                            }
+                                            .frame(minHeight: 64)
+                                        }
+                                        .listRowBackground(Color.clear)
+                                        .listRowInsets(.init(top: 0, leading: 18, bottom: 0, trailing: 28))
+                                        .alignmentGuide(.listRowSeparatorLeading) { _ in 74 }
+                                    }
+                                } header: {
+                                    Text(section.title).font(.subheadline).textCase(nil)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .id(section.title)
                             }
-                            .frame(minHeight: PhoneListMetrics.rowHeight)
                         }
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(.init(
-                            top: 0,
-                            leading: PhoneListMetrics.horizontalInset,
-                            bottom: 0,
-                            trailing: PhoneListMetrics.horizontalInset
-                        ))
-                        .alignmentGuide(.listRowSeparatorLeading) { _ in
-                            PhoneListMetrics.separatorLeading
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .overlay(alignment: .trailing) {
+                            VStack(spacing: 1) {
+                                ForEach(Array("ABCDEFGHIJKLMNOPQRSTUVWXYZ#").map(String.init), id: \.self) { letter in
+                                    Button {
+                                        if let target = sections.first(where: { $0.title >= letter }) ?? sections.last {
+                                            proxy.scrollTo(target.title, anchor: .top)
+                                        }
+                                    } label: {
+                                        Text(letter).font(.system(size: 10, weight: .semibold))
+                                            .frame(width: 17, height: 13)
+                                    }
+                                    .accessibilityLabel("Contacts starting with " + letter)
+                                }
+                            }
+                            .foregroundStyle(.blue)
                         }
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .environment(\.defaultMinListRowHeight, PhoneListMetrics.rowHeight)
 
                 }
             }
             .background(PhoneBackdrop())
-            .navigationTitle("\(L10n.t("Address book")) · \(model.contacts.contacts.count)")
-            .searchable(
-                text: $search,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: L10n.t("Search for a name or number")
-            )
+            .navigationTitle("Contacts")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $search, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { showingContactEditor = true } label: { Image(systemName: "plus") }
+                        .accessibilityLabel("Add Contact")
+                }
+            }
+            .sheet(isPresented: $showingContactEditor) {
+                PhoneContactEditor(number: "") {
+                    Task { await model.contacts.loadIfAuthorized(force: true) }
+                }
+            }
             .refreshable { await model.contacts.requestAccessAndLoad() }
             .task { await model.contacts.loadIfAuthorized(force: true) }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -2023,6 +2130,38 @@ private extension View {
             glassEffect(.regular.interactive(), in: Circle())
         } else {
             background(Color(uiColor: .tertiarySystemFill), in: Circle())
+        }
+    }
+}
+
+/// Use Apple's contact editor for saving numbers, including its native fonts and validation.
+private struct PhoneContactEditor: UIViewControllerRepresentable {
+    @Environment(\.dismiss) private var dismiss
+    let number: String
+    let onSave: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIViewController(context: Context) -> UINavigationController {
+        let contact = CNMutableContact()
+        if !number.isEmpty {
+            contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberMobile,
+                                                  value: CNPhoneNumber(stringValue: number))]
+        }
+        let editor = CNContactViewController(forNewContact: contact)
+        editor.contactStore = CNContactStore()
+        editor.delegate = context.coordinator
+        return UINavigationController(rootViewController: editor)
+    }
+
+    func updateUIViewController(_ controller: UINavigationController, context: Context) {}
+
+    final class Coordinator: NSObject, CNContactViewControllerDelegate {
+        let parent: PhoneContactEditor
+        init(parent: PhoneContactEditor) { self.parent = parent }
+        func contactViewController(_ viewController: CNContactViewController, didCompleteWith contact: CNContact?) {
+            if contact != nil { parent.onSave() }
+            parent.dismiss()
         }
     }
 }
@@ -2134,12 +2273,12 @@ struct InitialAvatar: View {
                         .offset(y: size * 0.08)
                 case let .initial(initial):
                     Text(initial)
-                        .phoneFont(size: size * 0.46, weight: .bold, design: .rounded)
+                        .phoneFont(size: size * 0.46, weight: .bold, design: .default)
                         .foregroundStyle(.white)
                         .shadow(color: Color.indigo.opacity(0.55), radius: 1.4, x: 0, y: 1.2)
                         .overlay {
                             Text(initial)
-                                .phoneFont(size: size * 0.46, weight: .bold, design: .rounded)
+                                .phoneFont(size: size * 0.46, weight: .bold, design: .default)
                                 .foregroundStyle(.white.opacity(0.28))
                                 .offset(y: -0.8)
                         }
@@ -2642,7 +2781,7 @@ private struct DTMFKeypadView: View {
             ScrollView {
               VStack(spacing: 20) {
                 Text(enteredDigits.isEmpty ? "Press the button to send dual tone multi-frequency" : enteredDigits)
-                    .phoneFont(.title3, design: .rounded).monospacedDigit()
+                    .phoneFont(.title3, design: .default).monospacedDigit()
                     .foregroundStyle(enteredDigits.isEmpty ? .secondary : .primary)
                     .lineLimit(1)
                     .contentTransition(.numericText())
@@ -2674,7 +2813,7 @@ private struct DTMFKeypadView: View {
                             Task { await model.sendDTMF(digit) }
                         } label: {
                             Text(digit)
-                                .phoneFont(size: 29, weight: .medium, design: .rounded)
+                                .phoneFont(size: 29, weight: .medium, design: .default)
                                 .frame(width: keySize, height: keySize)
                                 .contentShape(Circle())
                         }

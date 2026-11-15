@@ -563,7 +563,7 @@ struct PhoneBoldText: ViewModifier {
     @Environment(\.legibilityWeight) private var legibilityWeight
 
     func body(content: Content) -> some View {
-        content.fontWeight(legibilityWeight == .bold ? .bold : nil)
+        content.fontDesign(.default)
     }
 }
 
@@ -580,9 +580,9 @@ private struct PhoneAccessibleFont: ViewModifier {
         switch weight {
         case .ultraLight, .thin, .light: return .medium
         case .regular: return .semibold
-        case .medium: return .bold
-        case .semibold, .bold: return .heavy
-        default: return .black
+        case .medium: return .semibold
+        case .semibold: return .bold
+        default: return weight
         }
     }
 
