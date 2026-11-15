@@ -250,7 +250,7 @@ struct DialPadView: View {
         let query = model.numberInput.filter(\.isNumber)
         guard !query.isEmpty else { return [] }
         return contacts.contacts.flatMap { contact in
-            contact.phones.compactMap { phone -> NumberMatch? in
+            Set(contact.phones).compactMap { phone -> NumberMatch? in
                 let digits = phone.filter(\.isNumber)
                 return digits.contains(query) ? NumberMatch(contact: contact, number: phone) : nil
             }
@@ -279,6 +279,7 @@ struct DialPadView: View {
                     compactWidth: isCompact,
                     twoColumns: twoColumns
                 )
+                let matches = numberMatches
                 ScrollView {
                     layout {
                         VStack(spacing: 6) {
@@ -318,16 +319,16 @@ struct DialPadView: View {
                                         model.numberInput = DialPadPasteSanitizer.sanitize(raw)
                                     }
                                 }
-                            if let match = numberMatches.first {
+                            if let match = matches.first {
                                 VStack(spacing: 0) {
                                     Button { model.numberInput = match.number } label: {
                                         matchLabel(match)
                                             .padding(14)
                                     }
-                                    if numberMatches.count > 1 {
+                                    if matches.count > 1 {
                                         Divider().padding(.horizontal, 16)
                                         Button { showingMatches = true } label: {
-                                            Label("\(numberMatches.count - 1) More Results", systemImage: "magnifyingglass")
+                                            Label("\(matches.count - 1) More Results", systemImage: "magnifyingglass")
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                                 .padding(14)
                                         }
@@ -341,7 +342,7 @@ struct DialPadView: View {
                             Spacer(minLength: 0)
                         }
                         .frame(maxWidth: twoColumns ? 420 : 520)
-                        .frame(height: twoColumns ? nil : max(150, proxy.size.height - (metrics.keySize * 5 + metrics.rowSpacing * 3 + metrics.sectionSpacing + 40)))
+                        .frame(height: twoColumns ? nil : max(150, proxy.size.height - (metrics.keySize * 5 + metrics.rowSpacing * 3 + metrics.sectionSpacing + 44)))
 
                         VStack(spacing: metrics.sectionSpacing) {
                             dialKeyGrid(metrics: metrics)
@@ -463,7 +464,15 @@ struct DialPadView: View {
             Color.clear.frame(width: metrics.keySize, height: metrics.keySize)
                 .accessibilityHidden(true)
             Button {
-                Task { await model.dial() }
+                if model.numberInput.isEmpty {
+                    if let last = model.callHistory.first(where: {
+                        $0.direction != "incoming" && RecentCallDialPolicy.numberToDial($0.number) != nil
+                    }) {
+                        model.numberInput = last.number ?? ""
+                    }
+                } else {
+                    Task { await model.dial() }
+                }
             } label: {
                 Circle()
                     .fill(.green)
@@ -476,9 +485,7 @@ struct DialPadView: View {
             }
             .buttonStyle(.plain)
             .disabled(
-                model.numberInput.isEmpty
-                    || model.isBusy
-                    || !model.canStartOutgoingCommand
+                model.isBusy || (!model.numberInput.isEmpty && !model.canStartOutgoingCommand)
             )
 
             Image(systemName: "delete.left.fill")
@@ -559,7 +566,7 @@ struct DialPadView: View {
             VStack(spacing: 0) {
                 Text(digit)
                     .phoneFont(size: metrics.digitFontSize, weight: .regular, design: .default)
-                Text(letters)
+                Text(letters.isEmpty ? " " : letters)
                     .phoneFont(size: metrics.letterFontSize, weight: .semibold)
                     .tracking(1.4)
             }
