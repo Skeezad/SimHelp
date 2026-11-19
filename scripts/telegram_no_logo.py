@@ -1,10 +1,14 @@
 """Remove Telegram's notch badge from source, or package its built IPA for sideloading."""
 import argparse
+import datetime
 import hashlib
 import json
 from pathlib import Path
 import plistlib
 import struct
+import ssl
+import subprocess
+import tempfile
 import zipfile
 
 
@@ -22,6 +26,39 @@ def patch(root):
     path.write_text(updated, encoding="utf-8")
     assert ORIGINAL not in updated and updated.count(REPLACEMENT) == 1
     print("Removed notch-badge image assignment: " + str(SOURCE_PATH))
+
+
+def refresh_verification_profiles(root):
+    """Renew only upstream's self-signed build fixtures; these never authorize installation."""
+    fixture_root = root / "build-system/fake-codesigning"
+    certificate = (fixture_root / "certs/Public.cer").read_bytes()
+    pem = ssl.DER_cert_to_PEM_cert(certificate)
+    with tempfile.TemporaryDirectory() as temporary:
+        pem_path = Path(temporary) / "certificate.pem"
+        pem_path.write_text(pem, encoding="ascii")
+        decoded = ssl._ssl._test_decode_cert(str(pem_path))
+        subject = dict(item for rdn in decoded["subject"] for item in rdn)
+        if subject.get("organizationalUnitName") != "SELFSIGNED":
+            raise ValueError("Refusing to modify real signing profiles")
+        identity = subject["commonName"]
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+        profiles = list((fixture_root / "profiles").glob("*.mobileprovision"))
+        if not profiles:
+            raise ValueError("No upstream verification fixtures found")
+        for profile_path in profiles:
+            profile = plistlib.loads(subprocess.check_output(
+                ["security", "cms", "-D", "-i", str(profile_path)]))
+            if profile.get("DeveloperCertificates") != [certificate]:
+                raise ValueError("Verification profile does not use the expected self-signed certificate")
+            profile["CreationDate"] = now
+            profile["ExpirationDate"] = now + datetime.timedelta(days=365)
+            profile["TimeToLive"] = 365
+            profile.pop("DER-Encoded-Profile", None)
+            input_path = Path(temporary) / "profile.plist"
+            input_path.write_bytes(plistlib.dumps(profile))
+            subprocess.run(["security", "cms", "-S", "-k", "temp.keychain", "-N", identity,
+                            "-i", str(input_path), "-o", str(profile_path)], check=True)
+            print("Refreshed self-signed build fixture: " + profile_path.name)
 
 
 def verify_unencrypted_arm64(data):
@@ -88,6 +125,8 @@ if __name__ == "__main__":
     commands = parser.add_subparsers(dest="command", required=True)
     patch_args = commands.add_parser("patch")
     patch_args.add_argument("root", type=Path)
+    profiles_args = commands.add_parser("refresh-verification-profiles")
+    profiles_args.add_argument("root", type=Path)
     pack_args = commands.add_parser("package")
     pack_args.add_argument("source", type=Path)
     pack_args.add_argument("output", type=Path)
@@ -95,5 +134,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.command == "patch":
         patch(args.root)
+    elif args.command == "refresh-verification-profiles":
+        refresh_verification_profiles(args.root)
     else:
         package(args.source, args.output, args.commit)
