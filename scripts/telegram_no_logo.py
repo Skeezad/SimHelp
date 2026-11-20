@@ -44,6 +44,19 @@ private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
 '''
     cloud_path.write_text(cloud_original[:cloud_start] + cloud_replacement + cloud_original[cloud_end:], encoding="utf-8")
     print("Disabled official CloudKit emergency bootstrap for personal signing")
+    delegate_path = root / "submodules/TelegramUI/Sources/AppDelegate.swift"
+    delegate = delegate_path.read_text(encoding="utf-8")
+    changes = {
+        'let logsPath = rootPath + "/logs/app-logs"': 'let logsPath = CommandLine.arguments.contains("--connection-diagnostics") ? NSHomeDirectory() + "/Documents/ConnectionDiagnostics" : rootPath + "/logs/app-logs"',
+        'Logger.shared.logToFile = loggingSettings.logToFile': 'Logger.shared.logToFile = CommandLine.arguments.contains("--connection-diagnostics") || loggingSettings.logToFile',
+        'Logger.shared.redactSensitiveData = loggingSettings.redactSensitiveData': 'Logger.shared.redactSensitiveData = CommandLine.arguments.contains("--connection-diagnostics") || loggingSettings.redactSensitiveData',
+    }
+    for original, replacement in changes.items():
+        if delegate.count(original) != 1:
+            raise SystemExit("Unexpected AppDelegate diagnostics hook")
+        delegate = delegate.replace(original, replacement)
+    delegate_path.write_text(delegate, encoding="utf-8")
+    print("Added opt-in redacted connection diagnostics in this app's Documents")
 
 
 def refresh_verification_profiles(root):
@@ -110,7 +123,7 @@ def package(source, output, commit):
         executable_path = app + "/" + info["CFBundleExecutable"]
         binary = archive.read(executable_path)
         verify_unencrypted_arm64(binary)
-        info["CFBundleDisplayName"] = "SimHelp Chat"
+        info["CFBundleDisplayName"] = "Telegram"
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as packaged:
             for entry in archive.infolist():
                 if "/_CodeSignature/" in entry.filename or entry.filename.endswith("embedded.mobileprovision"):
@@ -128,7 +141,7 @@ def package(source, output, commit):
     with zipfile.ZipFile(output) as archive:
         assert archive.testzip() is None
         assert archive.read(executable_path) == binary
-        assert plistlib.loads(archive.read(info_path))["CFBundleDisplayName"] == "SimHelp Chat"
+        assert plistlib.loads(archive.read(info_path))["CFBundleDisplayName"] == "Telegram"
     report = {"upstream_commit": commit, "badge_removed_in_source": True,
               "official_cloudkit_bootstrap_disabled": True,
               "arm64_unencrypted_executable": True, "requires_signing": True,

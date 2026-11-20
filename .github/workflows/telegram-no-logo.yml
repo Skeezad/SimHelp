@@ -53,6 +53,18 @@ jobs:
       - name: Reproduce previous recursion and verify bootstrap fix
         run: python3 scripts/check_telegram_cloud_bootstrap.py telegram-source
 
+      - name: Configure personal build without unavailable iCloud capability
+        working-directory: telegram-source
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('build-system/appstore-configuration.json')
+          config = json.loads(source.read_text())
+          config['enable_icloud'] = False
+          Path('build-system/personal-configuration.json').write_text(json.dumps(config))
+          PY
+
       - name: Import upstream verification certificates
         working-directory: telegram-source
         run: python3 build-system/Make/ImportCertificates.py --path build-system/fake-codesigning/certs
@@ -76,10 +88,10 @@ jobs:
           python3 -u build-system/Make/Make.py \
             --bazelUserRoot="$RUNNER_TEMP/telegram-bazel" \
             build \
-            --configurationPath=build-system/appstore-configuration.json \
+            --configurationPath=build-system/personal-configuration.json \
             --codesigningInformationPath=build-system/fake-codesigning \
             --configuration=release_arm64 \
-            --buildNumber=100003 \
+            --buildNumber=100004 \
             --outputBuildArtifactsPath="$RUNNER_TEMP/telegram-artifacts"
 
       - name: Package and verify sideload IPA
@@ -88,17 +100,17 @@ jobs:
           set -euo pipefail
           python3 scripts/telegram_no_logo.py package \
             "$RUNNER_TEMP/telegram-artifacts/Telegram.ipa" \
-            dist/SimHelp-Chat-100003-unsigned.ipa \
+            dist/Telegram-100004-unsigned.ipa \
             --commit "$UPSTREAM_COMMIT"
-          cp dist/SimHelp-Chat-100003-unsigned.json dist/build-provenance.json
-          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift > dist/remove-notch-logo.patch
+          cp dist/Telegram-100004-unsigned.json dist/build-provenance.json
+          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift submodules/TelegramUI/Sources/AppDelegate.swift > dist/remove-notch-logo.patch
 
       - name: Upload IPA and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: SimHelp-Chat-100003-unsigned
+          name: Telegram-100004-unsigned
           path: |
-            dist/SimHelp-Chat-100003-unsigned.ipa
+            dist/Telegram-100004-unsigned.ipa
             dist/build-provenance.json
             dist/remove-notch-logo.patch
           if-no-files-found: error
