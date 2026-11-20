@@ -47,6 +47,7 @@ private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
     delegate_path = root / "submodules/TelegramUI/Sources/AppDelegate.swift"
     delegate = delegate_path.read_text(encoding="utf-8")
     changes = {
+        '}, requestSiriAuthorization: { completion in\n            if #available(iOS 10, *) {': '}, requestSiriAuthorization: { completion in\n            guard buildConfig.isSiriEnabled else {\n                completion(false)\n                return\n            }\n            if #available(iOS 10, *) {',
         'let logsPath = rootPath + "/logs/app-logs"': 'let logsPath = CommandLine.arguments.contains("--connection-diagnostics") ? NSHomeDirectory() + "/Documents/ConnectionDiagnostics" : rootPath + "/logs/app-logs"',
         'Logger.shared.logToFile = loggingSettings.logToFile': 'Logger.shared.logToFile = CommandLine.arguments.contains("--connection-diagnostics") || loggingSettings.logToFile',
         'Logger.shared.redactSensitiveData = loggingSettings.redactSensitiveData': 'Logger.shared.redactSensitiveData = CommandLine.arguments.contains("--connection-diagnostics") || loggingSettings.redactSensitiveData',

@@ -55,7 +55,7 @@ jobs:
       - name: Reproduce previous recursion and verify bootstrap fix
         run: python3 scripts/check_telegram_cloud_bootstrap.py telegram-source
 
-      - name: Configure personal build without unavailable iCloud capability
+      - name: Configure personal build without unavailable iCloud and Siri capabilities
         working-directory: telegram-source
         run: |
           python3 - <<'PY'
@@ -71,6 +71,7 @@ jobs:
           config['api_hash'] = api_hash
           config['is_appstore_build'] = 'false'
           config['enable_icloud'] = False
+          config['enable_siri'] = False
           Path('build-system/personal-configuration.json').write_text(json.dumps(config))
           PY
 
@@ -100,7 +101,7 @@ jobs:
             --configurationPath=build-system/personal-configuration.json \
             --codesigningInformationPath=build-system/fake-codesigning \
             --configuration=release_arm64 \
-            --buildNumber=100005 \
+            --buildNumber=100006 \
             --outputBuildArtifactsPath="$RUNNER_TEMP/telegram-artifacts"
 
       - name: Package and verify sideload IPA
@@ -109,17 +110,17 @@ jobs:
           set -euo pipefail
           python3 scripts/telegram_no_logo.py package \
             "$RUNNER_TEMP/telegram-artifacts/Telegram.ipa" \
-            dist/Telegram-100005-unsigned.ipa \
+            dist/Telegram-100006-unsigned.ipa \
             --commit "$UPSTREAM_COMMIT"
-          cp dist/Telegram-100005-unsigned.json dist/build-provenance.json
+          cp dist/Telegram-100006-unsigned.json dist/build-provenance.json
           git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift submodules/TelegramUI/Sources/AppDelegate.swift > dist/remove-notch-logo.patch
 
       - name: Upload IPA and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: Telegram-100005-unsigned
+          name: Telegram-100006-unsigned
           path: |
-            dist/Telegram-100005-unsigned.ipa
+            dist/Telegram-100006-unsigned.ipa
             dist/build-provenance.json
             dist/remove-notch-logo.patch
           if-no-files-found: error
