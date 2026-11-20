@@ -22,6 +22,8 @@ jobs:
     timeout-minutes: 180
     env:
       UPSTREAM_COMMIT: 24638bc69bd083981b178dd1e7f921eebbf7fc46
+      PERSONAL_TELEGRAM_API_ID: ${{ secrets.PERSONAL_TELEGRAM_API_ID }}
+      PERSONAL_TELEGRAM_API_HASH: ${{ secrets.PERSONAL_TELEGRAM_API_HASH }}
     steps:
       - name: Check out build tools
         uses: actions/checkout@v4
@@ -57,10 +59,17 @@ jobs:
         working-directory: telegram-source
         run: |
           python3 - <<'PY'
-          import json
+          import json, os, re
           from pathlib import Path
           source = Path('build-system/appstore-configuration.json')
           config = json.loads(source.read_text())
+          api_id = os.environ.get('PERSONAL_TELEGRAM_API_ID', '')
+          api_hash = os.environ.get('PERSONAL_TELEGRAM_API_HASH', '')
+          if not api_id.isdecimal() or int(api_id) <= 0 or int(api_id) == 8 or not re.fullmatch(r'[0-9a-fA-F]{32}', api_hash):
+              raise SystemExit('A personal Telegram API ID and hash must be configured as build secrets')
+          config['api_id'] = api_id
+          config['api_hash'] = api_hash
+          config['is_appstore_build'] = 'false'
           config['enable_icloud'] = False
           Path('build-system/personal-configuration.json').write_text(json.dumps(config))
           PY
@@ -91,7 +100,7 @@ jobs:
             --configurationPath=build-system/personal-configuration.json \
             --codesigningInformationPath=build-system/fake-codesigning \
             --configuration=release_arm64 \
-            --buildNumber=100004 \
+            --buildNumber=100005 \
             --outputBuildArtifactsPath="$RUNNER_TEMP/telegram-artifacts"
 
       - name: Package and verify sideload IPA
@@ -100,17 +109,17 @@ jobs:
           set -euo pipefail
           python3 scripts/telegram_no_logo.py package \
             "$RUNNER_TEMP/telegram-artifacts/Telegram.ipa" \
-            dist/Telegram-100004-unsigned.ipa \
+            dist/Telegram-100005-unsigned.ipa \
             --commit "$UPSTREAM_COMMIT"
-          cp dist/Telegram-100004-unsigned.json dist/build-provenance.json
+          cp dist/Telegram-100005-unsigned.json dist/build-provenance.json
           git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift submodules/TelegramUI/Sources/AppDelegate.swift > dist/remove-notch-logo.patch
 
       - name: Upload IPA and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: Telegram-100004-unsigned
+          name: Telegram-100005-unsigned
           path: |
-            dist/Telegram-100004-unsigned.ipa
+            dist/Telegram-100005-unsigned.ipa
             dist/build-provenance.json
             dist/remove-notch-logo.patch
           if-no-files-found: error
