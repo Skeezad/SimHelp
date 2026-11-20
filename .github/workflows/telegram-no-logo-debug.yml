@@ -1,0 +1,108 @@
+name: Build Telegram without notch logo (debug)
+
+on:
+  push:
+    branches: [codex/telegram-no-notch-logo]
+    paths:
+      - .github/workflows/telegram-no-logo-debug.yml
+      - scripts/telegram_no_logo.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-no-notch-logo-debug
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: xcode-27
+    timeout-minutes: 180
+    env:
+      UPSTREAM_COMMIT: 24638bc69bd083981b178dd1e7f921eebbf7fc46
+    steps:
+      - name: Check out build tools
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check out pinned Telegram source
+        uses: actions/checkout@v4
+        with:
+          repository: TelegramMessenger/Telegram-iOS
+          ref: ${{ env.UPSTREAM_COMMIT }}
+          path: telegram-source
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Select required Xcode
+        working-directory: telegram-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import json; print(json.load(open("versions.json"))["xcode"])')
+          sudo xcode-select -s "/Applications/Xcode_${version}.app/Contents/Developer"
+          xcodebuild -version
+          df -h .
+
+      - name: Remove notch logo from source
+        run: python3 scripts/telegram_no_logo.py patch telegram-source
+
+      - name: Import upstream verification certificates
+        working-directory: telegram-source
+        run: python3 build-system/Make/ImportCertificates.py --path build-system/fake-codesigning/certs
+
+      - name: Renew expired self-signed build fixtures
+        run: python3 scripts/telegram_no_logo.py refresh-verification-profiles telegram-source
+
+      - name: Restore compiler cache
+        id: compiler-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/telegram-bazel
+          key: telegram-no-logo-debug-xcode27-${{ env.UPSTREAM_COMMIT }}-${{ github.run_id }}
+          restore-keys: telegram-no-logo-debug-xcode27-${{ env.UPSTREAM_COMMIT }}-
+
+      - name: Compile debug arm64 iPhone application
+        working-directory: telegram-source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -u build-system/Make/Make.py \
+            --bazelUserRoot="$RUNNER_TEMP/telegram-bazel" \
+            build \
+            --configurationPath=build-system/appstore-configuration.json \
+            --codesigningInformationPath=build-system/fake-codesigning \
+            --configuration=debug_arm64 \
+            --buildNumber=100001 \
+            --outputBuildArtifactsPath="$RUNNER_TEMP/telegram-artifacts"
+
+      - name: Package and verify sideload IPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/telegram_no_logo.py package \
+            "$RUNNER_TEMP/telegram-artifacts/Telegram.ipa" \
+            dist/SimHelp-Chat-No-Notch-Logo-Debug-unsigned.ipa \
+            --commit "$UPSTREAM_COMMIT"
+          cp dist/SimHelp-Chat-No-Notch-Logo-Debug-unsigned.json dist/build-provenance.json
+          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift > dist/remove-notch-logo.patch
+
+      - name: Upload IPA and provenance
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimHelp-Chat-No-Notch-Logo-Debug-unsigned
+          path: |
+            dist/SimHelp-Chat-No-Notch-Logo-Debug-unsigned.ipa
+            dist/build-provenance.json
+            dist/remove-notch-logo.patch
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Save compiler cache
+        if: always() && steps.compiler-cache.outcome == 'success'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ runner.temp }}/telegram-bazel
+          key: telegram-no-logo-debug-xcode27-${{ env.UPSTREAM_COMMIT }}-${{ github.run_id }}
