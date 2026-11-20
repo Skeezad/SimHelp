@@ -26,6 +26,27 @@ def patch(root):
     path.write_text(updated, encoding="utf-8")
     assert ORIGINAL not in updated and updated.count(REPLACEMENT) == 1
     print("Removed notch-badge image assignment: " + str(SOURCE_PATH))
+    cloud_path = root / "submodules/CloudData/Sources/CloudData.swift"
+    cloud_original = cloud_path.read_text(encoding="utf-8")
+    cloud_start = cloud_original.index('@available(iOS 10.0, *)\nprivate func fetchRawData(')
+    cloud_end = cloud_original.index('@available(iOS 10.0, *)\nprivate final class CloudDataPrefixContext', cloud_start)
+    cloud_function = cloud_original[cloud_start:cloud_end]
+    if cloud_function.count('let container = CKContainer.default()') != 1:
+        raise SystemExit("Expected the pinned CloudKit bootstrap implementation")
+    cloud_replacement = '''@available(iOS 10.0, *)
+private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
+    // Personal signing cannot access Telegram's official CloudKit container.
+    // Use the existing generic-error path to finish this optional bootstrap.
+    return Signal { subscriber in
+        subscriber.putError(.generic)
+        return ActionDisposable {
+        }
+    }
+}
+
+'''
+    cloud_path.write_text(cloud_original[:cloud_start] + cloud_replacement + cloud_original[cloud_end:], encoding="utf-8")
+    print("Disabled official CloudKit emergency bootstrap for personal signing")
 
 
 def refresh_verification_profiles(root):
@@ -104,7 +125,7 @@ def package(source, output, commit):
             packaged.writestr(app + "/NO-NOTCH-LOGO.txt",
                 "Unofficial personal build from https://github.com/TelegramMessenger/Telegram-iOS\n"
                 "Upstream commit: " + commit + "\n"
-                "Change: omit Components/AppBadge from WindowContent.swift.\n"
+                "Changes: omit Components/AppBadge; disable official CloudKit emergency bootstrap.\n"
                 "The executable was compiled from source; no App Store executable was used.\n"
                 "Requires personal signing before installation. Device behavior is unverified.\n")
     with zipfile.ZipFile(output) as archive:
@@ -112,6 +133,7 @@ def package(source, output, commit):
         assert archive.read(executable_path) == binary
         assert plistlib.loads(archive.read(info_path))["CFBundleDisplayName"] == "SimHelp Chat"
     report = {"upstream_commit": commit, "badge_removed_in_source": True,
+              "official_cloudkit_bootstrap_disabled": True,
               "arm64_unencrypted_executable": True, "requires_signing": True,
               "tested_on_device": False, "app_version": info.get("CFBundleShortVersionString"),
               "minimum_ios": info.get("MinimumOSVersion"),

@@ -75,7 +75,7 @@ jobs:
             --configurationPath=build-system/appstore-configuration.json \
             --codesigningInformationPath=build-system/fake-codesigning \
             --configuration=release_arm64 \
-            --buildNumber=100001 \
+            --buildNumber=100002 \
             --outputBuildArtifactsPath="$RUNNER_TEMP/telegram-artifacts"
 
       - name: Package and verify sideload IPA
@@ -84,17 +84,17 @@ jobs:
           set -euo pipefail
           python3 scripts/telegram_no_logo.py package \
             "$RUNNER_TEMP/telegram-artifacts/Telegram.ipa" \
-            dist/SimHelp-Chat-No-Notch-Logo-unsigned.ipa \
+            dist/SimHelp-Chat-No-Notch-Logo-CloudKit-Fix-unsigned.ipa \
             --commit "$UPSTREAM_COMMIT"
-          cp dist/SimHelp-Chat-No-Notch-Logo-unsigned.json dist/build-provenance.json
-          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift > dist/remove-notch-logo.patch
+          cp dist/SimHelp-Chat-No-Notch-Logo-CloudKit-Fix-unsigned.json dist/build-provenance.json
+          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift > dist/remove-notch-logo.patch
 
       - name: Upload IPA and provenance
         uses: actions/upload-artifact@v4
         with:
-          name: SimHelp-Chat-No-Notch-Logo-unsigned
+          name: SimHelp-Chat-No-Notch-Logo-CloudKit-Fix-unsigned
           path: |
-            dist/SimHelp-Chat-No-Notch-Logo-unsigned.ipa
+            dist/SimHelp-Chat-No-Notch-Logo-CloudKit-Fix-unsigned.ipa
             dist/build-provenance.json
             dist/remove-notch-logo.patch
           if-no-files-found: error
