@@ -36,12 +36,9 @@ def patch(root):
     cloud_replacement = '''@available(iOS 10.0, *)
 private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
     // Personal signing cannot access Telegram's official CloudKit container.
-    // Use the existing generic-error path to finish this optional bootstrap.
-    return Signal { subscriber in
-        subscriber.putError(.generic)
-        return ActionDisposable {
-        }
-    }
+    // No terminal event: the caller uses synchronous restart before take(1).
+    // Reporting an immediate error/completion here can recurse indefinitely.
+    return .never()
 }
 
 '''
