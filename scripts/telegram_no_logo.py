@@ -47,6 +47,7 @@ private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
     delegate_path = root / "submodules/TelegramUI/Sources/AppDelegate.swift"
     delegate = delegate_path.read_text(encoding="utf-8")
     changes = {
+        'private func resetIntentsIfNeeded(context: AccountContextImpl) {': 'private func resetIntentsIfNeeded(context: AccountContextImpl) {\n        guard self.buildConfig?.isSiriEnabled == true else { return }',
         '}, requestSiriAuthorization: { completion in\n            if #available(iOS 10, *) {': '}, requestSiriAuthorization: { completion in\n            guard buildConfig.isSiriEnabled else {\n                completion(false)\n                return\n            }\n            if #available(iOS 10, *) {',
         'let logsPath = rootPath + "/logs/app-logs"': 'let logsPath = CommandLine.arguments.contains("--connection-diagnostics") ? NSHomeDirectory() + "/Documents/ConnectionDiagnostics" : rootPath + "/logs/app-logs"',
         'Logger.shared.logToFile = loggingSettings.logToFile': 'Logger.shared.logToFile = CommandLine.arguments.contains("--connection-diagnostics") || loggingSettings.logToFile',
@@ -58,6 +59,22 @@ private func fetchRawData(prefix: String) -> Signal<Data, FetchError> {
         delegate = delegate.replace(original, replacement)
     delegate_path.write_text(delegate, encoding="utf-8")
     print("Added opt-in redacted connection diagnostics in this app's Documents")
+    intents_path = root / "submodules/TelegramIntents/Sources/TelegramIntents.swift"
+    intents = intents_path.read_text(encoding="utf-8")
+    signatures = [
+        'public func donateSendMessageIntent(account: Account, sharedContext: SharedAccountContext, intentContext: SendMessageIntentContext, peerIds: [EnginePeer.Id]) {',
+        'public func deleteSendMessageIntents(peerId: EnginePeer.Id) {',
+        'public func deleteAllSendMessageIntents() {',
+    ]
+    if intents.count('import AccountContext\n') != 1:
+        raise SystemExit("Unexpected Siri integration imports")
+    intents = intents.replace('import AccountContext\n', 'import AccountContext\n\nprivate let personalBuildSiriIntegrationEnabled = false\n')
+    for signature in signatures:
+        if intents.count(signature) != 1:
+            raise SystemExit("Unexpected Siri integration entry point")
+        intents = intents.replace(signature, signature + '\n    guard personalBuildSiriIntegrationEnabled else { return }')
+    intents_path.write_text(intents, encoding="utf-8")
+    print("Disabled Siri interaction donation and cleanup in personal build")
 
 
 def refresh_verification_profiles(root):

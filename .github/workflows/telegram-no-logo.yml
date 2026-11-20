@@ -113,7 +113,7 @@ jobs:
             dist/Telegram-100006-unsigned.ipa \
             --commit "$UPSTREAM_COMMIT"
           cp dist/Telegram-100006-unsigned.json dist/build-provenance.json
-          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift submodules/TelegramUI/Sources/AppDelegate.swift > dist/remove-notch-logo.patch
+          git -C telegram-source diff -- submodules/Display/Source/WindowContent.swift submodules/CloudData/Sources/CloudData.swift submodules/TelegramUI/Sources/AppDelegate.swift submodules/TelegramIntents/Sources/TelegramIntents.swift > dist/remove-notch-logo.patch
 
       - name: Upload IPA and provenance
         uses: actions/upload-artifact@v4
